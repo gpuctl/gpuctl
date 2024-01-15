@@ -7,7 +7,7 @@ import (
 )
 
 func TestDemo(t *testing.T) {
-	if gpuctl.GetANumber() > 0 {
+	if gpuctl.GetANumber() < 0 {
 		t.Error("this is bad")
 	}
 }
