@@ -1,5 +1,5 @@
 package gpuctl
 
 func GetANumber() int {
-	return 0
+	return -1
 }
