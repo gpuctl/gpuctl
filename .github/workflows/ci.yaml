@@ -5,6 +5,7 @@ on:
     branches: [ trunk ]
   pull_request:
     branches: [ trunk ]
+  merge_group:
 
 jobs:
   build-and-test:
