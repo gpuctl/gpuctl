@@ -17,12 +17,17 @@ jobs:
           go-version: "1.21.x"
       - run: go build ./...
       - run: go test ./...
-      - run: cd ./frontend
       - name: Install Frontend Dependencies
-        run: npm ci
+        run: |
+          cd ./frontend
+          npm ci
       - name: Build Frontend
-        run: npm run build
+        run: |
+          cd ./frontend
+          npm run build
       - name: Run Frontend Tests
         env:
           CI: true
-        run: npm test
+        run: |
+          cd ./frontend
+          npm test
