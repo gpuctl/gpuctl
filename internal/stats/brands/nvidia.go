@@ -240,9 +240,24 @@ type gpu struct {
 		} `xml:"supported_mem_clock"`
 	} `xml:"supported_clocks"`
 	// TODO: `Processes` is wrong, need to accomodate running processes
-	Processes          string `xml:"processes"`
+	Processes          processes `xml:"processes"`
 	AccountedProcesses string `xml:"accounted_processes"`
 }
+
+type processes struct {
+	XMLName     xml.Name `xml:"processes"`
+	Text        string   `xml:",chardata"`
+	ProcessInfo []struct {
+		Text              string `xml:",chardata"`
+		GpuInstanceID     string `xml:"gpu_instance_id"`
+		ComputeInstanceID string `xml:"compute_instance_id"`
+		Pid               string `xml:"pid"`
+		Type              string `xml:"type"`
+		ProcessName       string `xml:"process_name"`
+		UsedMemory        string `xml:"used_memory"`
+	} `xml:"process_info"`
+}
+
 
 // Filter down the relevant information from our nvidia-smi dump
 func (xml NvidiaSmiLog) FilterStatus() stats.GPUStatsPacket {
@@ -262,21 +277,21 @@ func (xml NvidiaSmiLog) FilterStatus() stats.GPUStatsPacket {
 }
 
 // Helper function to unmarshal Nvidia XML dump
-func ParseNvidiaSmi(input []byte) NvidiaSmiLog {
+func ParseNvidiaSmi(input []byte) (NvidiaSmiLog, error) {
 	var result NvidiaSmiLog
 	if e := xml.Unmarshal(input, &result); e != nil {
 		// TODO: Graceful failing
-		return result
+		return result, e
 	}
-	return result
+	return result, nil
 }
 
 // Get the Nvidia GPU status directly from the computer using `nvidia-smi`
-func GetNvidiaGPUStatus() NvidiaSmiLog {
+func GetNvidiaGPUStatus() (NvidiaSmiLog, error) {
 	output, err := exec.Command("nvidia-smi", "-q", "-x").Output()
 	if err != nil {
 		// TODO: Graceful failing
-		return NvidiaSmiLog{}
+		return NvidiaSmiLog{}, err
 	}
 
 	return ParseNvidiaSmi(output)
