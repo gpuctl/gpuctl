@@ -15,5 +15,15 @@ jobs:
       - uses: actions/setup-go@v4
         with: 
           go-version: '1.21.x'
-      - run: go build ./...
-      - run: go test ./...
+      - name: Build code
+        run: go build ./...
+      - name: Test code
+        run: go test ./... -coverprofile=./cover.out -covermode=atomic -coverpkg=./...
+      - name: Test coverage check
+        uses: vladopajic/go-test-coverage@v2
+        with:
+          profile: cover.out
+          local-prefix: github.com/gpuctl/gpuctl
+          threshold-file: 80
+          threshold-package: 80
+          threshold-total: 95
