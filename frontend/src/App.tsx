@@ -14,7 +14,7 @@ const retrieveAllStats: () => Promise<Stats[]> = async () => {
 };
 
 function App() {
-  const stats = useAsync(retrieveAllStats);
+  const stats = useAsync(retrieveAllStats());
 
   return (
     <div className="App">
