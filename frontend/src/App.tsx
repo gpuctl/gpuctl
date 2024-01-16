@@ -22,8 +22,8 @@ function App() {
         <p>Welcome to the GPU Control Room!</p>
         {stats?.map((row, i) => {
           return (
-            <p>
-              ID: {i}, Core Utilisation: {row.util}% Clock Speed:{" "}
+            <p key={i}>
+              ID: {i}, Core Utilisation: {row.util}%, Clock Speed:{" "}
               {row.clock_speed} MHz, VRAM: {row.gpu_mem} GB, Used VRAM:{" "}
               {row.gpu_mem_used}
             </p>

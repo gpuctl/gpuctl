@@ -1,3 +1,4 @@
+import { act } from "@testing-library/react";
 import { useEffect, useState } from "react";
 
 /**
@@ -7,7 +8,10 @@ import { useEffect, useState } from "react";
  */
 export const useAsync = <T,>(f: () => Promise<T | null>): T | null => {
   const [v, setV] = useState<T | null>(null);
-  const asyncSetV = async () => setV(await f());
+  const asyncSetV = async () => {
+    const x = await f();
+    act(() => setV(x));
+  };
 
   useEffect(() => {
     asyncSetV();
