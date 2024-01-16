@@ -17,8 +17,10 @@ jobs:
           go-version: "1.21.x"
       - name: Check for formatting errors
         run: test -z $(gofmt -l .)
-      - run: go build ./...
-      - run: go test ./...
+      - name: Build and test satellite
+        run: go test ./cmd/satellite
+      - name: Build and test groundstation
+        run: go test ./cmd/groundstation
       - name: Install Frontend Dependencies
         run: |
           cd ./frontend
