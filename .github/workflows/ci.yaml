@@ -12,6 +12,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        # We wan't the entire history so we can check for no merges.
+        with:
+          fetch-depth: 0 
       - uses: actions/setup-go@v4
         with:
           go-version: "1.21.x"
@@ -35,3 +38,12 @@ jobs:
         run: |
           cd ./frontend
           npm test
+      - name: Check no merge commits
+        run: |
+          changes=$(git log --oneline trunk..$GITHUB_SHA --merges)
+          if [[ -n $changes  ]]; then 
+            echo "Found merge commits on your branch!"
+            echo $changes
+            echo "You can probably fix this with `git rebase -i origin/trunk`"
+            # TODO: Link to rustc-dev-guide here.
+          fi
