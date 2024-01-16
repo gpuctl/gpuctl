@@ -22,10 +22,18 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Check for formatting errors
         run: test -z $(gofmt -l .)
-      - name: Build and test satellite
-        run: go test ./cmd/satellite
-      - name: Build and test groundstation
-        run: go test ./cmd/groundstation
+      - name: Build and test Go
+        run: go test ./... -coverprofile cover.out
+        # upload cover.out as an artifact so we can generate a web view on failure
+      - name: Upload coverage profile
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-profile
+          path: cover.out
+          retention-days: 1
+        # coverage check currently only checks total coverage
+      - name: Check for insufficient coverage
+        run: test 80 -le $(go tool cover -func=cover.out | grep total | grep -Eo "[[:space:]][[:digit:]]+")
       - name: Install Frontend Dependencies
         run: |
           cd ./frontend
