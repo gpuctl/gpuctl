@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/gpuctl/gpuctl/internal/stats"
+	"github.com/gpuctl/gpuctl/internal/stats/brands"
+	"io/ioutil"
 )
 
 func main() {
