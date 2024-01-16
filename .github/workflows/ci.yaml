@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ trunk ]
+    branches: [trunk]
   pull_request:
-    branches: [ trunk ]
+    branches: [trunk]
   merge_group:
 
 jobs:
@@ -13,9 +13,23 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
-        with: 
-          go-version: '1.21.x'
+        with:
+          go-version: "1.21.x"
       - name: Check for formatting errors
         run: test -z $(gofmt -l .)
       - run: go build ./...
       - run: go test ./...
+      - name: Install Frontend Dependencies
+        run: |
+          cd ./frontend
+          npm ci
+      - name: Build Frontend
+        run: |
+          cd ./frontend
+          npm run build
+      - name: Run Frontend Tests
+        env:
+          CI: true
+        run: |
+          cd ./frontend
+          npm test
