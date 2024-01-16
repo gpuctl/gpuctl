@@ -36,12 +36,12 @@ jobs:
             let fs = require('fs');
             fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/coverage-profile.zip`, Buffer.from(download.data));
 
-        - name: Unzip coverage profile
-          run: unzip coverage-profile.zip
-        - name: Generate webpage
-          run: go tool cover -html=cover.out -o cover.html
-        - name: Upload coverage webpage artifact
-          uses: actions/upload-artifact@v3
-          with:
-            name: coverage-report
-            path: cover.html
+      - name: Unzip coverage profile
+        run: unzip coverage-profile.zip
+      - name: Generate webpage
+        run: go tool cover -html=cover.out -o cover.html
+      - name: Upload coverage webpage artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report
+          path: cover.html
