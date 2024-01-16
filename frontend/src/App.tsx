@@ -9,7 +9,7 @@ type Stats = {
   gpu_mem_used: number;
 };
 
-const retrieveAllStats = async () => {
+const retrieveAllStats: () => Promise<Stats[]> = async () => {
   return [{ clock_speed: 0, util: 0, gpu_mem: 0, gpu_mem_used: 0 }];
 };
 
