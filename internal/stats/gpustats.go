@@ -1,9 +1,5 @@
 package stats
 
-import (
-	"time"
-)
-
 type GPUStatsPacket struct {
 	// Contextual information
 	Name string
@@ -12,11 +8,7 @@ type GPUStatsPacket struct {
 	MemoryTotal uint64
 
 	// Temporal statistics
-	Timestamp time.Time
 	MemoryUsed uint64
+	FanSpeed uint32
 	Temp float32
-}
-
-type GPUStatGetter interface {
-	currentStatus() GPUStatsPacket
 }
