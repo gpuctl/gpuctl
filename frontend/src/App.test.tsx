@@ -3,7 +3,7 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { default as App, GPUStats, REFRESH_INTERVAL } from "./App";
 
 test("renders welcome message", () => {
-  mockFetch(Promise.resolve(EXAMPLE_GPU_DATA_1));
+  mockFetch(EXAMPLE_GPU_DATA_1);
   jest.useFakeTimers();
 
   render(<App />);
@@ -13,7 +13,7 @@ test("renders welcome message", () => {
 
 test(`before fetch succeeds inform the user that data is being fetched
 after fetch succeeds, no longer show that message`, () => {
-  mockFetch(Promise.resolve(EXAMPLE_GPU_DATA_1));
+  mockFetch(EXAMPLE_GPU_DATA_1);
   jest.useFakeTimers();
 
   render(<App />);
@@ -24,18 +24,19 @@ after fetch succeeds, no longer show that message`, () => {
   cleanup();
   render(<App />);
 
-  expect(status).not.toBeInTheDocument();
+  const new_status = screen.getByText("Retrieving data from API server...");
+  expect(new_status).not.toBeInTheDocument();
 });
 
 test("retrieves data from API server and displays correctly", () => {
-  mockFetch(Promise.resolve(EXAMPLE_GPU_DATA_1));
+  mockFetch(EXAMPLE_GPU_DATA_1);
   jest.useFakeTimers();
 
   render(<App />);
   cleanup();
   render(<App />);
 
-  const gpu = screen.getByText("NVIDIA GeForce GT 1030");
+  const gpu = screen.getByText("1030");
   expect(gpu).toBeInTheDocument();
 
   EXAMPLE_GPU_DATA_1.forEach((row) => {
@@ -55,7 +56,7 @@ test("retrieves data from API server and displays correctly", () => {
 
 test("data is fetched again after refresh interval", () => {
   var data = EXAMPLE_GPU_DATA_1;
-  mockFetch(Promise.resolve(EXAMPLE_GPU_DATA_1));
+  mockFetch(EXAMPLE_GPU_DATA_1);
   jest.useFakeTimers();
   jest.spyOn(global, "setInterval");
 
@@ -64,13 +65,13 @@ test("data is fetched again after refresh interval", () => {
 
   data[0].gpu_temp = 100;
 
-  jest.advanceTimersByTime(6000);
+  jest.advanceTimersByTime(REFRESH_INTERVAL + 1);
 
   const new_temp = screen.getByText("100 °C");
   expect(new_temp).toBeInTheDocument();
 });
 
-const mockFetch = (s: Promise<GPUStats[]>) => {
+const mockFetch = (s: GPUStats[]) => {
   global.fetch = jest.fn(() => {
     return {
       json: () => s,

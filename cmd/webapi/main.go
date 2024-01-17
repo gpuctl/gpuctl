@@ -1,10 +1,9 @@
-package api
+package main
 
 import (
 	"fmt"
 	"log"
 	"net/http"
-	"sync"
 )
 
 const GPU_STATS string = `[
@@ -15,7 +14,7 @@ const GPU_STATS string = `[
 
 const API_URL string = "localhost:8000"
 
-func Main(wg *sync.WaitGroup) {
+func main() {
 	init_server()
 	for {
 		// Loop
