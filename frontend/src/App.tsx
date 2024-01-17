@@ -39,7 +39,7 @@ function App() {
               VRAM: {row.memory_used} GB, Temperature: {row.gpu_temp} °C
             </p>
           );
-        }) ?? <p>Retrieving data...</p>}
+        }) ?? <p>Retrieving data from API server...</p>}
       </header>
     </div>
   );
