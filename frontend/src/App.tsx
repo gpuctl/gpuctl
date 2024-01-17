@@ -1,8 +1,8 @@
-import React from "react";
 import "./App.css";
-import { useAsync } from "./Utils/Hooks";
+import { useJarJar, useOnce } from "./Utils/Hooks";
 
 const API_URL = "http://localhost:8000";
+const REFRESH_INTERVAL = 5000;
 
 type GPUStats = {
   gpu_name: string;
@@ -21,7 +21,11 @@ const retrieveAllStats: () => Promise<GPUStats[]> = async () =>
   (await fetch(API_URL + "/api/stats/all")).json();
 
 function App() {
-  const stats = useAsync(retrieveAllStats());
+  const [stats, updateStats] = useJarJar(retrieveAllStats);
+
+  useOnce(() => {
+    setInterval(updateStats, REFRESH_INTERVAL);
+  });
 
   return (
     <div className="App">
