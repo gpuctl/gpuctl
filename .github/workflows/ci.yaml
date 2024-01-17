@@ -31,6 +31,8 @@ jobs:
           name: coverage-profile
           path: cover.out
           retention-days: 1
+      - name: Print function coverage values
+        run: go tool cover -func=cover.out
         # coverage check currently only checks total coverage
       - name: Check for insufficient coverage
         run: test 80 -le $(go tool cover -func=cover.out | grep total | grep -Eo "[[:space:]][[:digit:]]+")
