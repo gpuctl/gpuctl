@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"time"
 	"github.com/gpuctl/gpuctl/internal/status/handlers"
+	"time"
 )
 
 func main() {
