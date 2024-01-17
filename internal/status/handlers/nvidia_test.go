@@ -1,11 +1,11 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"os"
 	"path/filepath"
-	"reflect"
 	"strings"
 	"testing"
 )
@@ -62,9 +62,9 @@ func TestNvidiaSmiXMLParsing(t *testing.T) {
 			expected = dump
 		}
 
-		j = append(j, 10) // HACK: annoying newline at the end of stored data...
-		if !reflect.DeepEqual(expected, j) {
-			t.Errorf("Parsed data did not match expected output (file %s): %v != %v", fileloc, j, expected)
+		j = append(j, '\n') // HACK: annoying newline at the end of stored data...
+		if !bytes.Equal(expected, j) {
+			t.Errorf("Parsed data did not match expected output (file %s):\n%s!=\n%s", fileloc, j, expected)
 		}
 
 	}

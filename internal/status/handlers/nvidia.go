@@ -13,6 +13,10 @@ const (
 	NvidiaNotApplicable = "N/A"
 )
 
+var (
+	ErrBadField = errors.New("Parsing of data fields failed.")
+)
+
 // NvidiaSmiLog was generated 2024-01-16 15:52:50 by https://xml-to-go.github.io/ in Ukraine.
 // TODO: this data structure does not support multiple GPUs nor any processes
 type NvidiaSmiLog struct {
@@ -293,7 +297,7 @@ func (xml NvidiaSmiLog) FilterStatus() (status.GPUStatusPacket, error) {
 
 	// report back catastrophic failures
 	if isDirty {
-		return res, errors.New("Parsing of data fields failed.")
+		return res, ErrBadField
 	}
 
 	return res, nil
@@ -301,29 +305,29 @@ func (xml NvidiaSmiLog) FilterStatus() (status.GPUStatusPacket, error) {
 
 // Helper function for extracting GPU data such as available memory and fan speed
 func parseUIntWithUnit(input string) (uint64, error) {
-	parts := strings.Split(input, " ")
+	part, _, _ := strings.Cut(input, " ")
 	// Interpret N/A as 0
-	if parts[0] == NvidiaNotApplicable {
+	if part == NvidiaNotApplicable {
 		return 0, nil
 	}
-	return strconv.ParseUint(parts[0], 10, 0)
+	return strconv.ParseUint(part, 10, 0)
 }
 
 // Helper function for extracting GPU data such as temp
 func parseIntWithUnit(input string) (int64, error) {
-	parts := strings.Split(input, " ")
+	part, _, _ := strings.Cut(input, " ")
 	// Interpret N/A as 0
-	if parts[0] == NvidiaNotApplicable {
+	if part == NvidiaNotApplicable {
 		return 0, nil
 	}
-	return strconv.ParseInt(parts[0], 10, 0)
+	return strconv.ParseInt(part, 10, 0)
 }
 
 // Helper function to unmarshal Nvidia XML dump
 func ParseNvidiaSmi(input []byte) (NvidiaSmiLog, error) {
 	var result NvidiaSmiLog
 	if e := xml.Unmarshal(input, &result); e != nil {
-		return result, e
+		return NvidiaSmiLog{}, e
 	}
 	return result, nil
 }
