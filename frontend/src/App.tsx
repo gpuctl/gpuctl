@@ -4,18 +4,21 @@ import { useAsync } from "./Utils/Hooks";
 
 const API_URL = "http://localhost:8000";
 
-type Stats = {
-  clock_speed: number;
-  util: number;
-  gpu_mem: number;
-  gpu_mem_used: number;
+type GPUStats = {
+  gpu_name: string;
+  brand: string;
+  driver_version: string;
+  memory_total: number;
+
+  memory_util: number;
+  gpu_util: number;
+  memory_used: number;
+  fan_speed: number;
+  gpu_temp: number;
 };
 
-const retrieveAllStats: () => Promise<Stats[]> = async () => {
-  const stats = await fetch(API_URL + "/api/stats/all", { mode: "cors" });
-  const jason = await stats.json();
-  return jason;
-};
+const retrieveAllStats: () => Promise<GPUStats[]> = async () =>
+  (await fetch(API_URL + "/api/stats/all")).json();
 
 function App() {
   const stats = useAsync(retrieveAllStats());
@@ -27,9 +30,9 @@ function App() {
         {stats?.map((row, i) => {
           return (
             <p key={i}>
-              ID: {i}, Core Utilisation: {row.util}%, Clock Speed:{" "}
-              {row.clock_speed} MHz, VRAM: {row.gpu_mem} GB, Used VRAM:{" "}
-              {row.gpu_mem_used}
+              ID: {i}, Name: {row.gpu_name}, Core Utilisation: {row.gpu_util}%,
+              VRAM: {row.memory_total} GB, Used VRAM: {row.memory_used},
+              Temperature: {row.gpu_temp}
             </p>
           );
         })}
