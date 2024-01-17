@@ -2,12 +2,12 @@ import "./App.css";
 import { useJarJar, useOnce } from "./Utils/Hooks";
 
 const API_URL = "http://localhost:8000";
-const REFRESH_INTERVAL = 5000;
+export const REFRESH_INTERVAL = 5000;
 
-type GPUStats = {
+export type GPUStats = {
   gpu_name: string;
-  brand: string;
-  driver_version: string;
+  gpu_brand: string;
+  driver_ver: string;
   memory_total: number;
 
   memory_util: number;
@@ -35,11 +35,11 @@ function App() {
           return (
             <p key={i}>
               ID: {i}, Name: {row.gpu_name}, Core Utilisation: {row.gpu_util}%,
-              VRAM: {row.memory_total} GB, Used VRAM: {row.memory_used},
-              Temperature: {row.gpu_temp}
+              VRAM Util: {row.memory_util}%, VRAM: {row.memory_total} GB, Used
+              VRAM: {row.memory_used} GB, Temperature: {row.gpu_temp} °C
             </p>
           );
-        })}
+        }) ?? <p>Retrieving data...</p>}
       </header>
     </div>
   );
