@@ -35,7 +35,7 @@ jobs:
         run: go tool cover -func=cover.out
         # coverage check currently only checks total coverage
       - name: Check for insufficient coverage
-        run: test 80 -le $(go tool cover -func=cover.out | grep total | grep -Eo "[[:space:]][[:digit:]]+")
+        run: test 80 -le $(go tool cover -func=cover.out | tail -n 1 | grep -Eo "[[:space:]][[:digit:]]+")
       - name: Install Frontend Dependencies
         run: |
           cd ./frontend
