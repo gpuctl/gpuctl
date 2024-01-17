@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/gpuctl/gpuctl/internal/stats/brands"
+	"github.com/gpuctl/gpuctl/internal/status/handlers"
 	"encoding/json"
 )
 
 func main() {
 	// Just get the GPU data and print it in JSON
-	gpuHandler := brands.NvidiaGPUHandler{}
+	gpuHandler := handlers.NvidiaGPUHandler{}
 	res, err := gpuHandler.GetGPUStatus()
 	if err != nil {
 		fmt.Printf("Failed to parse: %v\n", err)

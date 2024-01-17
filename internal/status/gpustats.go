@@ -1,11 +1,11 @@
-package stats
+package status
 
-type GPUStatsPacket struct {
+type GPUStatusPacket struct {
 	// Contextual information
 	Name          string `json:"gpu_name"`
 	Brand         string `json:"gpu_brand"`
 	DriverVersion string `json:"driver_ver"`
-	MemoryTotal   uint64 `json:memory_total"`
+	MemoryTotal   uint64 `json:"memory_total"`
 
 	// Temporal statistics
 	MemoryUtilisation uint64 `json:"memory_util"` // Percentage of memory used

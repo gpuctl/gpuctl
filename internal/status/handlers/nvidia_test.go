@@ -1,4 +1,4 @@
-package brands
+package handlers
 
 import (
     "os"
