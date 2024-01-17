@@ -2,6 +2,8 @@ import React from "react";
 import "./App.css";
 import { useAsync } from "./Utils/Hooks";
 
+const API_URL = "http://localhost:8000";
+
 type Stats = {
   clock_speed: number;
   util: number;
@@ -10,7 +12,9 @@ type Stats = {
 };
 
 const retrieveAllStats: () => Promise<Stats[]> = async () => {
-  return [{ clock_speed: 0, util: 0, gpu_mem: 0, gpu_mem_used: 0 }];
+  const stats = await fetch(API_URL + "/api/stats/all", { mode: "cors" });
+  const jason = await stats.json();
+  return jason;
 };
 
 function App() {
