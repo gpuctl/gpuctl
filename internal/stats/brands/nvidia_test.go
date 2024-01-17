@@ -2,9 +2,12 @@ package brands
 
 import (
     "os"
+    "reflect"
+    "strings"
     "io/ioutil"
     "path/filepath"
     "testing"
+    "encoding/json"
 )
 
 const (
@@ -27,12 +30,40 @@ func TestNvidiaSmiXMLParsing(t *testing.T) {
         if err != nil {
             t.Fatalf("Could not read test data: %v", err)
         }
-        if _, err := ParseNvidiaSmi(dump); err != nil {
-            t.Errorf("Could not parse the nvidia-smi dump at %s", fileloc)
+        res, err := ParseNvidiaSmi(dump)
+        if err != nil {
+            t.Errorf("Could not parse the nvidia-smi dump at %s: %v", fileloc, err)
+            continue
         }
-    }
-}
 
-func TestNvidiaSmiParsingExtractsCorrectInformation(t *testing.T) {
-    t.Fail()
+        r, err := res.FilterStatus()
+        if err != nil {
+            t.Errorf("Could not produce filtered status packet from nvidia-smi dump: %v (file %s) %v", err, fileloc, r)
+            continue
+        }
+
+        j, err := json.Marshal(r)
+        if err != nil {
+            t.Errorf("Could not marshal status packet to JSON: %v (file %s)", err, fileloc)
+            continue
+        }
+        // Read expected json
+        var expected []byte
+
+        {
+            sp := strings.Split(filename, ".")
+            resloc := testDataRoot + "/" + sp[0] + ".json"
+            dump, err := ioutil.ReadFile(resloc)
+            if err != nil {
+                t.Fatalf("Could not read test result data at %s: %v", resloc, err)
+            }
+            expected = dump
+        }
+
+        j = append(j, 10) // HACK: annoying newline at the end of stored data...
+        if !reflect.DeepEqual(expected, j) {
+            t.Errorf("Parsed data did not match expected output (file %s): %v != %v", fileloc, j, expected)
+        }
+
+    }
 }

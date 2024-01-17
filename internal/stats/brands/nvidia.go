@@ -2,8 +2,15 @@ package brands
 
 import (
 	"encoding/xml"
+	"errors"
 	"github.com/gpuctl/gpuctl/internal/stats"
 	"os/exec"
+	"strconv"
+	"strings"
+)
+
+const (
+	NvidiaNotApplicable = "N/A"
 )
 
 // NvidiaSmiLog was generated 2024-01-16 15:52:50 by https://xml-to-go.github.io/ in Ukraine.
@@ -241,7 +248,7 @@ type gpu struct {
 	} `xml:"supported_clocks"`
 	// TODO: `Processes` is wrong, need to accomodate running processes
 	Processes          processes `xml:"processes"`
-	AccountedProcesses string `xml:"accounted_processes"`
+	AccountedProcesses string    `xml:"accounted_processes"`
 }
 
 type processes struct {
@@ -258,29 +265,64 @@ type processes struct {
 	} `xml:"process_info"`
 }
 
-
 // Filter down the relevant information from our nvidia-smi dump
-func (xml NvidiaSmiLog) FilterStatus() stats.GPUStatsPacket {
-	// TODO: do parsing for these fields
-	var fanSpeed uint32
-	var memoryTotal uint64
-	var memoryUsed uint64
-	var temp float32
-	return stats.GPUStatsPacket{
-		Name:          xml.Gpu.ProductName,
-		Brand:         xml.Gpu.ProductBrand,
-		DriverVersion: xml.DriverVersion,
-		MemoryTotal:   memoryTotal,
-		MemoryUsed:    memoryUsed,
-		FanSpeed:      fanSpeed,
-		Temp:          temp}
+func (xml NvidiaSmiLog) FilterStatus() (stats.GPUStatsPacket, error) {
+	fanSpeed, err := parseUIntWithUnit(xml.Gpu.FanSpeed)
+	isDirty := err != nil
+	memoryTotal, err := parseUIntWithUnit(xml.Gpu.FbMemoryUsage.Total)
+	isDirty = isDirty || err != nil
+	memoryUsed, err := parseUIntWithUnit(xml.Gpu.FbMemoryUsage.Used)
+	isDirty = isDirty || err != nil
+	temp, err := parseIntWithUnit(xml.Gpu.Temperature.GpuTemp)
+	isDirty = isDirty || err != nil
+	gpuUtil, err := parseUIntWithUnit(xml.Gpu.Utilization.GpuUtil)
+	isDirty = isDirty || err != nil
+	memUtil, err := parseUIntWithUnit(xml.Gpu.Utilization.MemoryUtil)
+	isDirty = isDirty || err != nil
+
+	res := stats.GPUStatsPacket{
+		Name:              xml.Gpu.ProductName,
+		Brand:             xml.Gpu.ProductBrand,
+		DriverVersion:     xml.DriverVersion,
+		MemoryTotal:       memoryTotal,
+		MemoryUtilisation: memUtil,
+		GPUUtilisation:    gpuUtil,
+		MemoryUsed:        memoryUsed,
+		FanSpeed:          fanSpeed,
+		Temp:              temp}
+
+	// report back catastrophic failures
+	if isDirty {
+		return res, errors.New("Parsing of data fields failed.")
+	}
+
+	return res, nil
+}
+
+// Helper function for extracting GPU data such as available memory and fan speed
+func parseUIntWithUnit(input string) (uint64, error) {
+	parts := strings.Split(input, " ")
+	// Interpret N/A as 0
+	if parts[0] == NvidiaNotApplicable {
+		return 0, nil
+	}
+	return strconv.ParseUint(parts[0], 10, 0)
+}
+
+// Helper function for extracting GPU data such as temp
+func parseIntWithUnit(input string) (int64, error) {
+	parts := strings.Split(input, " ")
+	// Interpret N/A as 0
+	if parts[0] == NvidiaNotApplicable {
+		return 0, nil
+	}
+	return strconv.ParseInt(parts[0], 10, 0)
 }
 
 // Helper function to unmarshal Nvidia XML dump
 func ParseNvidiaSmi(input []byte) (NvidiaSmiLog, error) {
 	var result NvidiaSmiLog
 	if e := xml.Unmarshal(input, &result); e != nil {
-		// TODO: Graceful failing
 		return result, e
 	}
 	return result, nil
@@ -290,9 +332,20 @@ func ParseNvidiaSmi(input []byte) (NvidiaSmiLog, error) {
 func GetNvidiaGPUStatus() (NvidiaSmiLog, error) {
 	output, err := exec.Command("nvidia-smi", "-q", "-x").Output()
 	if err != nil {
-		// TODO: Graceful failing
 		return NvidiaSmiLog{}, err
 	}
 
 	return ParseNvidiaSmi(output)
+}
+
+// Dummy struct to act as our adapter
+type NvidiaGPUHandler struct{}
+
+// Run the whole pipeline of getting GPU information
+func (h *NvidiaGPUHandler) GetGPUStatus() (stats.GPUStatsPacket, error) {
+	smi, err := GetNvidiaGPUStatus()
+	if err != nil {
+		return stats.GPUStatsPacket{}, err
+	}
+	return smi.FilterStatus()
 }
