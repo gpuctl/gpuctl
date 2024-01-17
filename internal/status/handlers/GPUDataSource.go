@@ -5,5 +5,5 @@ import (
 )
 
 type GPUDataSource interface {
-    GetGPUStatus() (status.GPUStatusPacket, error)
+	GetGPUStatus() (status.GPUStatusPacket, error)
 }
