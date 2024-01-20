@@ -1,6 +1,6 @@
 import "./App.css";
 import { useJarJar, useOnce } from "./Utils/Hooks";
-import { Validated, success, velim } from "./Utils/Utils";
+import { Validated, success, validationElim } from "./Utils/Utils";
 
 const API_URL = "http://localhost:8000";
 export const REFRESH_INTERVAL = 5000;
@@ -34,9 +34,8 @@ function App() {
     <div className="App">
       <header className="App-header">
         <p>Welcome to the GPU Control Room!</p>
-        {velim(
-          stats,
-          (l) => (
+        {validationElim(stats, {
+          success: (l) => (
             <div>
               {l.map((row, i) => {
                 return (
@@ -51,10 +50,9 @@ function App() {
               })}
             </div>
           ),
-          () => (
-            <p>Retrieving data from API server...</p>
-          )
-        )}
+          loading: () => <p>Retrieving data from API server...</p>,
+          failure: () => <p>Something has gone wrong!</p>,
+        })}
       </header>
     </div>
   );

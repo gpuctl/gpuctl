@@ -41,19 +41,15 @@ enum VTag {
 export type Success<T> = {
   tag: VTag.Success;
   data: T;
-  error: null;
 };
 
 export type Failure = {
   tag: VTag.Failure;
-  data: null;
   error: Error;
 };
 
 export type Loading = {
   tag: VTag.Loading;
-  data: null;
-  error: null;
 };
 
 export type Validated<T> = Success<T> | Failure;
@@ -63,39 +59,39 @@ export type Validation<T> = Validated<T> | Loading;
 export const success = <T,>(x: T): Success<T> => ({
   tag: VTag.Success,
   data: x,
-  error: null,
 });
 
 export const failure = (e: Error): Failure => ({
   tag: VTag.Failure,
-  data: null,
   error: e,
 });
 
 export const loading = (): Loading => ({
   tag: VTag.Loading,
-  data: null,
-  error: null,
 });
+
+type ValidationElim<T, U> = {
+  success: (x: T) => U;
+  loading: () => U;
+  failure: (e: Error) => U;
+};
 
 /**
  * Eliminate a validation
  */
-export function velim<T, U>(
+export function validationElim<T, U>(
   v: Validation<T>,
-  success: (x: T) => U,
-  otherwise: () => U,
-  error: ((e: Error) => U) | null = null
-) {
+  motive: ValidationElim<T, U>
+): U {
   switch (v.tag) {
     case VTag.Success: {
-      return success(v.data);
+      return motive.success(v.data);
     }
     case VTag.Failure: {
-      return error === null ? otherwise() : error(v.error);
+      return motive.failure(v.error);
     }
     case VTag.Loading: {
-      return otherwise();
+      return motive.loading();
     }
   }
 }
