@@ -38,9 +38,11 @@ func HandleStatusSubmission(writer http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		http.Error(
-			writer, "Expected JSON for status submission",
+			writer, "Malformed request body detected",
 			http.StatusBadRequest,
 		)
+
+		return
 	}
 
 	packet, err := buildStatusObject(body)
@@ -50,6 +52,8 @@ func HandleStatusSubmission(writer http.ResponseWriter, request *http.Request) {
 			writer, "JSON deserialisation was not successful",
 			http.StatusBadRequest,
 		)
+
+		return
 	}
 
 	err = handleGPUStatusObject(packet)
@@ -59,6 +63,8 @@ func HandleStatusSubmission(writer http.ResponseWriter, request *http.Request) {
 			writer, "There was an error while handling the status object",
 			http.StatusInternalServerError,
 		)
+
+		return
 	}
 
 	writer.WriteHeader(http.StatusOK)
