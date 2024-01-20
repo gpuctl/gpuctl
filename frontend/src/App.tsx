@@ -1,5 +1,6 @@
 import "./App.css";
 import { useJarJar, useOnce } from "./Utils/Hooks";
+import { Validated, success, velim } from "./Utils/Utils";
 
 const API_URL = "http://localhost:8000";
 export const REFRESH_INTERVAL = 5000;
@@ -17,8 +18,10 @@ export type GPUStats = {
   gpu_temp: number;
 };
 
-const retrieveAllStats: () => Promise<GPUStats[]> = async () =>
-  (await fetch(API_URL + "/api/stats/all")).json();
+// Currently does not attempt to do any validation of the returned GPU stats,
+// or indeed handle errors that might be thrown by the Promises
+const retrieveAllStats: () => Promise<Validated<GPUStats[]>> = async () =>
+  success(await (await fetch(API_URL + "/api/stats/all")).json());
 
 function App() {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
@@ -31,18 +34,26 @@ function App() {
     <div className="App">
       <header className="App-header">
         <p>Welcome to the GPU Control Room!</p>
-        {stats?.map((row, i) => {
-          return (
-            <p key={i}>
-              ID: {i}, Name: {row.gpu_name}, Core Utilisation: {row.gpu_util}%,
-              VRAM Util: {row.memory_util}%, VRAM: {row.memory_total} GB, Used
-              VRAM: {row.memory_used} GB, Temperature: {row.gpu_temp} °C
-            </p>
-          );
-        }) ?? (
-          <div>
+        {velim(
+          stats,
+          (l) => (
+            <div>
+              {l.map((row, i) => {
+                return (
+                  <p key={i}>
+                    ID: {i}, Name: {row.gpu_name}, Core Utilisation:{" "}
+                    {row.gpu_util}
+                    %, VRAM Util: {row.memory_util}%, VRAM: {row.memory_total}{" "}
+                    GB, Used VRAM: {row.memory_used} GB, Temperature:{" "}
+                    {row.gpu_temp} °C
+                  </p>
+                );
+              })}
+            </div>
+          ),
+          () => (
             <p>Retrieving data from API server...</p>
-          </div>
+          )
         )}
       </header>
     </div>

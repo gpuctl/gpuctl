@@ -1,14 +1,14 @@
 import { act } from "@testing-library/react";
 import { EffectCallback, useEffect, useState } from "react";
-import { discard } from "./Utils";
+import { Validated, Validation, discard, loading } from "./Utils";
 
 /**
  * Daniel named this
  */
 export const useJarJar = <T,>(
-  f: () => Promise<T | null>
-): [T | null, EffectCallback] => {
-  const [v, setV] = useState<T | null>(null);
+  f: () => Promise<Validated<T>>
+): [Validation<T>, EffectCallback] => {
+  const [v, setV] = useState<Validation<T>>(loading());
   const updateV = discard(async () => {
     const x = await f();
     act(() => setV(x));
@@ -25,7 +25,7 @@ export const useJarJar = <T,>(
  *
  * Returns 'null' until the promise returns.
  */
-export const useAsync = <T,>(p: Promise<T | null>): T | null =>
+export const useAsync = <T,>(p: Promise<Validated<T>>): Validation<T> =>
   useJarJar(() => p)[0];
 
 /**
