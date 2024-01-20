@@ -26,16 +26,17 @@ func PortToAddress(port int) string {
 	return fmt.Sprintf(":%d", port)
 }
 
-func GetConfigurationFromPath(configPath string) (Configuration, error) {
-	var config Configuration
+func IsFileEmpty(path string) (bool, error) {
+	fileInfo, err := os.Stat(path)
 
-	if _, err := toml.DecodeFile(configPath, &config); err != nil {
-		return DefaultConfiguration(), err
+	if err != nil {
+		return false, err
 	}
-	return config, nil
+
+	return fileInfo.Size() == 0, nil
 }
 
-func GetConfiguration() (Configuration, error) {
+func GetConfiguration(filename string) (Configuration, error) {
 	exePath, err := os.Executable()
 
 	if err != nil {
@@ -43,7 +44,22 @@ func GetConfiguration() (Configuration, error) {
 	}
 
 	exeDir := filepath.Dir(exePath)
-	configPath := filepath.Join(exeDir, "config.toml")
+	configPath := filepath.Join(exeDir, filename)
 
-	return GetConfigurationFromPath(configPath)
+	fileEmpty, err := IsFileEmpty(configPath)
+
+	if err != nil {
+		return DefaultConfiguration(), err
+	}
+
+	if fileEmpty {
+		return DefaultConfiguration(), nil
+	}
+
+	var config Configuration
+
+	if _, err := toml.DecodeFile(configPath, &config); err != nil {
+		return DefaultConfiguration(), nil
+	}
+	return config, nil
 }

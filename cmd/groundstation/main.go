@@ -11,7 +11,7 @@ import (
 func main() {
 	fmt.Print("Hey, world :3")
 
-	configuration, err := config.GetConfiguration()
+	configuration, err := config.GetConfiguration("config.toml")
 
 	if err != nil {
 		// TODO: Using logging library for auditing, fail soft
