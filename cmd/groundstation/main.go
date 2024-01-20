@@ -2,10 +2,14 @@ package main
 
 import (
 	"fmt"
-	"github.com/gpuctl/gpuctl/internal/incrementer"
+	"net/http"
+
+	"github.com/gpuctl/gpuctl/cmd/groundstation/remote"
 )
 
 func main() {
-	fmt.Println("Hello from groundstation")
-	fmt.Println(incrementer.Inc(4))
+	fmt.Print("Hey, world :3")
+
+	http.HandleFunc("/api/remote", remote.HandleStatusSubmission)
+
 }
