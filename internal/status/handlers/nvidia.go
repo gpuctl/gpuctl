@@ -3,10 +3,11 @@ package handlers
 import (
 	"encoding/xml"
 	"errors"
-	"github.com/gpuctl/gpuctl/internal/status"
 	"os/exec"
 	"strconv"
 	"strings"
+
+	"github.com/gpuctl/gpuctl/internal/status"
 )
 
 const (
@@ -271,17 +272,17 @@ type processes struct {
 
 // Filter down the relevant information from our nvidia-smi dump
 func (xml NvidiaSmiLog) FilterStatus() (status.GPUStatusPacket, error) {
-	fanSpeed, err := parseUIntWithUnit(xml.Gpu.FanSpeed)
+	fanSpeed, err := parseFloatWithUnit(xml.Gpu.FanSpeed)
 	isDirty := err != nil
 	memoryTotal, err := parseUIntWithUnit(xml.Gpu.FbMemoryUsage.Total)
 	isDirty = isDirty || err != nil
-	memoryUsed, err := parseUIntWithUnit(xml.Gpu.FbMemoryUsage.Used)
+	memoryUsed, err := parseFloatWithUnit(xml.Gpu.FbMemoryUsage.Used)
 	isDirty = isDirty || err != nil
-	temp, err := parseIntWithUnit(xml.Gpu.Temperature.GpuTemp)
+	temp, err := parseFloatWithUnit(xml.Gpu.Temperature.GpuTemp)
 	isDirty = isDirty || err != nil
-	gpuUtil, err := parseUIntWithUnit(xml.Gpu.Utilization.GpuUtil)
+	gpuUtil, err := parseFloatWithUnit(xml.Gpu.Utilization.GpuUtil)
 	isDirty = isDirty || err != nil
-	memUtil, err := parseUIntWithUnit(xml.Gpu.Utilization.MemoryUtil)
+	memUtil, err := parseFloatWithUnit(xml.Gpu.Utilization.MemoryUtil)
 	isDirty = isDirty || err != nil
 
 	res := status.GPUStatusPacket{
@@ -321,6 +322,15 @@ func parseIntWithUnit(input string) (int64, error) {
 		return 0, nil
 	}
 	return strconv.ParseInt(part, 10, 0)
+}
+
+func parseFloatWithUnit(input string) (float64, error) {
+	part, _, _ := strings.Cut(input, " ")
+	// Interpret N/A as 0
+	if part == NvidiaNotApplicable {
+		return 0, nil
+	}
+	return strconv.ParseFloat(part, 10)
 }
 
 // Helper function to unmarshal Nvidia XML dump
