@@ -1,6 +1,7 @@
 import React from "react";
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, renderHook, screen } from "@testing-library/react";
 import { default as App, GPUStats, REFRESH_INTERVAL } from "./App";
+import { execArgv } from "process";
 
 test("renders welcome message", () => {
   mockFetch(EXAMPLE_GPU_DATA_1);
@@ -16,13 +17,18 @@ after fetch succeeds, no longer show that message`, () => {
   mockFetch(EXAMPLE_GPU_DATA_1);
   jest.useFakeTimers();
 
-  render(<App />);
+  console.log("CCCCC");
+
+  const view = render(<App />);
+
+  console.log("DDDDD");
 
   const status = screen.getByText("Retrieving data from API server...");
   expect(status).toBeInTheDocument();
 
-  cleanup();
-  render(<App />);
+  console.log("AAAAA");
+  view.rerender(<App />);
+  console.log("BBBBB");
 
   const new_status = screen.getByText("Retrieving data from API server...");
   expect(new_status).not.toBeInTheDocument();
@@ -32,50 +38,50 @@ test("retrieves data from API server and displays correctly", () => {
   mockFetch(EXAMPLE_GPU_DATA_1);
   jest.useFakeTimers();
 
-  render(<App />);
-  cleanup();
-  render(<App />);
+  const view = render(<App />);
+  view.rerender(<App />);
 
-  const gpu = screen.getByText("1030");
+  const gpu = screen.getByText("GT 1030", { exact: false });
   expect(gpu).toBeInTheDocument();
 
   EXAMPLE_GPU_DATA_1.forEach((row) => {
     const name = screen.getByText(row.gpu_name);
     expect(name).toBeInTheDocument();
 
-    const core_util = screen.getByText(row.gpu_util + "%");
+    const core_util = screen.getByText(row.gpu_util + "%", { exact: false });
     expect(core_util).toBeInTheDocument();
 
-    const memory_util = screen.getByText(row.memory_util + "%");
+    const memory_util = screen.getByText(row.memory_util + "%", {
+      exact: false,
+    });
     expect(memory_util).toBeInTheDocument();
 
-    const temp = screen.getByText(row.gpu_temp + " °C");
+    const temp = screen.getByText(row.gpu_temp + " °C", { exact: false });
     expect(temp).toBeInTheDocument();
   });
 });
 
 test("data is fetched again after refresh interval", () => {
   var data = EXAMPLE_GPU_DATA_1;
-  mockFetch(EXAMPLE_GPU_DATA_1);
+  mockFetch(data);
   jest.useFakeTimers();
   jest.spyOn(global, "setInterval");
+  const view = render(<App />);
 
-  const old_temp = screen.getByText("31 °C");
+  const old_temp = screen.getByText("31 °C", { exact: false });
   expect(old_temp).toBeInTheDocument();
-
   data[0].gpu_temp = 100;
-
   jest.advanceTimersByTime(REFRESH_INTERVAL + 1);
-
-  const new_temp = screen.getByText("100 °C");
+  view.rerender(<App />);
+  const new_temp = screen.getByText("100 °C", { exact: false });
   expect(new_temp).toBeInTheDocument();
 });
 
 const mockFetch = (s: GPUStats[]) => {
   global.fetch = jest.fn(() => {
-    return {
-      json: () => s,
-    };
+    return Promise.resolve({
+      json: () => Promise.resolve(s),
+    });
   }) as jest.Mock;
 };
 

@@ -1,5 +1,6 @@
 import "./App.css";
 import { useJarJar, useOnce } from "./Utils/Hooks";
+import { inlineLog } from "./Utils/Utils";
 
 const API_URL = "http://localhost:8000";
 export const REFRESH_INTERVAL = 5000;
@@ -17,8 +18,14 @@ export type GPUStats = {
   gpu_temp: number;
 };
 
-const retrieveAllStats: () => Promise<GPUStats[]> = async () =>
-  (await fetch(API_URL + "/api/stats/all")).json();
+const retrieveAllStats: () => Promise<GPUStats[]> = async () => {
+  const yeow = fetch(API_URL + "/api/stats/all");
+  console.log(yeow);
+  const yeow2 = await yeow;
+  console.log(yeow2);
+  return yeow2.json();
+};
+// (await fetch(API_URL + "/api/stats/all")).json();
 
 function App() {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
@@ -34,12 +41,18 @@ function App() {
         {stats?.map((row, i) => {
           return (
             <p key={i}>
-              ID: {i}, Name: {row.gpu_name}, Core Utilisation: {row.gpu_util}%,
-              VRAM Util: {row.memory_util}%, VRAM: {row.memory_total} GB, Used
-              VRAM: {row.memory_used} GB, Temperature: {row.gpu_temp} °C
+              ID: {i}, Name: {inlineLog(row.gpu_name)}, Core Utilisation:{" "}
+              {row.gpu_util}%, VRAM Util: {row.memory_util}%, VRAM:{" "}
+              {row.memory_total} GB, Used VRAM: {row.memory_used} GB,
+              Temperature: {row.gpu_temp} °C
             </p>
           );
-        }) ?? <p>Retrieving data from API server...</p>}
+        }) ?? (
+          <div>
+            <p>Retrieving data from API server...</p>
+            <p>NVIDIA yeow</p>
+          </div>
+        )}
       </header>
     </div>
   );

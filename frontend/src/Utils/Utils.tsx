@@ -6,3 +6,8 @@ export const discard = <T,>(f: () => Promise<T>) => {
     f();
   };
 };
+
+export const inlineLog = <T,>(x: T): T => {
+  console.log(x);
+  return x;
+};
