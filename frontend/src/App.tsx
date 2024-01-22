@@ -1,6 +1,7 @@
 import "./App.css";
 import { useJarJar, useOnce } from "./Utils/Hooks";
 import { Validated, success, validationElim } from "./Utils/Utils";
+import { ChakraProvider } from "@chakra-ui/react";
 
 const API_URL = "http://localhost:8000";
 export const REFRESH_INTERVAL = 5000;
@@ -31,30 +32,32 @@ function App() {
   });
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <p>Welcome to the GPU Control Room!</p>
-        {validationElim(stats, {
-          success: (l) => (
-            <div>
-              {l.map((row, i) => {
-                return (
-                  <p key={i}>
-                    ID: {i}, Name: {row.gpu_name}, Core Utilisation:{" "}
-                    {row.gpu_util}
-                    %, VRAM Util: {row.memory_util}%, VRAM: {row.memory_total}{" "}
-                    GB, Used VRAM: {row.memory_used} GB, Temperature:{" "}
-                    {row.gpu_temp} °C
-                  </p>
-                );
-              })}
-            </div>
-          ),
-          loading: () => <p>Retrieving data from API server...</p>,
-          failure: () => <p>Something has gone wrong!</p>,
-        })}
-      </header>
-    </div>
+    <ChakraProvider>
+      <div className="App">
+        <header className="App-header">
+          <p>Welcome to the GPU Control Room!</p>
+          {validationElim(stats, {
+            success: (l) => (
+              <div>
+                {l.map((row, i) => {
+                  return (
+                    <p key={i}>
+                      ID: {i}, Name: {row.gpu_name}, Core Utilisation:{" "}
+                      {row.gpu_util}
+                      %, VRAM Util: {row.memory_util}%, VRAM: {row.memory_total}{" "}
+                      GB, Used VRAM: {row.memory_used} GB, Temperature:{" "}
+                      {row.gpu_temp} °C
+                    </p>
+                  );
+                })}
+              </div>
+            ),
+            loading: () => <p>Retrieving data from API server...</p>,
+            failure: (_) => <p>Something has gone wrong!</p>,
+          })}
+        </header>
+      </div>
+    </ChakraProvider>
   );
 }
 

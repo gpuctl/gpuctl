@@ -70,7 +70,7 @@ export const loading = (): Loading => ({
   tag: VTag.Loading,
 });
 
-type ValidationElim<T, U> = {
+type ValidationMotive<T, U> = {
   success: (x: T) => U;
   loading: () => U;
   failure: (e: Error) => U;
@@ -81,7 +81,7 @@ type ValidationElim<T, U> = {
  */
 export function validationElim<T, U>(
   v: Validation<T>,
-  motive: ValidationElim<T, U>
+  motive: ValidationMotive<T, U>
 ): U {
   switch (v.tag) {
     case VTag.Success: {
