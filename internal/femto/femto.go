@@ -13,10 +13,6 @@ type Femto struct {
 	reqNo atomic.Uint64
 }
 
-func (f *Femto) ListenAndServe(addr string) error {
-	return http.ListenAndServe(addr, f)
-}
-
 func (f *Femto) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f.mux.ServeHTTP(w, r)
 }
