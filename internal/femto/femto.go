@@ -14,7 +14,11 @@ type Femto struct {
 }
 
 func (f *Femto) ListenAndServe(addr string) error {
-	return http.ListenAndServe(addr, &f.mux)
+	return http.ListenAndServe(addr, f)
+}
+
+func (f *Femto) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	f.mux.ServeHTTP(w, r)
 }
 
 func OnPost[T any](f *Femto, pattern string, handle HandlerFunc[T]) {
@@ -41,7 +45,7 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Hand
 	decoder := json.NewDecoder(r.Body)
 	if err := decoder.Decode(&reqData); err != nil {
 		log.Info("Failed to unmarshal JSON", "error", err)
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "failed to decode json: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
