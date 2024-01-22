@@ -1,10 +1,21 @@
 import "./App.css";
+import { WorkstationTab } from "./Components/WorkstationTab";
 import { useJarJar, useOnce } from "./Utils/Hooks";
 import { Validated, success, validationElim } from "./Utils/Utils";
 import { ChakraProvider } from "@chakra-ui/react";
 
 const API_URL = "http://localhost:8000";
 export const REFRESH_INTERVAL = 5000;
+
+export type WorkStationGroup = {
+  name: string;
+  workStations: WorkStationData[];
+};
+
+export type WorkStationData = {
+  name: string;
+  gpus: GPUStats[];
+};
 
 export type GPUStats = {
   gpu_name: string;
@@ -41,6 +52,13 @@ function App() {
               <div>
                 {l.map((row, i) => {
                   return (
+                    <WorkstationTab
+                      key={i}
+                      name={`Workstation ${i}`}
+                      gpus={[row]}
+                    ></WorkstationTab>
+                  );
+                  /*(
                     <p key={i}>
                       ID: {i}, Name: {row.gpu_name}, Core Utilisation:{" "}
                       {row.gpu_util}
@@ -48,7 +66,7 @@ function App() {
                       GB, Used VRAM: {row.memory_used} GB, Temperature:{" "}
                       {row.gpu_temp} °C
                     </p>
-                  );
+                  );*/
                 })}
               </div>
             ),
