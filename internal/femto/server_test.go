@@ -40,9 +40,12 @@ func TestWrongMethod(t *testing.T) {
 
 	req := httptest.NewRequest("GET", "/postme", nil)
 	w := httptest.NewRecorder()
-
 	mux.ServeHTTP(w, req)
 	defer req.Body.Close()
+
+	data, err := io.ReadAll(w.Body)
+	assert.NoError(t, err)
+	assert.Contains(t, string(data), "Expected POST")
 
 	assert.Equal(t, w.Code, http.StatusMethodNotAllowed)
 }

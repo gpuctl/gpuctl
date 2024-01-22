@@ -31,8 +31,8 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Hand
 	log.Info("New Request", "method", r.Method, "url", r.URL, "from", r.RemoteAddr)
 
 	if r.Method != http.MethodPost {
-		log.Info("Wanted GET, returned 405")
-		http.Error(w, "Expected GET", http.StatusMethodNotAllowed)
+		log.Info("Wanted POST, returned 405")
+		http.Error(w, "Expected POST", http.StatusMethodNotAllowed)
 		return
 	}
 
