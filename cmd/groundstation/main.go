@@ -21,4 +21,5 @@ func main() {
 	http.HandleFunc("/api/remote", remote.HandleStatusSubmission)
 
 	http.ListenAndServe(config.PortToAddress(configuration.Server.Port), nil)
+
 }
