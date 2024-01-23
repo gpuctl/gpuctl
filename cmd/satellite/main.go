@@ -62,14 +62,14 @@ func (s *satellite) sendHeartBeat() error {
 }
 
 func (s *satellite) sendGPUStatus(gpuhandler gpustats.GPUDataSource) error {
-	packet, err := gpuhandler.GetGPUStatus()
+	stats, err := gpuhandler.GPUStats()
 
 	if err != nil {
 		return err
 	}
 
 	return femto.Post(
-		s.gsAddr+uplink.StatusSubmissionUrl,
-		packet,
+		s.gsAddr+uplink.GPUStatsUrl,
+		stats,
 	)
 }

@@ -1,6 +1,8 @@
 package database
 
-import "github.com/gpuctl/gpuctl/internal/gpustats"
+import (
+	"github.com/gpuctl/gpuctl/internal/uplink"
+)
 
 // define set of operations on the database that any provider will implement
 type Database interface {
@@ -8,8 +10,8 @@ type Database interface {
 	UpdateLastSeen(host string) error
 
 	// record a new data point for a satellite in the data store
-	AppendDataPoint(packet gpustats.GPUStatusPacket) error
+	AppendDataPoint(uplink.GPUStats) error
 
 	// get the latest metrics for all approved machines
-	LatestData() ([]gpustats.GPUStatusPacket, error)
+	LatestData() ([]uplink.GPUStats, error)
 }

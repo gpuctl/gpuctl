@@ -1,5 +1,7 @@
 package gpustats
 
+import "github.com/gpuctl/gpuctl/internal/uplink"
+
 type GPUDataSource interface {
-	GetGPUStatus() (GPUStatusPacket, error)
+	GPUStats() (uplink.GPUStats, error)
 }
