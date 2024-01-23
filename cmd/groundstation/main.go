@@ -39,7 +39,7 @@ func main() {
 
 type Server struct {
 	mux *femto.Femto
-	gs  groundstation
+	gs  *groundstation
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +48,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func NewServer() *Server {
 	mux := new(femto.Femto)
-	gs := groundstation{lastSeen: make(map[string]time.Time)}
+	gs := &groundstation{lastSeen: make(map[string]time.Time)}
 
 	/// Register routes.
 	femto.OnPost(mux, uplink.HeartbeatUrl, gs.heartbeat)
