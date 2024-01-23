@@ -1,9 +1,10 @@
 import "./App.css";
-import { WorkstationTab } from "./Components/WorkstationTab";
+import { WorkstationTab } from "./Components/WorkstationCard";
 import { useJarJar, useOnce } from "./Utils/Hooks";
 import { Validated, success, validationElim } from "./Utils/Utils";
 import {
   Box,
+  Center,
   ChakraProvider,
   Flex,
   Grid,
@@ -56,22 +57,25 @@ function App() {
       <div className="App">
         <Stack direction={"column"} spacing={30}>
           <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
-          <Box bg={useColorModeValue("gray.100", "gray.800")}>
-            <Stack direction={"column"} spacing={10}>
-              <div>
-                <Heading size="xl">Group 1: Personal</Heading>
-                {validationElim(stats, {
-                  success: (l) => (
-                    <SimpleGrid minChildWidth={500} spacing={20}>
-                      {l.map((row, i) => {
-                        return (
-                          <WorkstationTab
-                            key={i}
-                            name={`Workstation ${i}`}
-                            gpus={[row]}
-                          ></WorkstationTab>
-                        );
-                        /*(
+          <Center>
+            <Box w="95%" bg={useColorModeValue("gray.200", "gray.800")}>
+              <Stack direction={"column"} spacing={10}>
+                <Stack direction={"column"} spacing={5}>
+                  <Heading size="xl">Group 1: Personal</Heading>
+                  {validationElim(stats, {
+                    success: (l) => (
+                      <Center>
+                        <Box w="95%">
+                          <SimpleGrid minChildWidth={300} spacing={20}>
+                            {l.map((row, i) => {
+                              return (
+                                <WorkstationTab
+                                  key={i}
+                                  name={`Workstation ${i}`}
+                                  gpus={[row]}
+                                ></WorkstationTab>
+                              );
+                              /*(
                     <p key={i}>
                       ID: {i}, Name: {row.gpu_name}, Core Utilisation:{" "}
                       {row.gpu_util}
@@ -80,17 +84,20 @@ function App() {
                       {row.gpu_temp} °C
                     </p>
                   );*/
-                      })}
-                    </SimpleGrid>
-                  ),
-                  loading: () => <p>Retrieving data from API server...</p>,
-                  failure: (_) => <p>Something has gone wrong!</p>,
-                })}
-              </div>
-              <Heading>Group 2: Shared</Heading>
-              <Heading>Group 3: Remote</Heading>
-            </Stack>
-          </Box>
+                            })}
+                          </SimpleGrid>
+                        </Box>
+                      </Center>
+                    ),
+                    loading: () => <p>Retrieving data from API server...</p>,
+                    failure: (_) => <p>Something has gone wrong!</p>,
+                  })}
+                </Stack>
+                <Heading>Group 2: Shared</Heading>
+                <Heading>Group 3: Remote</Heading>
+              </Stack>
+            </Box>
+          </Center>
         </Stack>
       </div>
     </ChakraProvider>
