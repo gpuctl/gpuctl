@@ -3,7 +3,7 @@ package remote
 import (
 	"testing"
 
-	"github.com/gpuctl/gpuctl/internal/status"
+	"github.com/gpuctl/gpuctl/internal/gpustats"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -11,7 +11,7 @@ import (
 
 func TestBuildStatusObject(t *testing.T) {
 	validJSON := []byte(`{"gpu_name": "Test GPU", "gpu_brand": "BrandX", "driver_ver": "1.0", "memory_total": 4096, "memory_util": 50, "gpu_util": 50, "memory_used": 2048, "fan_speed": 70, "gpu_temp": 60}`)
-	expectedPacket := status.GPUStatusPacket{
+	expectedPacket := gpustats.GPUStatusPacket{
 		Name:              "Test GPU",
 		Brand:             "BrandX",
 		DriverVersion:     "1.0",

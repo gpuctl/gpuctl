@@ -5,27 +5,27 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gpuctl/gpuctl/internal/status"
+	"github.com/gpuctl/gpuctl/internal/gpustats"
 )
 
 // TODO: Remove this
-func buildStatusObject(jsonData []byte) (status.GPUStatusPacket, error) {
-	var handler status.GPUStatusPacket
+func buildStatusObject(jsonData []byte) (gpustats.GPUStatusPacket, error) {
+	var handler gpustats.GPUStatusPacket
 
 	err := json.Unmarshal(jsonData, &handler)
 	if err != nil {
-		return status.GPUStatusPacket{}, err
+		return gpustats.GPUStatusPacket{}, err
 	}
 
 	return handler, nil
 }
 
-func handleGPUStatusObject(stat status.GPUStatusPacket) error {
+func handleGPUStatusObject(stat gpustats.GPUStatusPacket) error {
 	slog.Info("Received packet", "packet", stat)
 	return nil
 }
 
-func HandleStatusSubmission(packet status.GPUStatusPacket, req *http.Request, log *slog.Logger) error {
+func HandleStatusSubmission(packet gpustats.GPUStatusPacket, req *http.Request, log *slog.Logger) error {
 	err := handleGPUStatusObject(packet)
 
 	if err != nil {
