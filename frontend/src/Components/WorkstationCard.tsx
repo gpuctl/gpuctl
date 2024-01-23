@@ -17,28 +17,28 @@ export const WorkstationTab = ({ name, gpus }: WorkStationData) => {
   return (
     <Center>
       <Box w="100%" rounded={"md"} bg={useColorModeValue("white", "gray.900")}>
-        <Heading size="lg" color={textCol}>
+        <Heading size="md" color={textCol}>
           {name}
         </Heading>
         {gpus.map((s, i) => {
           return (
             <Box key={i}>
-              <Table variant="striped">
+              <Table size="sm" className="table-tiny" variant="striped">
                 <Tbody>
                   <Tr>
                     <Td>
-                      <Heading size="md">GPU Model:</Heading>
+                      <Heading size="sm">GPU Model:</Heading>
                     </Td>
                     <Td>
-                      <Heading size="md">{s.gpu_name}</Heading>
+                      <Heading size="sm">{s.gpu_name}</Heading>
                     </Td>
                   </Tr>
                   <Tr>
                     <Td>
-                      <Heading size="md">Free?</Heading>
+                      <Heading size="sm">Free?</Heading>
                     </Td>
                     <Td>
-                      <Heading size="md">
+                      <Heading size="sm">
                         {s.gpu_util < 5
                           ? `Yes ✅ (${s.gpu_util}% used)`
                           : "No ❌"}
@@ -47,20 +47,20 @@ export const WorkstationTab = ({ name, gpus }: WorkStationData) => {
                   </Tr>
                   <Tr>
                     <Td>
-                      <Heading size="md">GPU Memory:</Heading>
+                      <Heading size="sm">GPU Memory:</Heading>
                     </Td>
                     <Td>
-                      <Heading size="md">
+                      <Heading size="sm">
                         {(s.memory_total / 1000).toFixed(0)} GB
                       </Heading>
                     </Td>
                   </Tr>
                   <Tr>
                     <Td>
-                      <Heading size="md">GPU Temperature:</Heading>
+                      <Heading size="sm">GPU Temperature:</Heading>
                     </Td>
                     <Td>
-                      <Heading size="md">{s.gpu_temp} °C</Heading>
+                      <Heading size="sm">{s.gpu_temp} °C</Heading>
                     </Td>
                   </Tr>
                 </Tbody>
