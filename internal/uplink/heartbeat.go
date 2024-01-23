@@ -2,10 +2,8 @@
 
 package uplink
 
-import "time"
-
 const HeartbeatUrl = "/gs-api/heartbeat/"
 
 type HeartbeatReq struct {
-	Time time.Time
+	Hostname string
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log/slog"
+	"os"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/femto"
@@ -12,9 +13,17 @@ func main() {
 
 	log := slog.Default()
 
+	host, err := os.Hostname()
+	if err != nil {
+		log.Error("failed to get hostname", "err", err)
+		return
+	}
+
 	s := satellite{
 		// TODO: Make this configurable
 		gsAddr: "http://localhost:8080",
+		// we assume hostnames don't change during the program's runtime
+		hostname: host,
 	}
 
 	log.Info("Starting satellite")
@@ -32,12 +41,13 @@ func main() {
 }
 
 type satellite struct {
-	gsAddr string
+	hostname string
+	gsAddr   string
 }
 
 func (s *satellite) sendHeartBeat() error {
 	return femto.Post(
 		s.gsAddr+uplink.HeartbeatUrl,
-		uplink.HeartbeatReq{Time: time.Now()},
+		uplink.HeartbeatReq{Hostname: s.hostname},
 	)
 }
