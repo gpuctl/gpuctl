@@ -31,14 +31,14 @@ func New(databaseUrl string) (database.Database, error) {
 }
 
 // implement interface
-func (db postgresConn) UpdateLastSeen(host string) error {
+func (conn postgresConn) UpdateLastSeen(host string) error {
 	return nil
 }
 
-func (db postgresConn) AppendDataPoint(packet uplink.GPUStats) error {
+func (conn postgresConn) AppendDataPoint(packet uplink.GPUStats) error {
 	return nil
 }
 
-func (db postgresConn) LatestData() ([]uplink.GPUStats, error) {
+func (conn postgresConn) LatestData() ([]uplink.GPUStats, error) {
 	return nil, nil
 }
