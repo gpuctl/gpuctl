@@ -55,27 +55,35 @@ function App() {
   return (
     <ChakraProvider>
       <div className="App">
-        <Stack direction={"column"} spacing={30}>
-          <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
-          <Center>
-            <Box w="95%" bg={useColorModeValue("gray.200", "gray.800")}>
-              <Stack direction={"column"} spacing={10}>
-                <Stack direction={"column"} spacing={5}>
-                  <Heading size="xl">Group 1: Personal</Heading>
-                  {validationElim(stats, {
-                    success: (l) => (
-                      <Center>
-                        <Box w="95%">
-                          <SimpleGrid minChildWidth={300} spacing={20}>
-                            {l.map((row, i) => {
-                              return (
-                                <WorkstationTab
-                                  key={i}
-                                  name={`Workstation ${i}`}
-                                  gpus={[row]}
-                                ></WorkstationTab>
-                              );
-                              /*(
+        <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
+        <Center>
+          <Box w="100%" m={10} bg={useColorModeValue("gray.100", "gray.800")}>
+            <Stack direction={"column"} spacing={10}>
+              <Center>
+                <Box
+                  w="100%"
+                  m={10}
+                  bg={useColorModeValue("gray.200", "gray.800")}
+                >
+                  <Stack direction={"column"} spacing={5}>
+                    {/* <Box></Box> */}
+                    <Heading size="lg" textAlign="left">
+                      Group 1: Personal
+                    </Heading>
+                    {validationElim(stats, {
+                      success: (l) => (
+                        <Center>
+                          <Box w="100%" m={10}>
+                            <SimpleGrid minChildWidth={350} spacing={10}>
+                              {l.map((row, i) => {
+                                return (
+                                  <WorkstationTab
+                                    key={i}
+                                    name={`Workstation ${i}`}
+                                    gpus={[row]}
+                                  ></WorkstationTab>
+                                );
+                                /*(
                     <p key={i}>
                       ID: {i}, Name: {row.gpu_name}, Core Utilisation:{" "}
                       {row.gpu_util}
@@ -84,21 +92,26 @@ function App() {
                       {row.gpu_temp} °C
                     </p>
                   );*/
-                            })}
-                          </SimpleGrid>
-                        </Box>
-                      </Center>
-                    ),
-                    loading: () => <p>Retrieving data from API server...</p>,
-                    failure: (_) => <p>Something has gone wrong!</p>,
-                  })}
-                </Stack>
-                <Heading>Group 2: Shared</Heading>
-                <Heading>Group 3: Remote</Heading>
-              </Stack>
-            </Box>
-          </Center>
-        </Stack>
+                              })}
+                            </SimpleGrid>
+                          </Box>
+                        </Center>
+                      ),
+                      loading: () => <p>Retrieving data from API server...</p>,
+                      failure: (_) => <p>Something has gone wrong!</p>,
+                    })}
+                  </Stack>
+                </Box>
+              </Center>
+              <Heading size="lg" textAlign="left">
+                Group 2: Shared
+              </Heading>
+              <Heading size="lg" textAlign="left">
+                Group 3: Remote
+              </Heading>
+            </Stack>
+          </Box>
+        </Center>
       </div>
     </ChakraProvider>
   );
