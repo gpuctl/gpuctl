@@ -2,7 +2,16 @@ import "./App.css";
 import { WorkstationTab } from "./Components/WorkstationTab";
 import { useJarJar, useOnce } from "./Utils/Hooks";
 import { Validated, success, validationElim } from "./Utils/Utils";
-import { ChakraProvider } from "@chakra-ui/react";
+import {
+  Box,
+  ChakraProvider,
+  Flex,
+  Grid,
+  Heading,
+  SimpleGrid,
+  Stack,
+  useColorModeValue,
+} from "@chakra-ui/react";
 
 const API_URL = "http://localhost:8000";
 export const REFRESH_INTERVAL = 5000;
@@ -45,20 +54,24 @@ function App() {
   return (
     <ChakraProvider>
       <div className="App">
-        <header className="App-header">
-          <p>Welcome to the GPU Control Room!</p>
-          {validationElim(stats, {
-            success: (l) => (
+        <Stack direction={"column"} spacing={30}>
+          <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
+          <Box bg={useColorModeValue("gray.100", "gray.800")}>
+            <Stack direction={"column"} spacing={10}>
               <div>
-                {l.map((row, i) => {
-                  return (
-                    <WorkstationTab
-                      key={i}
-                      name={`Workstation ${i}`}
-                      gpus={[row]}
-                    ></WorkstationTab>
-                  );
-                  /*(
+                <Heading size="xl">Group 1: Personal</Heading>
+                {validationElim(stats, {
+                  success: (l) => (
+                    <SimpleGrid minChildWidth={500} spacing={20}>
+                      {l.map((row, i) => {
+                        return (
+                          <WorkstationTab
+                            key={i}
+                            name={`Workstation ${i}`}
+                            gpus={[row]}
+                          ></WorkstationTab>
+                        );
+                        /*(
                     <p key={i}>
                       ID: {i}, Name: {row.gpu_name}, Core Utilisation:{" "}
                       {row.gpu_util}
@@ -67,13 +80,18 @@ function App() {
                       {row.gpu_temp} °C
                     </p>
                   );*/
+                      })}
+                    </SimpleGrid>
+                  ),
+                  loading: () => <p>Retrieving data from API server...</p>,
+                  failure: (_) => <p>Something has gone wrong!</p>,
                 })}
               </div>
-            ),
-            loading: () => <p>Retrieving data from API server...</p>,
-            failure: (_) => <p>Something has gone wrong!</p>,
-          })}
-        </header>
+              <Heading>Group 2: Shared</Heading>
+              <Heading>Group 3: Remote</Heading>
+            </Stack>
+          </Box>
+        </Stack>
       </div>
     </ChakraProvider>
   );
