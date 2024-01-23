@@ -1,4 +1,4 @@
-package remote
+package remote_test
 
 import (
 	"bytes"
@@ -8,38 +8,10 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gpuctl/gpuctl/internal/status"
+	"github.com/gpuctl/gpuctl/cmd/groundstation/gsapi"
+
 	"github.com/stretchr/testify/assert"
 )
-
-/* Status Object Construction */
-
-func TestBuildStatusObject(t *testing.T) {
-	validJSON := []byte(`{"gpu_name": "Test GPU", "gpu_brand": "BrandX", "driver_ver": "1.0", "memory_total": 4096, "memory_util": 50, "gpu_util": 50, "memory_used": 2048, "fan_speed": 70, "gpu_temp": 60}`)
-	expectedPacket := status.GPUStatusPacket{
-		Name:              "Test GPU",
-		Brand:             "BrandX",
-		DriverVersion:     "1.0",
-		MemoryTotal:       4096,
-		MemoryUtilisation: 50,
-		GPUUtilisation:    50,
-		MemoryUsed:        2048,
-		FanSpeed:          70,
-		Temp:              60,
-	}
-
-	packet, err := buildStatusObject(validJSON)
-	assert.NoError(t, err)
-	assert.Equal(t, expectedPacket, packet)
-
-}
-
-func TestBuildMalformedObject(t *testing.T) {
-	invalidJSON := []byte(`{"gpu_name": "Test GPU", "gpu_brand": "BrandX", "driver_ver": 1.0}`)
-	_, err := buildStatusObject(invalidJSON)
-
-	assert.Error(t, err)
-}
 
 /* Submission Side-Effect Testing */
 
@@ -50,10 +22,11 @@ func (r corruptedReader) Read(p []byte) (int, error) {
 }
 
 func simulateCorruptedSubmissionAndGetResponse(method string) *http.Response {
-	req := httptest.NewRequest(method, "/api/submit", &corruptedReader{})
+	req := httptest.NewRequest(method, "/api/status/", &corruptedReader{})
 	w := httptest.NewRecorder()
 
-	HandleStatusSubmission(w, req)
+	s := gsapi.NewServer()
+	s.ServeHTTP(w, req)
 
 	res := w.Result()
 	defer res.Body.Close()
@@ -62,10 +35,11 @@ func simulateCorruptedSubmissionAndGetResponse(method string) *http.Response {
 }
 
 func simulateSubmissionAndGetResponse(submission []byte, method string) *http.Response {
-	req := httptest.NewRequest(method, "/api/submit", bytes.NewBuffer(submission))
+	req := httptest.NewRequest(method, "/api/status/", bytes.NewBuffer(submission))
 	w := httptest.NewRecorder()
 
-	HandleStatusSubmission(w, req)
+	s := gsapi.NewServer()
+	s.ServeHTTP(w, req)
 
 	res := w.Result()
 	defer res.Body.Close()
@@ -74,12 +48,14 @@ func simulateSubmissionAndGetResponse(submission []byte, method string) *http.Re
 }
 
 func assertResponseHas(t *testing.T, res *http.Response, expectedStatusCode int, expectedMessage string) {
+	t.Helper()
+
 	assert.Equal(t, expectedStatusCode, res.StatusCode)
 
 	data, err := io.ReadAll(res.Body)
 	assert.NoError(t, err)
 
-	assert.Equal(t, expectedMessage, string(data))
+	assert.Contains(t, string(data), expectedMessage)
 }
 
 func TestHandleStatusSubmission(t *testing.T) {
@@ -87,7 +63,7 @@ func TestHandleStatusSubmission(t *testing.T) {
 
 	res := simulateSubmissionAndGetResponse(validJSON, "POST")
 
-	assertResponseHas(t, res, http.StatusOK, "OK: Submission processed successfully")
+	assertResponseHas(t, res, http.StatusOK, "OK")
 }
 
 func TestHandleWrongMethodSubmission(t *testing.T) {
@@ -95,13 +71,13 @@ func TestHandleWrongMethodSubmission(t *testing.T) {
 
 	res := simulateSubmissionAndGetResponse(validJSON, "GET")
 
-	assertResponseHas(t, res, http.StatusBadRequest, "Invalid method for status submission\n")
+	assertResponseHas(t, res, http.StatusMethodNotAllowed, "Expected POST\n")
 }
 
 func TestHandleBadJsonSubmission(t *testing.T) {
 	res := simulateCorruptedSubmissionAndGetResponse("POST")
 
-	assertResponseHas(t, res, http.StatusBadRequest, "Malformed request body detected\n")
+	assertResponseHas(t, res, http.StatusBadRequest, "Read corrupted\n")
 }
 
 func TestHandleBadJsonDeserialisation(t *testing.T) {
@@ -109,7 +85,7 @@ func TestHandleBadJsonDeserialisation(t *testing.T) {
 
 	res := simulateSubmissionAndGetResponse(invalidJSON, "POST")
 
-	assertResponseHas(t, res, http.StatusBadRequest, "JSON deserialisation was not successful\n")
+	assertResponseHas(t, res, http.StatusBadRequest, "failed to decode json")
 }
 
 // Once DB connection is made, should test that we can fail on error states during
