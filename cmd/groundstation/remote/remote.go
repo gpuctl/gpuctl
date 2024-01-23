@@ -3,6 +3,7 @@ package remote
 import (
 	"encoding/json"
 	"io"
+	"log/slog"
 	"net/http"
 
 	"github.com/gpuctl/gpuctl/internal/status"
@@ -20,6 +21,7 @@ func buildStatusObject(jsonData []byte) (status.GPUStatusPacket, error) {
 }
 
 func handleGPUStatusObject(stat status.GPUStatusPacket) error {
+	slog.Info("Received packet", "packet", stat)
 	return nil
 }
 
@@ -29,7 +31,6 @@ func HandleStatusSubmission(writer http.ResponseWriter, request *http.Request) {
 			writer, "Invalid method for status submission",
 			http.StatusBadRequest,
 		)
-
 		return
 	}
 
@@ -66,7 +67,6 @@ func HandleStatusSubmission(writer http.ResponseWriter, request *http.Request) {
 
 		return
 	}
-
 	writer.WriteHeader(http.StatusOK)
 	writer.Write([]byte("OK: Submission processed successfully"))
 }
