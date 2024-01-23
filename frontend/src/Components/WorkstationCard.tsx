@@ -12,7 +12,7 @@ import {
 } from "@chakra-ui/react";
 import { WorkStationData } from "../App";
 
-export const WorkstationTab = ({ name, gpus }: WorkStationData) => {
+export const WorkstationCard = ({ name, gpus }: WorkStationData) => {
   const textCol = useColorModeValue("black", "white");
   return (
     <Center>
@@ -51,7 +51,8 @@ export const WorkstationTab = ({ name, gpus }: WorkStationData) => {
                     </Td>
                     <Td>
                       <Heading size="sm">
-                        {(s.memory_total / 1000).toFixed(0)} GB
+                        {(s.memory_total / 1000).toFixed(0)} GB (
+                        {s.memory_total - s.memory_used} MB free)
                       </Heading>
                     </Td>
                   </Tr>

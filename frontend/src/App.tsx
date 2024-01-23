@@ -1,7 +1,7 @@
 import "./App.css";
-import { WorkstationTab } from "./Components/WorkstationCard";
 import { useJarJar, useOnce } from "./Utils/Hooks";
 import { Validated, success, validationElim } from "./Utils/Utils";
+import { WorkstationCardNew } from "./Components/WorkstationCardNew";
 import {
   Box,
   Button,
@@ -21,6 +21,8 @@ import {
   TabPanel,
 } from "@chakra-ui/react";
 import {} from "@chakra-ui/react";
+import { WorkstationCard } from "./Components/WorkstationCard";
+import { Navbar } from "./Components/Navbar";
 
 const API_URL = "http://localhost:8000";
 export const REFRESH_INTERVAL = 5000;
@@ -62,86 +64,46 @@ function App() {
 
   return (
     <ChakraProvider>
-      <div className="App">
-        <Tabs variant='soft-rounded'>
-          <TabList>
-            <Tab>Simple View</Tab>
-            <Tab>Table View</Tab>
-            <Spacer />
-            <Button mr={5}> Sign in </Button>
-          </TabList>
-          <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
-          <TabPanels>
-            <TabPanel>
-              <Center>
-                <Box
-                  w="100%"
-                  m={10}
-                  bg={useColorModeValue("gray.100", "gray.800")}
-                >
-                  <Stack direction={"column"} spacing={10}>
-                    <Center>
-                      <Box
-                        w="100%"
-                        m={10}
-                        bg={useColorModeValue("gray.200", "gray.800")}
-                      >
-                        <Stack direction={"column"} spacing={5}>
-                          {/* <Box></Box> */}
-                          <Heading size="lg" textAlign="left">
-                            Group 1: Personal
-                          </Heading>
-                          {validationElim(stats, {
-                            success: (l) => (
-                              <Center>
-                                <Box w="100%" m={10}>
-                                  <SimpleGrid minChildWidth={350} spacing={10}>
-                                    {l.map((row, i) => {
-                                      return (
-                                        <WorkstationTab
-                                          key={i}
-                                          name={`Workstation ${i}`}
-                                          gpus={[row]}
-                                        ></WorkstationTab>
-                                      );
-                                      /*(
-                    <p key={i}>
-                      ID: {i}, Name: {row.gpu_name}, Core Utilisation:{" "}
-                      {row.gpu_util}
-                      %, VRAM Util: {row.memory_util}%, VRAM: {row.memory_total}{" "}
-                      GB, Used VRAM: {row.memory_used} GB, Temperature:{" "}
-                      {row.gpu_temp} °C
-                    </p>
-                  );*/
-                                    })}
-                                  </SimpleGrid>
-                                </Box>
-                              </Center>
-                            ),
-                            loading: () => (
-                              <p>Retrieving data from API server...</p>
-                            ),
-                            failure: (_) => <p>Something has gone wrong!</p>,
-                          })}
-                        </Stack>
-                      </Box>
-                    </Center>
-                    <Heading size="lg" textAlign="left">
-                      Group 2: Shared
-                    </Heading>
-                    <Heading size="lg" textAlign="left">
-                      Group 3: Remote
-                    </Heading>
-                  </Stack>
-                </Box>
-              </Center>
-            </TabPanel>
-            <TabPanel>
-              <p>Tab le</p>
-            </TabPanel>
-          </TabPanels>
-        </Tabs>
-      </div>
+      <div className="App"></div>
+      <Navbar>
+        <Center>
+          <Box w="100%" m={10} bg={useColorModeValue("gray.100", "gray.800")}>
+            <Stack direction={"column"} spacing={5}>
+              <Heading size="lg" textAlign="left">
+                Group 1: Personal
+              </Heading>
+              {validationElim(stats, {
+                success: (l) => (
+                  <Center>
+                    <Box w="100%" m={10}>
+                      <SimpleGrid minChildWidth={350} spacing={10}>
+                        {l.map((row, i) => {
+                          return (
+                            <WorkstationCard
+                              key={i}
+                              name={`Workstation ${i}`}
+                              gpus={[row]}
+                            ></WorkstationCard>
+                          );
+                        })}
+                      </SimpleGrid>
+                    </Box>
+                  </Center>
+                  /* <WorkstationCardNew
+                          key={0}
+                          name="Workstation 0"
+                          gpus={[l[0]]}
+                        ></WorkstationCardNew>
+                        */
+                ),
+                loading: () => <p>Retrieving data from API server...</p>,
+                failure: (_) => <p>Something has gone wrong!</p>,
+              })}
+            </Stack>
+          </Box>
+        </Center>
+        <p>Tab le</p>
+      </Navbar>
     </ChakraProvider>
   );
 }
