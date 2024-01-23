@@ -1,28 +1,43 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/gpuctl/gpuctl/internal/status/handlers"
+	"log/slog"
 	"time"
+
+	"github.com/gpuctl/gpuctl/internal/femto"
+	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 func main() {
-	// Just get the GPU data and print it in JSON
-	gpuHandler := handlers.NvidiaGPUHandler{}
-	for {
-		res, err := gpuHandler.GetGPUStatus()
-		if err != nil {
-			fmt.Printf("Failed to parse: %v\n", err)
-			return
-		}
 
-		ser, err := json.Marshal(res)
-		if err != nil {
-			fmt.Printf("Failed to parse: %v\n", err)
-			return
-		}
-		fmt.Printf("%s\n", ser)
-		time.Sleep(5 * time.Second)
+	log := slog.Default()
+
+	s := satellite{
+		// TODO: Make this configurable
+		gsAddr: "http://localhost:8080",
 	}
+
+	log.Info("Starting satellite")
+
+	for i := 0; i < 10; i++ {
+		err := s.sendHeartBeat()
+		if err != nil {
+			log.Error("failed to send heartbeat", "err", err)
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
+
+	log.Info("Stopped satellite")
+
+}
+
+type satellite struct {
+	gsAddr string
+}
+
+func (s *satellite) sendHeartBeat() error {
+	return femto.Post(
+		s.gsAddr+uplink.HeartbeatUrl,
+		uplink.HeartbeatReq{Time: time.Now()},
+	)
 }
