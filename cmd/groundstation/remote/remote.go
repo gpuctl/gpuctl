@@ -2,13 +2,13 @@ package remote
 
 import (
 	"encoding/json"
-	"io"
 	"log/slog"
 	"net/http"
 
 	"github.com/gpuctl/gpuctl/internal/status"
 )
 
+// TODO: Remove this
 func buildStatusObject(jsonData []byte) (status.GPUStatusPacket, error) {
 	var handler status.GPUStatusPacket
 
@@ -25,48 +25,12 @@ func handleGPUStatusObject(stat status.GPUStatusPacket) error {
 	return nil
 }
 
-func HandleStatusSubmission(writer http.ResponseWriter, request *http.Request) {
-	if request.Method != "POST" {
-		http.Error(
-			writer, "Invalid method for status submission",
-			http.StatusBadRequest,
-		)
-		return
-	}
-
-	body, err := io.ReadAll(request.Body)
-	defer request.Body.Close()
+func HandleStatusSubmission(packet status.GPUStatusPacket, req *http.Request, log *slog.Logger) error {
+	err := handleGPUStatusObject(packet)
 
 	if err != nil {
-		http.Error(
-			writer, "Malformed request body detected",
-			http.StatusBadRequest,
-		)
-
-		return
+		return err
 	}
 
-	packet, err := buildStatusObject(body)
-
-	if err != nil {
-		http.Error(
-			writer, "JSON deserialisation was not successful",
-			http.StatusBadRequest,
-		)
-
-		return
-	}
-
-	err = handleGPUStatusObject(packet)
-
-	if err != nil {
-		http.Error(
-			writer, "There was an error while handling the status object",
-			http.StatusInternalServerError,
-		)
-
-		return
-	}
-	writer.WriteHeader(http.StatusOK)
-	writer.Write([]byte("OK: Submission processed successfully"))
+	return nil
 }
