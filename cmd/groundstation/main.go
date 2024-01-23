@@ -5,6 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gpuctl/gpuctl/cmd/groundstation/config"
+	"github.com/gpuctl/gpuctl/internal/database/postgres"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
 )
 
@@ -19,6 +20,14 @@ func main() {
 	}
 
 	srv := groundstation.NewServer()
+
+	// open database connection
+	db, err := postgres.New("postgresql://gpuctl@localhost/gpuctl-tests-db")
+	if err != nil {
+		slog.Error("opening database:", err)
+		return
+	}
+	_ = db
 
 	slog.Info("Stating groundstation API server", "port", configuration.Server.Port)
 
