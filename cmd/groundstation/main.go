@@ -66,12 +66,13 @@ func (gs *groundstation) heartbeat(data uplink.HeartbeatReq, req *http.Request, 
 	gs.mu.Lock()
 	defer gs.mu.Unlock()
 
-	from := req.RemoteAddr
+	from := data.Hostname
 	prev := gs.lastSeen[from]
 
-	gs.lastSeen[from] = data.Time
+	now := time.Now()
+	gs.lastSeen[from] = now
 
-	log.Info("Received a heartbeat", "prev_time", prev, "cur_time", data.Time)
+	log.Info("Received a heartbeat", "satellite", from, "prev_time", prev, "cur_time", now)
 
 	return nil
 }
