@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/gpuctl/gpuctl/cmd/groundstation/config"
-	"github.com/gpuctl/gpuctl/cmd/groundstation/gsapi"
+	"github.com/gpuctl/gpuctl/internal/groundstation"
 )
 
 func main() {
@@ -18,7 +18,7 @@ func main() {
 		return
 	}
 
-	srv := gsapi.NewServer()
+	srv := groundstation.NewServer()
 
 	slog.Info("Stating groundstation API server", "port", configuration.Server.Port)
 

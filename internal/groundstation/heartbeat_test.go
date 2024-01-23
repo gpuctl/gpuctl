@@ -1,4 +1,4 @@
-package gsapi_test
+package groundstation_test
 
 import (
 	"bytes"
@@ -7,14 +7,14 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/gpuctl/gpuctl/cmd/groundstation/gsapi"
+	"github.com/gpuctl/gpuctl/internal/groundstation"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 func TestHeartbeatRace(t *testing.T) {
 	t.Parallel()
 
-	srv := gsapi.NewServer()
+	srv := groundstation.NewServer()
 	var wg sync.WaitGroup
 
 	toSpawn := 100
