@@ -9,9 +9,6 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// TODO: replace with reading environment variable
-const databaseUrl = "postgresql://gpuctl@localhost/gpuctl-tests-db"
-
 // struct holding database context
 // only holds a pointer, so we can pass it around by value
 type postgresConn struct {
