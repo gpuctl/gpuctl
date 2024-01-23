@@ -1,4 +1,4 @@
-package handlers
+package status
 
 import (
 	"encoding/xml"
@@ -6,8 +6,6 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-
-	"github.com/gpuctl/gpuctl/internal/status"
 )
 
 const (
@@ -271,7 +269,7 @@ type processes struct {
 }
 
 // Filter down the relevant information from our nvidia-smi dump
-func (xml NvidiaSmiLog) FilterStatus() (status.GPUStatusPacket, error) {
+func (xml NvidiaSmiLog) FilterStatus() (GPUStatusPacket, error) {
 	fanSpeed, err := parseFloatWithUnit(xml.Gpu.FanSpeed)
 	isDirty := err != nil
 	memoryTotal, err := parseUIntWithUnit(xml.Gpu.FbMemoryUsage.Total)
@@ -285,7 +283,7 @@ func (xml NvidiaSmiLog) FilterStatus() (status.GPUStatusPacket, error) {
 	memUtil, err := parseFloatWithUnit(xml.Gpu.Utilization.MemoryUtil)
 	isDirty = isDirty || err != nil
 
-	res := status.GPUStatusPacket{
+	res := GPUStatusPacket{
 		Name:              xml.Gpu.ProductName,
 		Brand:             xml.Gpu.ProductBrand,
 		DriverVersion:     xml.DriverVersion,
@@ -356,10 +354,10 @@ func GetNvidiaGPUStatus() (NvidiaSmiLog, error) {
 type NvidiaGPUHandler struct{}
 
 // Run the whole pipeline of getting GPU information
-func (h NvidiaGPUHandler) GetGPUStatus() (status.GPUStatusPacket, error) {
+func (h NvidiaGPUHandler) GetGPUStatus() (GPUStatusPacket, error) {
 	smi, err := GetNvidiaGPUStatus()
 	if err != nil {
-		return status.GPUStatusPacket{}, err
+		return GPUStatusPacket{}, err
 	}
 	return smi.FilterStatus()
 }
