@@ -9,7 +9,6 @@ import (
 // function that makes a new test instance of a postgres database
 func emptyInstance(pool) func() *database.Database {
 
-
 	return func() *database.Database {
 		return nil
 	}

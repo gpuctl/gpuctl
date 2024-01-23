@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-type unitTest func(t *testing.T, db *Database);
+type unitTest func(t *testing.T, db *Database)
 
 // public unit test runner takes a testing object and an anonymous functions
 // that creates a new instance of the database implementation being tested
@@ -21,12 +21,12 @@ func UnitTests(t *testing.T, emptyInstance func() *Database) {
 
 func databaseStartsEmpty(t *testing.T, db *Database) {
 	data, err := (*db).LatestData()
-	if (err == nil) {
+	if err == nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
 	size := len(data)
-	if (size != 0) {
+	if size != 0 {
 		t.Fatalf("Database is not empty initially")
 	}
 }

@@ -20,13 +20,13 @@ type postgresConn struct {
 
 func New(databaseUrl string) (database.Database, error) {
 	db, err := sql.Open("pgx", databaseUrl)
-	if (err != nil) {
+	if err != nil {
 		return nil, err
 	}
 
 	// try pinging database to verify connection
 	err = db.Ping()
-	if (err != nil) {
+	if err != nil {
 		return nil, err
 	} else {
 		return postgresConn{db}, nil
