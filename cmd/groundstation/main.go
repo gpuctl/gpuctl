@@ -14,7 +14,6 @@ import (
 )
 
 func main() {
-	slog.Info("Starting groundstation")
 
 	configuration, err := config.GetConfiguration("config.toml")
 
@@ -24,8 +23,10 @@ func main() {
 		return
 	}
 
+	slog.Info("Stating groundstation", "port", configuration.Server.Port)
+
 	// TODO: Move this into fempto.
-	http.HandleFunc("/api/remote", remote.HandleStatusSubmission)
+	http.HandleFunc(uplink.StatusSubmissionUrl, remote.HandleStatusSubmission)
 	http.ListenAndServe(config.PortToAddress(configuration.Server.Port), nil)
 
 	srv := NewServer()

@@ -356,7 +356,7 @@ func GetNvidiaGPUStatus() (NvidiaSmiLog, error) {
 type NvidiaGPUHandler struct{}
 
 // Run the whole pipeline of getting GPU information
-func (h *NvidiaGPUHandler) GetGPUStatus() (status.GPUStatusPacket, error) {
+func (h NvidiaGPUHandler) GetGPUStatus() (status.GPUStatusPacket, error) {
 	smi, err := GetNvidiaGPUStatus()
 	if err != nil {
 		return status.GPUStatusPacket{}, err
