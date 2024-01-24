@@ -33,7 +33,7 @@ func main() {
 	}
 	_ = db
 
-	slog.Info("Stating groundstation API server", "port", configuration.Server.Port)
+	slog.Info("Starting groundstation API server", "port", configuration.Server.Port)
 
 	err = http.ListenAndServe(config.PortToAddress(configuration.Server.Port), srv)
 
