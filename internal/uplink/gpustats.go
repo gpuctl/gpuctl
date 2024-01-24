@@ -13,7 +13,7 @@ type GPUStats struct {
 	// Temporal statistics
 	MemoryUtilisation float64 `json:"memory_util"` // Percentage of memory used
 	GPUUtilisation    float64 `json:"gpu_util"`    // Percentage of memory used
-	MemoryUsed        float64 `json:"memory_used"`
-	FanSpeed          float64 `json:"fan_speed"` // Percentage of fan speed
-	Temp              float64 `json:"gpu_temp"`  // Celcius
+	MemoryUsed        float64 `json:"memory_used"` // In megabytes
+	FanSpeed          float64 `json:"fan_speed"`   // Percentage of fan speed
+	Temp              float64 `json:"gpu_temp"`    // Celcius
 }
