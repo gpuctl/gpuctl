@@ -1,4 +1,4 @@
-package remote_test
+package groundstation_test
 
 import (
 	"bytes"
@@ -8,8 +8,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/gpuctl/gpuctl/cmd/groundstation/gsapi"
-
+	"github.com/gpuctl/gpuctl/internal/groundstation"
+	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -22,10 +22,10 @@ func (r corruptedReader) Read(p []byte) (int, error) {
 }
 
 func simulateCorruptedSubmissionAndGetResponse(method string) *http.Response {
-	req := httptest.NewRequest(method, "/api/status/", &corruptedReader{})
+	req := httptest.NewRequest(method, uplink.GPUStatsUrl, &corruptedReader{})
 	w := httptest.NewRecorder()
 
-	s := gsapi.NewServer()
+	s := groundstation.NewServer()
 	s.ServeHTTP(w, req)
 
 	res := w.Result()
@@ -35,10 +35,10 @@ func simulateCorruptedSubmissionAndGetResponse(method string) *http.Response {
 }
 
 func simulateSubmissionAndGetResponse(submission []byte, method string) *http.Response {
-	req := httptest.NewRequest(method, "/api/status/", bytes.NewBuffer(submission))
+	req := httptest.NewRequest(method, uplink.GPUStatsUrl, bytes.NewBuffer(submission))
 	w := httptest.NewRecorder()
 
-	s := gsapi.NewServer()
+	s := groundstation.NewServer()
 	s.ServeHTTP(w, req)
 
 	res := w.Result()

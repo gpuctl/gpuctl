@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/femto"
-	"github.com/gpuctl/gpuctl/internal/status/handlers"
+	"github.com/gpuctl/gpuctl/internal/gpustats"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
@@ -29,7 +29,7 @@ func main() {
 
 	log.Info("Starting satellite")
 
-	hndlr := handlers.NvidiaGPUHandler{}
+	hndlr := gpustats.NvidiaGPUHandler{}
 
 	for i := 0; i < 10; i++ {
 		log.Debug("Sending packets")
@@ -61,15 +61,15 @@ func (s *satellite) sendHeartBeat() error {
 	)
 }
 
-func (s *satellite) sendGPUStatus(gpuhandler handlers.GPUDataSource) error {
-	packet, err := gpuhandler.GetGPUStatus()
+func (s *satellite) sendGPUStatus(gpuhandler gpustats.GPUDataSource) error {
+	stats, err := gpuhandler.GPUStats()
 
 	if err != nil {
 		return err
 	}
 
 	return femto.Post(
-		s.gsAddr+uplink.StatusSubmissionUrl,
-		packet,
+		s.gsAddr+uplink.GPUStatsUrl,
+		stats,
 	)
 }

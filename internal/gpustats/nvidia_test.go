@@ -1,4 +1,4 @@
-package handlers
+package gpustats
 
 import (
 	"bytes"
@@ -38,7 +38,7 @@ func TestNvidiaSmiXMLParsing(t *testing.T) {
 			continue
 		}
 
-		r, err := res.FilterStatus()
+		r, err := res.FilterStats()
 		if err != nil {
 			t.Errorf("Could not produce filtered status packet from nvidia-smi dump: %v (file %s) %v", err, fileloc, r)
 			continue
@@ -116,7 +116,7 @@ func TestNvidiaSmiInvalidDataParse(t *testing.T) {
 			continue
 		}
 
-		_, err = smi.FilterStatus()
+		_, err = smi.FilterStats()
 		if err == nil {
 			t.Errorf("Accepted mangled data in parsing fields of nvidia-smi data (file %s)", fileloc)
 			continue
