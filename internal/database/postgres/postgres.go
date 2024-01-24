@@ -2,6 +2,9 @@ package postgres
 
 import (
 	"database/sql"
+	"errors"
+	"log/slog"
+	"time"
 
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/uplink"
@@ -82,7 +85,79 @@ func createTables(db *sql.DB) error {
 
 // implement interface
 func (conn postgresConn) UpdateLastSeen(host string) error {
-	return nil
+	var err error
+
+	tx, err := conn.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	slog.Debug("checking if machine exists")
+
+	rows, err := tx.Query(`SELECT LastSeen
+		FROM Machines
+		WHERE Hostname=$1`,
+		host)
+
+	if err != nil {
+		// rolling back a transaction can fail, so join it with the
+		// error that caused us to rollback
+		return errors.Join(err, tx.Rollback())
+	}
+
+	if rows.Next() {
+		slog.Debug("machine existed, check if time is in future")
+
+		var lastSeen time.Time
+		err = rows.Scan(&lastSeen)
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+
+		// if not shut before the next transaction, causes
+		// "driver: bad connection" errors
+		err = rows.Close()
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+
+		now := time.Now()
+		if lastSeen.Before(now) {
+			slog.Debug("last seen was before now, update it")
+			_, err = tx.Exec(`UPDATE Machines
+				SET LastSeen=$1
+				WHERE Hostname=$2`,
+				now, host)
+
+			if err != nil {
+				return errors.Join(err, tx.Rollback())
+			}
+		}
+	} else {
+		slog.Debug("row for this hostname doesn't exist, make it",
+			"hostname", host)
+
+		// Next() failing might be because of an error
+		err = rows.Err()
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+
+		// a machine with this hostname wasn't found, so make a new row
+		// for it
+		_, err = tx.Exec(`INSERT INTO Machines (Hostname, LastSeen)
+			VALUES ($1, $2)`,
+			host, time.Now())
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+
+		// TODO: in future, it should be added to a list to wait for
+		// approval
+	}
+
+	return tx.Commit()
 }
 
 func (conn postgresConn) AppendDataPoint(packet uplink.GPUStats) error {

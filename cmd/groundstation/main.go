@@ -31,7 +31,12 @@ func main() {
 	} else {
 		slog.Info("connected to database", "url", dbUrl)
 	}
-	_ = db
+
+	// TODO: remove
+	err = db.UpdateLastSeen("chinook")
+	if err != nil {
+		slog.Error("updating last seen", "err", err)
+	}
 
 	slog.Info("Starting groundstation API server", "port", configuration.Server.Port)
 
