@@ -3,7 +3,6 @@ package main
 import (
 	"log/slog"
 	"net/http"
-	"os"
 
 	"github.com/gpuctl/gpuctl/cmd/groundstation/config"
 	"github.com/gpuctl/gpuctl/internal/database/postgres"
@@ -23,7 +22,7 @@ func main() {
 	srv := groundstation.NewServer()
 
 	// open database connection
-	dbUrl := os.Getenv("DATABASE_URL")
+	dbUrl := configuration.Database.Url
 	db, err := postgres.New(dbUrl)
 	if err != nil {
 		slog.Error("when opening database", "err", err)
