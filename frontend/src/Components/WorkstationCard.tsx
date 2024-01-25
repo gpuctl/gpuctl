@@ -8,7 +8,8 @@ import {
   Td,
   Tr,
 } from "@chakra-ui/react";
-import { WorkStationData } from "../Data";
+import { WorkStationData } from "../App";
+import { isFree } from "../Utils/Utils";
 
 export const WorkstationCard = ({ name, gpus }: WorkStationData) => {
   const textCol = useColorModeValue("black", "white");
@@ -37,7 +38,7 @@ export const WorkstationCard = ({ name, gpus }: WorkStationData) => {
                     </Td>
                     <Td>
                       <Heading size="sm">
-                        {s.gpu_util < 5
+                        {isFree(s)
                           ? `Yes ✅ (${s.gpu_util}% used)`
                           : "No ❌"}
                       </Heading>
