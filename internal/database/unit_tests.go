@@ -6,22 +6,19 @@ import (
 	"testing"
 )
 
-type unitTest func(t *testing.T, db *Database)
-
-// public unit test runner takes a testing object and an anonymous functions
-// that creates a new instance of the database implementation being tested
-func UnitTests(t *testing.T, emptyInstance func() *Database) {
-	tests := []unitTest{databaseStartsEmpty}
-
-	for _, test := range tests {
-		db := emptyInstance()
-		test(t, db)
-	}
+type unitTest struct {
+	Name string
+	F    func(t *testing.T, db Database)
 }
 
-func databaseStartsEmpty(t *testing.T, db *Database) {
-	data, err := (*db).LatestData()
-	if err == nil {
+// a list of tests that implementations of the Database interface should pass
+var UnitTests = [...]unitTest{
+	{"DatabaseStartsEmpty", databaseStartsEmpty},
+}
+
+func databaseStartsEmpty(t *testing.T, db Database) {
+	data, err := db.LatestData()
+	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
