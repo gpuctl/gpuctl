@@ -22,8 +22,8 @@ export const Navbar = ({ children }: { children: ReactNode[] }) => {
       </TabList>
       <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
       <TabPanels>
-        {children.map((c) => (
-          <TabPanel>{c}</TabPanel>
+        {children.map((c, i) => (
+          <TabPanel key={i}>{c}</TabPanel>
         ))}
       </TabPanels>
     </Tabs>

@@ -41,8 +41,10 @@ export const ColumnGrid = ({
   return (
     <Center ref={ref}>
       <HStack align="top" spacing={`${hspacing}px`}>
-        {grouped.map((cs) => (
-          <VStack spacing={vSpacing}>{cs}</VStack>
+        {grouped.map((cs, i) => (
+          <VStack key={i} spacing={vSpacing}>
+            {cs}
+          </VStack>
         ))}
       </HStack>
     </Center>
