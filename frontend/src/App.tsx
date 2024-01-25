@@ -4,25 +4,12 @@ import { Validated, success, validationElim } from "./Utils/Utils";
 import { WorkstationCardMin } from "./Components/WorkstationCardMinimal";
 import {
   Box,
-  Button,
-  Center,
   ChakraProvider,
-  Flex,
-  Grid,
   Heading,
-  SimpleGrid,
-  Spacer,
-  Stack,
   useColorModeValue,
-  Tabs,
-  TabList,
-  TabPanels,
-  Tab,
-  TabPanel,
   VStack,
 } from "@chakra-ui/react";
 import {} from "@chakra-ui/react";
-import { WorkstationCard } from "./Components/WorkstationCard";
 import { Navbar } from "./Components/Navbar";
 import { ColumnGrid } from "./Components/ColumnGrid";
 import { WorkStationGroup } from "./Data";

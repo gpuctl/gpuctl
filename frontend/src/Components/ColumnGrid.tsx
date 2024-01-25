@@ -1,12 +1,6 @@
 import { ReactNode, useRef } from "react";
 import { useContainerDim } from "../Utils/Hooks";
-import {
-  Center,
-  HStack,
-  Spacer,
-  VStack,
-  useForceUpdate,
-} from "@chakra-ui/react";
+import { Center, HStack, VStack } from "@chakra-ui/react";
 import { makeArr } from "../Utils/Utils";
 
 export const ColumnGrid = ({

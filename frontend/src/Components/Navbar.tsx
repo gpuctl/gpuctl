@@ -9,7 +9,6 @@ import {
   Tabs,
 } from "@chakra-ui/react";
 import { ReactNode } from "react";
-import { JsxElement } from "typescript";
 
 export const Navbar = ({ children }: { children: ReactNode[] }) => {
   return (

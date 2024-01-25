@@ -1,16 +1,4 @@
-import {
-  Box,
-  Center,
-  Heading,
-  Text,
-  Table,
-  useColorModeValue,
-  Thead,
-  Tbody,
-  Td,
-  Tr,
-} from "@chakra-ui/react";
-import { useRef } from "react";
+import { Box, Center, Heading, useColorModeValue } from "@chakra-ui/react";
 import { WorkStationData } from "../Data";
 
 export const WorkstationCardMin = ({
