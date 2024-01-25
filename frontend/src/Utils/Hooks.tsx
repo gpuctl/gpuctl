@@ -49,28 +49,31 @@ export type Dims = { w: number; h: number };
  * Get dimensions of the container
  * See: https://stackoverflow.com/questions/43817118/how-to-get-the-width-of-a-react-element
  */
-export const useContainerDim = (
-  myRef: MutableRefObject<HTMLHeadingElement | undefined>
-) => {
+export const useContainerDim = (myRef: RefObject<HTMLHeadingElement>) => {
   const [dims, setDims] = useState<Dims>({ w: 0, h: 0 });
-  useEffect(() => {
-    const setDimsFromParent = (cur: HTMLHeadingElement) =>
-      setDims({
-        w: cur.offsetWidth,
-        h: cur.offsetHeight,
-      });
 
+  const setDimsFromParent = (cur: HTMLHeadingElement) =>
+    setDims({
+      w: cur.offsetWidth,
+      h: cur.offsetHeight,
+    });
+
+  useEffect(() => {
     const updateDims = () => {
       const cur = myRef?.current;
-      if (cur == null) return;
-      setDimsFromParent(cur);
+      console.log(`BRUH ${cur}`);
+      if (cur) {
+        setDimsFromParent(cur);
+      }
     };
 
     updateDims();
 
+    // window.addEventListener("load", updateDims);
     window.addEventListener("resize", updateDims);
 
     return () => {
+      // window.removeEventListener("load", updateDims);
       window.removeEventListener("resize", updateDims);
     };
   }, [myRef]);

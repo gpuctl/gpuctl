@@ -1,3 +1,9 @@
+export const range = (min: number, max: number) =>
+  Array.from(Array(max - min).keys()).map((x) => x + min);
+
+export const makeArr = <T,>(f: (i: number) => T, size: number) =>
+  range(0, size).map(f);
+
 /**
  * Fires an asynchronous function but doesn't wait for the result
  */

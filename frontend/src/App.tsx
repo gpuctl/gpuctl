@@ -23,6 +23,7 @@ import {
 import {} from "@chakra-ui/react";
 import { WorkstationCard } from "./Components/WorkstationCard";
 import { Navbar } from "./Components/Navbar";
+import { ColumnGrid } from "./Components/ColumnGrid";
 
 const API_URL = "http://localhost:8000";
 export const REFRESH_INTERVAL = 5000;
@@ -112,6 +113,66 @@ const foo: WorkStationGroup = {
         },
       ],
     },
+    {
+      name: "Workstation 5",
+      gpus: [
+        {
+          gpu_name: "NVIDIA TITAN Xp",
+          gpu_brand: "Titan",
+          driver_ver: "535.146.02",
+          memory_total: 12288,
+          memory_util: 0,
+          gpu_util: 0,
+          memory_used: 83,
+          fan_speed: 23,
+          gpu_temp: 32,
+        },
+        {
+          gpu_name: "NVIDIA TITAN Xp",
+          gpu_brand: "Titan",
+          driver_ver: "535.146.02",
+          memory_total: 12288,
+          memory_util: 0,
+          gpu_util: 0,
+          memory_used: 83,
+          fan_speed: 23,
+          gpu_temp: 32,
+        },
+      ],
+    },
+    {
+      name: "Workstation 4",
+      gpus: [
+        {
+          gpu_name: "NVIDIA GeForce GT 1030",
+          gpu_brand: "GeForce",
+          driver_ver: "535.146.02",
+          memory_total: 2048,
+          memory_util: 0,
+          gpu_util: 0,
+          memory_used: 82,
+          fan_speed: 35,
+          gpu_temp: 31,
+        },
+      ],
+    },
+
+    {
+      name: "Workstation 6",
+      gpus: [
+        {
+          gpu_name: "NVIDIA GeForce GT 730",
+          gpu_brand: "GeForce",
+          driver_ver: "470.223.02",
+          memory_total: 2001,
+          memory_util: 0,
+          gpu_util: 0,
+          memory_used: 220,
+          fan_speed: 30,
+          gpu_temp: 27,
+        },
+      ],
+    },
   ],
 };
 
@@ -142,7 +203,7 @@ function App() {
                 success: (l) => (
                   <Center>
                     <Box w="100%" m={10}>
-                      <SimpleGrid minChildWidth={350} spacing={10}>
+                      <ColumnGrid minChildWidth={350} spacing={10}>
                         {l.workStations.map((row, i) => {
                           return (
                             <WorkstationCard
@@ -152,7 +213,7 @@ function App() {
                             ></WorkstationCard>
                           );
                         })}
-                      </SimpleGrid>
+                      </ColumnGrid>
                     </Box>
                   </Center>
                   /* <WorkstationCardNew
