@@ -1,10 +1,7 @@
 import {
   Button,
-  Checkbox,
   Menu,
   MenuButton,
-  MenuDivider,
-  MenuItem,
   MenuItemOption,
   MenuList,
   MenuOptionGroup,
@@ -95,7 +92,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
       </Menu>
 
       <TableContainer>
-        <Table variant="simple">
+        <Table variant="striped">
           <Thead>
             <Tr>
               {Object.keys(shownColumns).map((col) => {
@@ -105,12 +102,16 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
             </Tr>
           </Thead>
           <Tbody>
-            {groups.map((group) =>
-              group.workStations.map(({ name, gpus }) =>
+            {groups.map(({ name: group_name, workStations }) =>
+              workStations.map(({ name: workstation_name, gpus }) =>
                 gpus.map((gpu) => (
                   <Tr key={gpu.gpu_name}>
-                    {shownColumns.group ? <Td> {group.name}</Td> : <></>}
-                    {shownColumns.machine_name ? <Td> {name}</Td> : <></>}
+                    {shownColumns.group ? <Td> {group_name}</Td> : <></>}
+                    {shownColumns.machine_name ? (
+                      <Td> {workstation_name}</Td>
+                    ) : (
+                      <></>
+                    )}
                     {shownColumns.gpu_name ? <Td> {gpu.gpu_name}</Td> : <></>}
                     {shownColumns.is_free ? (
                       <Td> {isFree(gpu).toString()}</Td>
