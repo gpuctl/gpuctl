@@ -23,15 +23,13 @@ func main() {
 
 	// open database connection
 	dbUrl := configuration.Database.Url
-	db, err := postgres.New(dbUrl)
+	_, err = postgres.New(dbUrl)
 	if err != nil {
 		slog.Error("when opening database", "err", err)
 		return
 	} else {
 		slog.Info("connected to database", "url", dbUrl)
 	}
-
-	_ = db
 
 	slog.Info("Starting groundstation API server", "port", configuration.Server.Port)
 
