@@ -50,10 +50,76 @@ export type GPUStats = {
   gpu_temp: number;
 };
 
+const foo: WorkStationGroup = {
+  name: "Shared",
+  workStations: [
+    {
+      name: "Workstation 1",
+      gpus: [
+        {
+          gpu_name: "NVIDIA GeForce GT 1030",
+          gpu_brand: "GeForce",
+          driver_ver: "535.146.02",
+          memory_total: 2048,
+          memory_util: 0,
+          gpu_util: 0,
+          memory_used: 82,
+          fan_speed: 35,
+          gpu_temp: 31,
+        },
+      ],
+    },
+    {
+      name: "Workstation 2",
+      gpus: [
+        {
+          gpu_name: "NVIDIA TITAN Xp",
+          gpu_brand: "Titan",
+          driver_ver: "535.146.02",
+          memory_total: 12288,
+          memory_util: 0,
+          gpu_util: 0,
+          memory_used: 83,
+          fan_speed: 23,
+          gpu_temp: 32,
+        },
+        {
+          gpu_name: "NVIDIA TITAN Xp",
+          gpu_brand: "Titan",
+          driver_ver: "535.146.02",
+          memory_total: 12288,
+          memory_util: 0,
+          gpu_util: 0,
+          memory_used: 83,
+          fan_speed: 23,
+          gpu_temp: 32,
+        },
+      ],
+    },
+    {
+      name: "Workstation 3",
+      gpus: [
+        {
+          gpu_name: "NVIDIA GeForce GT 730",
+          gpu_brand: "GeForce",
+          driver_ver: "470.223.02",
+          memory_total: 2001,
+          memory_util: 0,
+          gpu_util: 0,
+          memory_used: 220,
+          fan_speed: 30,
+          gpu_temp: 27,
+        },
+      ],
+    },
+  ],
+};
+
 // Currently does not attempt to do any validation of the returned GPU stats,
 // or indeed handle errors that might be thrown by the Promises
-const retrieveAllStats: () => Promise<Validated<GPUStats[]>> = async () =>
-  success(await (await fetch(API_URL + "/api/stats/all")).json());
+const retrieveAllStats: () => Promise<Validated<WorkStationGroup>> = async () =>
+  success(foo);
+// success(await (await fetch(API_URL + "/api/stats/all")).json());
 
 function App() {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
@@ -77,12 +143,12 @@ function App() {
                   <Center>
                     <Box w="100%" m={10}>
                       <SimpleGrid minChildWidth={350} spacing={10}>
-                        {l.map((row, i) => {
+                        {l.workStations.map((row, i) => {
                           return (
                             <WorkstationCard
                               key={i}
-                              name={`Workstation ${i}`}
-                              gpus={[row]}
+                              name={row.name}
+                              gpus={row.gpus}
                             ></WorkstationCard>
                           );
                         })}

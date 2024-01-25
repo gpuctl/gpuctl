@@ -1,5 +1,12 @@
 import { act } from "@testing-library/react";
-import { EffectCallback, useEffect, useState } from "react";
+import {
+  EffectCallback,
+  MutableRefObject,
+  Ref,
+  RefObject,
+  useEffect,
+  useState,
+} from "react";
 import { Validated, Validation, discard, loading } from "./Utils";
 
 /**
@@ -34,4 +41,39 @@ export const useAsync = <T,>(p: Promise<Validated<T>>): Validation<T> =>
 export const useOnce = (f: EffectCallback) => {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(f, []);
+};
+
+export type Dims = { w: number; h: number };
+
+/**
+ * Get dimensions of the container
+ * See: https://stackoverflow.com/questions/43817118/how-to-get-the-width-of-a-react-element
+ */
+export const useContainerDim = (
+  myRef: MutableRefObject<HTMLHeadingElement | undefined>
+) => {
+  const [dims, setDims] = useState<Dims>({ w: 0, h: 0 });
+  useEffect(() => {
+    const setDimsFromParent = (cur: HTMLHeadingElement) =>
+      setDims({
+        w: cur.offsetWidth,
+        h: cur.offsetHeight,
+      });
+
+    const updateDims = () => {
+      const cur = myRef?.current;
+      if (cur == null) return;
+      setDimsFromParent(cur);
+    };
+
+    updateDims();
+
+    window.addEventListener("resize", updateDims);
+
+    return () => {
+      window.removeEventListener("resize", updateDims);
+    };
+  }, [myRef]);
+
+  return dims;
 };
