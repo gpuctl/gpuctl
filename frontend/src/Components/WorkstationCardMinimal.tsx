@@ -10,8 +10,8 @@ import {
   Td,
   Tr,
 } from "@chakra-ui/react";
-import { WorkStationData } from "../App";
 import { useRef } from "react";
+import { WorkStationData } from "../Data";
 
 export const WorkstationCardMin = ({
   width,

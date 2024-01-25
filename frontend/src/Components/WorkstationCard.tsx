@@ -10,7 +10,7 @@ import {
   Td,
   Tr,
 } from "@chakra-ui/react";
-import { WorkStationData } from "../App";
+import { WorkStationData } from "../Data";
 
 export const WorkstationCard = ({ name, gpus }: WorkStationData) => {
   const textCol = useColorModeValue("black", "white");
