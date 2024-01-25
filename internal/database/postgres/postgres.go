@@ -44,10 +44,13 @@ func createTables(db *sql.DB) error {
 	// TODO: Allow passing in a parameter to create temporary tables for use
 	// with the unit tests
 
+	// We have to make all rows non-null, because we can't scan a null value
+	// into a Go variable
+
 	var err error
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Machines (
-		Hostname text,
-		LastSeen timestamp,
+		Hostname text NOT NULL,
+		LastSeen timestamp NOT NULL,
 		PRIMARY KEY (Hostname)
 	);`)
 
@@ -56,12 +59,12 @@ func createTables(db *sql.DB) error {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS GPUs (
-		Id integer,
-		Machine text REFERENCES Machines (Hostname),
-		Name text,
-		Brand text,
-		DriverVersion text,
-		MemoryTotal integer,
+		Id integer NOT NULL,
+		Machine text NOT NULL REFERENCES Machines (Hostname),
+		Name text NOT NULL,
+		Brand text NOT NULL,
+		DriverVersion text NOT NULL,
+		MemoryTotal integer NOT NULL,
 		PRIMARY KEY (Id)
 	);`)
 
@@ -70,13 +73,13 @@ func createTables(db *sql.DB) error {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Stats (
-		Gpu integer REFERENCES GPUs (Id),
-		Recieved timestamp,
-		MemoryUtilisation real,
-		GpuUtilisation real,
-		MemoryUsed real,
-		FanSpeed real,
-		Temp real,
+		Gpu integer REFERENCES GPUs (Id) NOT NULL,
+		Recieved timestamp NOT NULL,
+		MemoryUtilisation real NOT NULL,
+		GpuUtilisation real NOT NULL,
+		MemoryUsed real NOT NULL,
+		FanSpeed real NOT NULL,
+		Temp real NOT NULL,
 		PRIMARY KEY (Gpu, Recieved)
 	);`)
 
@@ -164,6 +167,40 @@ func (conn postgresConn) AppendDataPoint(packet uplink.GPUStats) error {
 	return nil
 }
 
-func (conn postgresConn) LatestData() ([]uplink.GPUStats, error) {
-	return nil, nil
+func (conn postgresConn) LatestData() (map[string][]uplink.GPUStats, error) {
+	rows, err := conn.db.Query(`SELECT g.Machine, g.Name, g.Brand,
+			g.DriverVersion, g.MemoryTotal, s.MemoryUtilisation,
+			s.GpuUtilisation, s.MemoryUsed, s.FanSpeed, s.Temp
+		FROM GPUs g INNER JOIN Stats s ON g.Id = s.Gpu
+		INNER JOIN (
+			SELECT Gpu, Max(Recieved) Recieved
+			FROM Stats
+			GROUP BY Gpu
+		) latest ON s.Gpu = latest.Gpu AND s.Recieved = latest.Recieved
+	`)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var latest = make(map[string][]uplink.GPUStats)
+
+	for rows.Next() {
+		var host string
+		var stat uplink.GPUStats
+
+		err = rows.Scan(&host, &stat.Name, &stat.Brand,
+			&stat.DriverVersion, &stat.MemoryTotal,
+			&stat.MemoryUtilisation, &stat.GPUUtilisation,
+			&stat.MemoryUsed, &stat.FanSpeed, &stat.Temp)
+
+		if err != nil {
+			return nil, err
+		}
+
+		slog.Debug("got stat from table", "host", host, "stat", stat)
+		latest[host] = append(latest[host], stat)
+	}
+
+	return latest, rows.Close()
 }

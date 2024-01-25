@@ -13,5 +13,6 @@ type Database interface {
 	AppendDataPoint(uplink.GPUStats) error
 
 	// get the latest metrics for all approved machines
-	LatestData() ([]uplink.GPUStats, error)
+	// returns map from hostname to slice of stats of gpus on that machine
+	LatestData() (map[string][]uplink.GPUStats, error)
 }

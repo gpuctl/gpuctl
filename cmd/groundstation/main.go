@@ -38,6 +38,12 @@ func main() {
 		slog.Error("updating last seen", "err", err)
 	}
 
+	data, err := db.LatestData()
+	if err != nil {
+		slog.Error("getting latest", "err", err)
+	}
+	slog.Info("Got data", "data", data)
+
 	slog.Info("Starting groundstation API server", "port", configuration.Server.Port)
 
 	err = http.ListenAndServe(config.PortToAddress(configuration.Server.Port), srv)
