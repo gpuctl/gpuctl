@@ -183,8 +183,8 @@ const foo: WorkStationGroup[] = [
 // or indeed handle errors that might be thrown by the Promises
 const retrieveAllStats: () => Promise<
   Validated<WorkStationGroup[]>
-> = async () => success(foo);
-// success(await (await fetch(API_URL + "/api/stats/all")).json());
+> = async () => success(await (await fetch(API_URL + "/api/stats/all")).json());
+//success(foo);
 
 function App() {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
