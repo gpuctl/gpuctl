@@ -29,7 +29,7 @@ export const WorkstationCardMin = ({
               <p>{`${true ? "🟢 Free" : "🔴 In-use"} (${
                 s.gpu_util
               }% Utilisation)`}</p>
-              <p>{`${s.gpu_temp < 80 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🥵"} ${
+              <p>{`${s.gpu_temp < 80 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${
                 s.gpu_temp
               } °C (${s.fan_speed}% Fan Speed)`}</p>
             </Box>
