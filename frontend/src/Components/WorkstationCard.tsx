@@ -8,7 +8,7 @@ import {
   Td,
   Tr,
 } from "@chakra-ui/react";
-import { WorkStationData } from "../App";
+import { WorkStationData } from "../Data";
 import { isFree } from "../Utils/Utils";
 
 export const WorkstationCard = ({ name, gpus }: WorkStationData) => {

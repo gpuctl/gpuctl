@@ -1,4 +1,4 @@
-import {GPUStats} from "../App"
+import {GPUStats} from "../Data"
 
 /** Create an array of numbers that span between a given minimum and maximum */
 export const range = (min: number, max: number) =>

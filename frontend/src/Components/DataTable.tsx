@@ -16,9 +16,8 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { WorkStationGroup } from "../App";
+import { WorkStationGroup } from "../Data";
 import { useState } from "react";
-import { WorkstationTab } from "./WorkstationCard";
 import { isFree } from "../Utils/Utils";
 
 /*
@@ -37,10 +36,11 @@ import { isFree } from "../Utils/Utils";
 
   */
 export const TableTab = (
-  { name, workStations }: WorkStationGroup
+{groups}: {groups: WorkStationGroup[]}
 ) => {
-  // default to show machine_name, gpu_name, isFree, brand, and memory_total
+  // default to show group, machine_name, gpu_name, isFree, brand, and memory_total
   const cols: Record<string, Boolean> = {
+    group: true,
     machine_name: true,
     gpu_name: true,
     is_free: true,
@@ -73,6 +73,7 @@ export const TableTab = (
               setter(shownColumns);
             }}
           >
+            <MenuItemOption value="group"> Group </MenuItemOption>
             <MenuItemOption value="machine_name"> Machine name </MenuItemOption>
             <MenuItemOption value="gpu_name"> GPU Id </MenuItemOption>
             <MenuItemOption value="is_free"> Free </MenuItemOption>
@@ -102,23 +103,26 @@ export const TableTab = (
             </Tr>
           </Thead>
           <Tbody>
-              {workStations.map(({name, gpus}) => (
-                gpus.map((gpu) => (
-                    <Tr key={gpu.gpu_name}>
-                        {shownColumns.machine_name ?  <Td> {name}</Td> : <></>}
-                        {shownColumns.gpu_name ? <Td> {gpu.gpu_name}</Td> : <></>}
-                        {shownColumns.is_free ? <Td> {isFree(gpu).toString()}</Td> : <></>}
-                        {shownColumns.gpu_brand ? <Td> {gpu.gpu_brand}</Td> : <></>}
-                        {shownColumns.driver_ver ? <Td> {gpu.driver_ver}</Td> : <></>}
-                        {shownColumns.memory_total ? <Td> {gpu.memory_total}</Td> : <></>}
-                        {shownColumns.memory_util ? <Td> {gpu.memory_util}</Td> : <></>}
-                        {shownColumns.gpu_util ? <Td> {gpu.gpu_util}</Td> : <></>}
-                        {shownColumns.memory_used ? <Td> {gpu.memory_used}</Td> : <></>}
-                        {shownColumns.fan_speed ? <Td> {gpu.fan_speed}</Td> : <></>}
-                        {shownColumns.gpu_temp ? <Td> {gpu.gpu_temp}</Td> : <></>}
-                    </Tr>
+            {groups.map((group) => (
+                group.workStations.map(({name, gpus}) => (
+                    gpus.map((gpu) => (
+                        <Tr key={gpu.gpu_name}>
+                            {shownColumns.group ?  <Td> {group.name}</Td> : <></>}
+                            {shownColumns.machine_name ?  <Td> {name}</Td> : <></>}
+                            {shownColumns.gpu_name ? <Td> {gpu.gpu_name}</Td> : <></>}
+                            {shownColumns.is_free ? <Td> {isFree(gpu).toString()}</Td> : <></>}
+                            {shownColumns.gpu_brand ? <Td> {gpu.gpu_brand}</Td> : <></>}
+                            {shownColumns.driver_ver ? <Td> {gpu.driver_ver}</Td> : <></>}
+                            {shownColumns.memory_total ? <Td> {gpu.memory_total}</Td> : <></>}
+                            {shownColumns.memory_util ? <Td> {gpu.memory_util}</Td> : <></>}
+                            {shownColumns.gpu_util ? <Td> {gpu.gpu_util}</Td> : <></>}
+                            {shownColumns.memory_used ? <Td> {gpu.memory_used}</Td> : <></>}
+                            {shownColumns.fan_speed ? <Td> {gpu.fan_speed}</Td> : <></>}
+                            {shownColumns.gpu_temp ? <Td> {gpu.gpu_temp}</Td> : <></>}
+                        </Tr>
+                    ))
                 ))
-              ))}
+                    ))}
           </Tbody>
         </Table>
       </TableContainer>

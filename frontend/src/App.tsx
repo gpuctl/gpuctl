@@ -82,7 +82,7 @@ function App() {
           failure: (_) => <p>Something has gone wrong!</p>,
         })}
         {validationElim(stats, {
-          success: (l) => <TableTab data={l}> </TableTab>,
+          success: (l: WorkStationGroup[]) => (<TableTab groups={l}></TableTab>),
           loading: () => <p>Retrieving data from API server...</p>,
           failure: (_) => <p>Something has gone wrong!</p>,
         })}
