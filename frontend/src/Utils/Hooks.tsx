@@ -2,6 +2,8 @@ import { act } from "@testing-library/react";
 import {
   EffectCallback,
   MutableRefObject,
+  ReactComponentElement,
+  ReactNode,
   Ref,
   RefObject,
   useEffect,
@@ -61,10 +63,8 @@ export const useContainerDim = (myRef: RefObject<HTMLHeadingElement>) => {
   useEffect(() => {
     const updateDims = () => {
       const cur = myRef?.current;
-      console.log(`BRUH ${cur}`);
-      if (cur) {
-        setDimsFromParent(cur);
-      }
+      if (cur == null) return;
+      setDimsFromParent(cur);
     };
 
     updateDims();

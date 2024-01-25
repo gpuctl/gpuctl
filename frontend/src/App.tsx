@@ -1,7 +1,7 @@
 import "./App.css";
 import { useJarJar, useOnce } from "./Utils/Hooks";
 import { Validated, success, validationElim } from "./Utils/Utils";
-import { WorkstationCardNew } from "./Components/WorkstationCardNew";
+import { WorkstationCardMin } from "./Components/WorkstationCardMinimal";
 import {
   Box,
   Button,
@@ -194,7 +194,12 @@ function App() {
       <div className="App"></div>
       <Navbar>
         <Center>
-          <Box w="100%" m={10} bg={useColorModeValue("gray.100", "gray.800")}>
+          <Box
+            w="100%"
+            m={5}
+            padding={2}
+            bg={useColorModeValue("gray.100", "gray.800")}
+          >
             <Stack direction={"column"} spacing={5}>
               <Heading size="lg" textAlign="left">
                 Group 1: Personal
@@ -202,15 +207,19 @@ function App() {
               {validationElim(stats, {
                 success: (l) => (
                   <Center>
-                    <Box w="100%" m={10}>
-                      <ColumnGrid minChildWidth={350} spacing={10}>
+                    <Box w="100%">
+                      <ColumnGrid
+                        minChildWidth={325}
+                        hMinSpacing={40}
+                        vSpacing={10}
+                      >
                         {l.workStations.map((row, i) => {
                           return (
-                            <WorkstationCard
+                            <WorkstationCardMin
                               key={i}
-                              name={row.name}
-                              gpus={row.gpus}
-                            ></WorkstationCard>
+                              width={325}
+                              data={row}
+                            ></WorkstationCardMin>
                           );
                         })}
                       </ColumnGrid>
