@@ -59,7 +59,7 @@ func createTables(db *sql.DB) error {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS GPUs (
-		Id integer NOT NULL,
+		Id serial NOT NULL,
 		Machine text NOT NULL REFERENCES Machines (Hostname),
 		Name text NOT NULL,
 		Brand text NOT NULL,
@@ -97,6 +97,7 @@ func (conn postgresConn) UpdateLastSeen(host string) error {
 
 	slog.Debug("checking if machine exists")
 
+	// TODO: Replace with usage of QueryRow
 	rows, err := tx.Query(`SELECT LastSeen
 		FROM Machines
 		WHERE Hostname=$1`,
@@ -163,8 +164,66 @@ func (conn postgresConn) UpdateLastSeen(host string) error {
 	return tx.Commit()
 }
 
-func (conn postgresConn) AppendDataPoint(packet uplink.GPUStats) error {
-	return nil
+func (conn postgresConn) AppendDataPoint(host string, packet uplink.GPUStats) error {
+	var err error
+
+	tx, err := conn.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	slog.Info("Find matching gpu")
+
+	// TODO: replace with Query
+	// This silently discards all rows other than the first
+	row := tx.QueryRow(`SELECT Id
+		FROM GPUs
+		WHERE Machine=$1`,
+		host)
+
+	var id int64
+	err = row.Scan(&id)
+
+	// check error type. If no rows found, add a new GPU
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			slog.Info("Didn't find a row, add new GPU")
+
+			// use TOFU approach, only set the name, brand, etc. on
+			// the first packet; future AppendDataPoint calls only
+			// add the 'dynamic' data to Stats
+			// TODO: reevaluate whether this is a good idea (what
+			// happens when a driver update occurs?)
+			newId := tx.QueryRow(`INSERT INTO GPUs
+				(Machine, Name, Brand, DriverVersion, MemoryTotal)
+				VALUES ($1, $2, $3, $4, $5)
+				RETURNING Id`,
+				host, packet.Name, packet.Brand,
+				packet.DriverVersion, packet.MemoryTotal)
+
+			err = newId.Scan(&id)
+			if err != nil {
+				return errors.Join(err, tx.Rollback())
+			}
+		} else {
+			slog.Info("Some other error occurred")
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	slog.Info("GPU now exists, push new stats")
+	now := time.Now()
+	_, err = tx.Exec(`INSERT INTO Stats
+		(Gpu, Recieved, MemoryUtilisation, GpuUtilisation, MemoryUsed,
+			FanSpeed, Temp)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+		id, now, packet.MemoryUtilisation, packet.GPUUtilisation,
+		packet.MemoryUsed, packet.FanSpeed, packet.Temp)
+	if err != nil {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	return tx.Commit()
 }
 
 func (conn postgresConn) LatestData() (map[string][]uplink.GPUStats, error) {

@@ -8,6 +8,9 @@ import (
 	"github.com/gpuctl/gpuctl/cmd/groundstation/config"
 	"github.com/gpuctl/gpuctl/internal/database/postgres"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
+
+	// TODO: REMOVE
+	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 func main() {
@@ -38,11 +41,17 @@ func main() {
 		slog.Error("updating last seen", "err", err)
 	}
 
+	err = db.AppendDataPoint("chinook", uplink.GPUStats{Name: "GT 1030", Temp: 7})
+	if err != nil {
+		slog.Error("appending data", "err", err)
+	}
+
 	data, err := db.LatestData()
 	if err != nil {
 		slog.Error("getting latest", "err", err)
 	}
 	slog.Info("Got data", "data", data)
+	// evomer :ODOT
 
 	slog.Info("Starting groundstation API server", "port", configuration.Server.Port)
 
