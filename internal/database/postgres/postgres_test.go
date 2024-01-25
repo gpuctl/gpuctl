@@ -9,9 +9,15 @@ import (
 
 // run all the database unit tests on the postgres implementation
 func TestPostgres(t *testing.T) {
+	// set default value that matches github workflow
+	url := os.Getenv("TEST_URL")
+	if url == "" {
+		url = "postgres://postgres@localhost/postgres"
+	}
+
 	for _, test := range database.UnitTests {
 		t.Run(test.Name, func(t *testing.T) {
-			db, err := New(os.Getenv("TEST_URL"))
+			db, err := New(url)
 			if err != nil {
 				t.Fatalf("Failed to open database: %v", err)
 			}

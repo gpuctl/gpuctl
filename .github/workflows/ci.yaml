@@ -10,6 +10,24 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+
+    # postgres container for the tests to run against
+    services:
+      postgres:
+        image: postgres
+        # don't use a password because it's restricted to this single workflow run
+        env:
+          POSTGRES_HOST_AUTH_METHOD: trust
+        # wait til postgres ready (taken from github docs)
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        # we run directly on the runner machine, so link ports
+        ports:
+          - 5432:5432
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
