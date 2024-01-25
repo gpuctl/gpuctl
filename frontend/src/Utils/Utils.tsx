@@ -1,3 +1,14 @@
+/** Create an array of numbers that span between a given minimum and maximum */
+export const range = (min: number, max: number) =>
+  Array.from(Array(max - min).keys()).map((x) => x + min);
+
+/**
+ * Initialise an array of a given size, filled with elements using f (which is
+ * given access to the index of the element is creating)
+ */
+export const makeArr = <T,>(size: number, f: (i: number) => T) =>
+  range(0, size).map(f);
+
 /**
  * Fires an asynchronous function but doesn't wait for the result
  */
@@ -70,7 +81,7 @@ export const loading = (): Loading => ({
   tag: VTag.Loading,
 });
 
-type ValidationElim<T, U> = {
+type ValidationMotive<T, U> = {
   success: (x: T) => U;
   loading: () => U;
   failure: (e: Error) => U;
@@ -81,7 +92,7 @@ type ValidationElim<T, U> = {
  */
 export function validationElim<T, U>(
   v: Validation<T>,
-  motive: ValidationElim<T, U>
+  motive: ValidationMotive<T, U>
 ): U {
   switch (v.tag) {
     case VTag.Success: {
