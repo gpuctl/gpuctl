@@ -19,6 +19,7 @@ import {
   TabPanels,
   Tab,
   TabPanel,
+  VStack,
 } from "@chakra-ui/react";
 import {} from "@chakra-ui/react";
 import { WorkstationCard } from "./Components/WorkstationCard";
@@ -51,135 +52,138 @@ export type GPUStats = {
   gpu_temp: number;
 };
 
-const foo: WorkStationGroup = {
-  name: "Shared",
-  workStations: [
-    {
-      name: "Workstation 1",
-      gpus: [
-        {
-          gpu_name: "NVIDIA GeForce GT 1030",
-          gpu_brand: "GeForce",
-          driver_ver: "535.146.02",
-          memory_total: 2048,
-          memory_util: 0,
-          gpu_util: 0,
-          memory_used: 82,
-          fan_speed: 35,
-          gpu_temp: 31,
-        },
-      ],
-    },
-    {
-      name: "Workstation 2",
-      gpus: [
-        {
-          gpu_name: "NVIDIA TITAN Xp",
-          gpu_brand: "Titan",
-          driver_ver: "535.146.02",
-          memory_total: 12288,
-          memory_util: 0,
-          gpu_util: 0,
-          memory_used: 83,
-          fan_speed: 23,
-          gpu_temp: 32,
-        },
-        {
-          gpu_name: "NVIDIA TITAN Xp",
-          gpu_brand: "Titan",
-          driver_ver: "535.146.02",
-          memory_total: 12288,
-          memory_util: 0,
-          gpu_util: 0,
-          memory_used: 83,
-          fan_speed: 23,
-          gpu_temp: 32,
-        },
-      ],
-    },
-    {
-      name: "Workstation 3",
-      gpus: [
-        {
-          gpu_name: "NVIDIA GeForce GT 730",
-          gpu_brand: "GeForce",
-          driver_ver: "470.223.02",
-          memory_total: 2001,
-          memory_util: 0,
-          gpu_util: 0,
-          memory_used: 220,
-          fan_speed: 30,
-          gpu_temp: 27,
-        },
-      ],
-    },
-    {
-      name: "Workstation 5",
-      gpus: [
-        {
-          gpu_name: "NVIDIA TITAN Xp",
-          gpu_brand: "Titan",
-          driver_ver: "535.146.02",
-          memory_total: 12288,
-          memory_util: 0,
-          gpu_util: 0,
-          memory_used: 83,
-          fan_speed: 23,
-          gpu_temp: 32,
-        },
-        {
-          gpu_name: "NVIDIA TITAN Xp",
-          gpu_brand: "Titan",
-          driver_ver: "535.146.02",
-          memory_total: 12288,
-          memory_util: 0,
-          gpu_util: 0,
-          memory_used: 83,
-          fan_speed: 23,
-          gpu_temp: 32,
-        },
-      ],
-    },
-    {
-      name: "Workstation 4",
-      gpus: [
-        {
-          gpu_name: "NVIDIA GeForce GT 1030",
-          gpu_brand: "GeForce",
-          driver_ver: "535.146.02",
-          memory_total: 2048,
-          memory_util: 0,
-          gpu_util: 0,
-          memory_used: 82,
-          fan_speed: 35,
-          gpu_temp: 31,
-        },
-      ],
-    },
+const foo: WorkStationGroup[] = [
+  {
+    name: "Shared",
+    workStations: [
+      {
+        name: "Workstation 1",
+        gpus: [
+          {
+            gpu_name: "NVIDIA GeForce GT 1030",
+            gpu_brand: "GeForce",
+            driver_ver: "535.146.02",
+            memory_total: 2048,
+            memory_util: 0,
+            gpu_util: 0,
+            memory_used: 82,
+            fan_speed: 35,
+            gpu_temp: 31,
+          },
+        ],
+      },
+      {
+        name: "Workstation 2",
+        gpus: [
+          {
+            gpu_name: "NVIDIA TITAN Xp",
+            gpu_brand: "Titan",
+            driver_ver: "535.146.02",
+            memory_total: 12288,
+            memory_util: 0,
+            gpu_util: 0,
+            memory_used: 83,
+            fan_speed: 23,
+            gpu_temp: 32,
+          },
+          {
+            gpu_name: "NVIDIA TITAN Xp",
+            gpu_brand: "Titan",
+            driver_ver: "535.146.02",
+            memory_total: 12288,
+            memory_util: 0,
+            gpu_util: 0,
+            memory_used: 83,
+            fan_speed: 23,
+            gpu_temp: 32,
+          },
+        ],
+      },
+      {
+        name: "Workstation 3",
+        gpus: [
+          {
+            gpu_name: "NVIDIA GeForce GT 730",
+            gpu_brand: "GeForce",
+            driver_ver: "470.223.02",
+            memory_total: 2001,
+            memory_util: 0,
+            gpu_util: 0,
+            memory_used: 220,
+            fan_speed: 30,
+            gpu_temp: 27,
+          },
+        ],
+      },
+      {
+        name: "Workstation 5",
+        gpus: [
+          {
+            gpu_name: "NVIDIA TITAN Xp",
+            gpu_brand: "Titan",
+            driver_ver: "535.146.02",
+            memory_total: 12288,
+            memory_util: 0,
+            gpu_util: 0,
+            memory_used: 83,
+            fan_speed: 23,
+            gpu_temp: 32,
+          },
+          {
+            gpu_name: "NVIDIA TITAN Xp",
+            gpu_brand: "Titan",
+            driver_ver: "535.146.02",
+            memory_total: 12288,
+            memory_util: 0,
+            gpu_util: 0,
+            memory_used: 83,
+            fan_speed: 23,
+            gpu_temp: 32,
+          },
+        ],
+      },
+      {
+        name: "Workstation 4",
+        gpus: [
+          {
+            gpu_name: "NVIDIA GeForce GT 1030",
+            gpu_brand: "GeForce",
+            driver_ver: "535.146.02",
+            memory_total: 2048,
+            memory_util: 0,
+            gpu_util: 0,
+            memory_used: 82,
+            fan_speed: 35,
+            gpu_temp: 31,
+          },
+        ],
+      },
 
-    {
-      name: "Workstation 6",
-      gpus: [
-        {
-          gpu_name: "NVIDIA GeForce GT 730",
-          gpu_brand: "GeForce",
-          driver_ver: "470.223.02",
-          memory_total: 2001,
-          memory_util: 0,
-          gpu_util: 0,
-          memory_used: 220,
-          fan_speed: 30,
-          gpu_temp: 27,
-        },
-      ],
-    },
-  ],
-};
+      {
+        name: "Workstation 6",
+        gpus: [
+          {
+            gpu_name: "NVIDIA GeForce GT 730",
+            gpu_brand: "GeForce",
+            driver_ver: "470.223.02",
+            memory_total: 2001,
+            memory_util: 0,
+            gpu_util: 0,
+            memory_used: 220,
+            fan_speed: 30,
+            gpu_temp: 27,
+          },
+        ],
+      },
+    ],
+  },
+];
 
 // Currently does not attempt to do any validation of the returned GPU stats,
 // or indeed handle errors that might be thrown by the Promises
-const retrieveAllStats: () => Promise<Validated<WorkStationGroup>> = async () =>
-  success(foo);
+const retrieveAllStats: () => Promise<
+  Validated<WorkStationGroup[]>
+> = async () => success(foo);
 // success(await (await fetch(API_URL + "/api/stats/all")).json());
 
 function App() {
@@ -189,24 +193,27 @@ function App() {
     setInterval(updateStats, REFRESH_INTERVAL);
   });
 
+  const bgcol = useColorModeValue("gray.100", "gray.800");
+
   return (
     <ChakraProvider>
       <div className="App"></div>
       <Navbar>
-        <Center>
-          <Box
-            w="100%"
-            m={5}
-            padding={2}
-            bg={useColorModeValue("gray.100", "gray.800")}
-          >
-            <Stack direction={"column"} spacing={5}>
-              <Heading size="lg" textAlign="left">
-                Group 1: Personal
-              </Heading>
-              {validationElim(stats, {
-                success: (l) => (
-                  <Center>
+        {validationElim(stats, {
+          success: (g) => (
+            <VStack spacing={20}>
+              {g.map((l) => (
+                <Box
+                  w="97%"
+                  m={5}
+                  bg={bgcol}
+                  paddingTop={10}
+                  paddingBottom={10}
+                >
+                  <VStack spacing={5}>
+                    <Heading size="lg" textAlign="left">
+                      Group 1: Personal
+                    </Heading>
                     <Box w="100%">
                       <ColumnGrid
                         minChildWidth={325}
@@ -224,20 +231,14 @@ function App() {
                         })}
                       </ColumnGrid>
                     </Box>
-                  </Center>
-                  /* <WorkstationCardNew
-                          key={0}
-                          name="Workstation 0"
-                          gpus={[l[0]]}
-                        ></WorkstationCardNew>
-                        */
-                ),
-                loading: () => <p>Retrieving data from API server...</p>,
-                failure: (_) => <p>Something has gone wrong!</p>,
-              })}
-            </Stack>
-          </Box>
-        </Center>
+                  </VStack>
+                </Box>
+              ))}
+            </VStack>
+          ),
+          loading: () => <p>Retrieving data from API server...</p>,
+          failure: (_) => <p>Something has gone wrong!</p>,
+        })}
         <p>Tab le</p>
       </Navbar>
     </ChakraProvider>
