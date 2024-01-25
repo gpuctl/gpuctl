@@ -202,18 +202,14 @@ function App() {
         {validationElim(stats, {
           success: (g) => (
             <VStack spacing={20}>
-              {g.map((l) => (
-                <Box
-                  w="97%"
-                  m={5}
-                  bg={bgcol}
-                  paddingTop={10}
-                  paddingBottom={10}
-                >
+              {g.map((l, i) => (
+                <Box w="97%" m={5} bg={bgcol} paddingTop={5} paddingBottom={10}>
                   <VStack spacing={5}>
-                    <Heading size="lg" textAlign="left">
-                      Group 1: Personal
-                    </Heading>
+                    <Box w="100%" paddingLeft={5}>
+                      <Heading size="lg" textAlign="left">
+                        Group {i + 1}: {l.name}
+                      </Heading>
+                    </Box>
                     <Box w="100%">
                       <ColumnGrid
                         minChildWidth={325}
