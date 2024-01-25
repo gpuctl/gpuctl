@@ -1,5 +1,5 @@
 import { ReactNode, useRef } from "react";
-import { useContainerDim } from "../Utils/Hooks";
+import { useDims } from "../Utils/Hooks";
 import { Center, HStack, VStack } from "@chakra-ui/react";
 import { makeArr } from "../Utils/Utils";
 
@@ -15,7 +15,7 @@ export const ColumnGrid = ({
   children: ReactNode[];
 }) => {
   const ref = useRef<HTMLHeadingElement>(null);
-  const { w: width } = useContainerDim(ref);
+  const { w: width } = useDims(ref);
   const numCols = Math.min(
     Math.max(
       1,
@@ -26,7 +26,7 @@ export const ColumnGrid = ({
   const tempSpace = (width - numCols * minChildWidth) / (numCols + 1);
   const hspacing = numCols === 1 ? 0 : tempSpace;
 
-  const grouped: ReactNode[][] = makeArr(() => [], numCols);
+  const grouped: ReactNode[][] = makeArr(numCols, () => []);
   let colNum = 0;
   children.forEach((c) => {
     grouped[colNum].push(c);

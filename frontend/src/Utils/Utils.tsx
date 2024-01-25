@@ -1,7 +1,12 @@
+/** Create an array of numbers that span between a given minimum and maximum */
 export const range = (min: number, max: number) =>
   Array.from(Array(max - min).keys()).map((x) => x + min);
 
-export const makeArr = <T,>(f: (i: number) => T, size: number) =>
+/**
+ * Initialise an array of a given size, filled with elements using f (which is
+ * given access to the index of the element is creating)
+ */
+export const makeArr = <T,>(size: number, f: (i: number) => T) =>
   range(0, size).map(f);
 
 /**

@@ -39,10 +39,10 @@ export const useOnce = (f: EffectCallback) => {
 export type Dims = { w: number; h: number };
 
 /**
- * Get dimensions of the container
+ * Get the dimensions of the referenced element
  * See: https://stackoverflow.com/questions/43817118/how-to-get-the-width-of-a-react-element
  */
-export const useContainerDim = (myRef: RefObject<HTMLHeadingElement>) => {
+export const useDims = (myRef: RefObject<HTMLHeadingElement>) => {
   const [dims, setDims] = useState<Dims>({ w: 0, h: 0 });
 
   const setDimsFromParent = (cur: HTMLHeadingElement) =>
@@ -59,12 +59,9 @@ export const useContainerDim = (myRef: RefObject<HTMLHeadingElement>) => {
     };
 
     updateDims();
-
-    // window.addEventListener("load", updateDims);
     window.addEventListener("resize", updateDims);
 
     return () => {
-      // window.removeEventListener("load", updateDims);
       window.removeEventListener("resize", updateDims);
     };
   }, [myRef]);
