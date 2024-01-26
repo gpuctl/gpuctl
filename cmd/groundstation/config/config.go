@@ -12,6 +12,9 @@ type Configuration struct {
 	Server struct {
 		Port int `toml:"port"`
 	} `toml:"server"`
+	Database struct {
+		Url string `toml:"url"`
+	} `toml:"database"`
 }
 
 func DefaultConfiguration() Configuration {
@@ -19,6 +22,9 @@ func DefaultConfiguration() Configuration {
 		Server: struct {
 			Port int `toml:"port"`
 		}{Port: 8080},
+		Database: struct {
+			Url string `toml:"url"`
+		}{Url: "postgres://gpuctl@localhost/gpuctl"},
 	}
 }
 

@@ -69,7 +69,10 @@ func TestFileEmpty_InvalidCase(t *testing.T) {
 func TestGetConfiguration_ValidConfig(t *testing.T) {
 	content := `
 [server]
-port = 9090`
+port = 9090
+
+[database]
+url = "postgres://tony@ic.ac.uk/squares"`
 	filename, cleanup := createTempConfigFile(content, t)
 	defer cleanup()
 
@@ -78,6 +81,7 @@ port = 9090`
 	config, err := GetConfiguration(filename)
 	assert.NoError(t, err)
 	assert.Equal(t, 9090, config.Server.Port)
+	assert.Equal(t, "postgres://tony@ic.ac.uk/squares", config.Database.Url)
 }
 
 func TestGetConfiguration_DefaultConfig(t *testing.T) {
