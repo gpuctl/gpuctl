@@ -3,6 +3,11 @@ package uplink
 // TODO: change to "/gs-api/gpu-stats"
 const GPUStatsUrl = "/gs-api/status/"
 
+type StatsPackage struct {
+	Hostname string `json:"hostname"`
+	Stats GPUStats `json:"stats"`
+}
+
 type GPUStats struct {
 	// Contextual information
 	Name          string `json:"gpu_name"`

@@ -70,6 +70,6 @@ func (s *satellite) sendGPUStatus(gpuhandler gpustats.GPUDataSource) error {
 
 	return femto.Post(
 		s.gsAddr+uplink.GPUStatsUrl,
-		stats,
+		uplink.StatsPackage{Hostname: s.hostname, Stats: stats},
 	)
 }

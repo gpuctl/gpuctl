@@ -2,11 +2,10 @@ package groundstation
 
 import (
 	"net/http"
-	"sync"
-	"time"
 
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+	"github.com/gpuctl/gpuctl/internal/database"
 )
 
 type Server struct {
@@ -18,9 +17,9 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(w, r)
 }
 
-func NewServer() *Server {
+func NewServer(db database.Database) *Server {
 	mux := new(femto.Femto)
-	gs := &groundstation{lastSeen: make(map[string]time.Time)}
+	gs := &groundstation{db}
 
 	/// Register routes.
 	femto.OnPost(mux, uplink.HeartbeatUrl, gs.heartbeat)
@@ -30,6 +29,5 @@ func NewServer() *Server {
 }
 
 type groundstation struct {
-	lastSeen map[string]time.Time
-	mu       sync.Mutex
+	db database.Database
 }
