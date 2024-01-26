@@ -10,6 +10,9 @@ import (
 )
 
 func main() {
+	slog.Info("Starting groundstation")
+
+	slog.Info("Reading configuration file")
 	configuration, err := config.GetConfiguration("config.toml")
 
 	if err != nil {
@@ -17,7 +20,7 @@ func main() {
 		return
 	}
 
-	// open database connection
+	slog.Info("Opening database connection")
 	dbUrl := configuration.Database.Url
 	db, err := postgres.New(dbUrl)
 	if err != nil {
