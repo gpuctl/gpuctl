@@ -95,55 +95,86 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
         <Table variant="striped">
           <Thead>
             <Tr>
-              {Object.keys(shownColumns).map((col) => {
-                if (shownColumns[col]) return <Th key={col}>{col}</Th>;
-                else return <></>;
+              {Object.keys(shownColumns).map((col, i) => {
+                if (shownColumns[col]) return <Th key={i}>{col}</Th>;
+                else return null;
               })}
             </Tr>
           </Thead>
-          <Tbody>
-            {groups.map(({ name: group_name, workStations }) =>
-              workStations.map(({ name: workstation_name, gpus }) =>
-                gpus.map((gpu) => (
-                  <Tr key={gpu.gpu_name}>
-                    {shownColumns.group ? <Td> {group_name}</Td> : <></>}
-                    {shownColumns.machine_name ? (
-                      <Td> {workstation_name}</Td>
-                    ) : (
-                      <></>
-                    )}
-                    {shownColumns.gpu_name ? <Td> {gpu.gpu_name}</Td> : <></>}
-                    {shownColumns.is_free ? (
-                      <Td> {isFree(gpu).toString()}</Td>
-                    ) : (
-                      <></>
-                    )}
-                    {shownColumns.gpu_brand ? <Td> {gpu.gpu_brand}</Td> : <></>}
-                    {shownColumns.driver_ver ? (
-                      <Td> {gpu.driver_ver}</Td>
-                    ) : (
-                      <></>
-                    )}
-                    {shownColumns.memory_total ? (
-                      <Td> {gpu.memory_total}</Td>
-                    ) : (
-                      <></>
-                    )}
-                    {shownColumns.memory_util ? (
-                      <Td> {gpu.memory_util}</Td>
-                    ) : (
-                      <></>
-                    )}
-                    {shownColumns.gpu_util ? <Td> {gpu.gpu_util}</Td> : <></>}
-                    {shownColumns.memory_used ? (
-                      <Td> {gpu.memory_used}</Td>
-                    ) : (
-                      <></>
-                    )}
-                    {shownColumns.fan_speed ? <Td> {gpu.fan_speed}</Td> : <></>}
-                    {shownColumns.gpu_temp ? <Td> {gpu.gpu_temp}</Td> : <></>}
-                  </Tr>
-                ))
+          <Tbody key={1}>
+            {groups.map(({ name: group_name, workStations }, i) =>
+              workStations.map(({ name: workstation_name, gpus }, j) =>
+                gpus.map((gpu, k) => {
+                  const id =
+                    (i * gpus.length * workStations.length +
+                      j * gpus.length +
+                      k) *
+                    12; //size of gpu
+                  return (
+                    <Tr key={id}>
+                      {shownColumns.group ? (
+                        <Td key={id}> {group_name}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.machine_name ? (
+                        <Td key={id + 1}> {workstation_name}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.gpu_name ? (
+                        <Td key={id + 2}> {gpu.gpu_name}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.is_free ? (
+                        <Td key={id + 3}> {isFree(gpu).toString()}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.gpu_brand ? (
+                        <Td key={id + 4}> {gpu.gpu_brand}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.driver_ver ? (
+                        <Td key={id + 5}> {gpu.driver_ver}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.memory_total ? (
+                        <Td key={id + 6}> {gpu.memory_total}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.memory_util ? (
+                        <Td key={id + 7}> {gpu.memory_util}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.gpu_util ? (
+                        <Td key={id + 8}> {gpu.gpu_util}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.memory_used ? (
+                        <Td key={id + 9}> {gpu.memory_used}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.fan_speed ? (
+                        <Td key={id + 10}> {gpu.fan_speed}</Td>
+                      ) : (
+                        null
+                      )}
+                      {shownColumns.gpu_temp ? (
+                        <Td key={id + 11}> {gpu.gpu_temp}</Td>
+                      ) : (
+                        null
+                      )}
+                    </Tr>
+                  );
+                })
               )
             )}
           </Tbody>

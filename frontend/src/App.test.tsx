@@ -18,8 +18,8 @@ after fetch succeeds, no longer show that message`, async () => {
 
   render(<App />);
 
-  const status = screen.getByText("Retrieving data from API server...");
-  expect(status).toBeInTheDocument();
+  const statuses = screen.getAllByText("Retrieving data from API server...");
+  statuses.forEach((status) => expect(status).toBeInTheDocument());
 
   await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
