@@ -38,9 +38,7 @@ export const WorkstationCard = ({ name, gpus }: WorkStationData) => {
                     </Td>
                     <Td>
                       <Heading size="sm">
-                        {isFree(s)
-                          ? `Yes ✅ (${s.gpu_util}% used)`
-                          : "No ❌"}
+                        {isFree(s) ? `Yes ✅ (${s.gpu_util}% used)` : "No ❌"}
                       </Heading>
                     </Td>
                   </Tr>

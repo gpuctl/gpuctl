@@ -1,4 +1,4 @@
-import {GPUStats} from "../Data"
+import { GPUStats } from "../Data";
 
 /** Create an array of numbers that span between a given minimum and maximum */
 export const range = (min: number, max: number) =>
@@ -94,7 +94,7 @@ type ValidationMotive<T, U> = {
  */
 export function validationElim<T, U>(
   v: Validation<T>,
-  motive: ValidationMotive<T, U>
+  motive: ValidationMotive<T, U>,
 ): U {
   switch (v.tag) {
     case VTag.Success: {
@@ -109,13 +109,13 @@ export function validationElim<T, U>(
   }
 }
 
-export function isFree(s : GPUStats): Boolean {
-  return s.gpu_util < 5
+export function isFree(s: GPUStats): Boolean {
+  return s.gpu_util < 5;
 }
 
 export const mapSuccess = <T, U>(
   v: Validation<T>,
-  f: (x: T) => U
+  f: (x: T) => U,
 ): Validation<U> => (v.tag === VTag.Success ? success(f(v.data)) : v);
 
 /**
