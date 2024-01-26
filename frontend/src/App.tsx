@@ -14,6 +14,7 @@ import {} from "@chakra-ui/react";
 import { Navbar } from "./Components/Navbar";
 import { ColumnGrid } from "./Components/ColumnGrid";
 import { WorkStationGroup } from "./Data";
+import { GlobalStyleProps } from "@chakra-ui/theme-tools";
 
 const API_URL = "http://localhost:8000";
 export const REFRESH_INTERVAL = 5000;
@@ -22,8 +23,17 @@ export const REFRESH_INTERVAL = 5000;
 // or indeed handle errors that might be thrown by the Promises
 const retrieveAllStats: () => Promise<
   Validated<WorkStationGroup[]>
-> = async () => success(await (await fetch(API_URL + "/api/stats/all")).json());
+> = async () =>
+  success(sortData(await (await fetch(API_URL + "/api/stats/all")).json()));
 //success(foo);
+
+const sortData = (gs: WorkStationGroup[]) =>
+  gs.map(({ name, workStations }) => ({
+    name: name,
+    workStations: workStations.sort((ws1, ws2) =>
+      ws1.name.localeCompare(ws2.name)
+    ),
+  }));
 
 function App() {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
@@ -82,7 +92,7 @@ function App() {
           failure: (_) => <p>Something has gone wrong!</p>,
         })}
         {validationElim(stats, {
-          success: (l: WorkStationGroup[]) => (<TableTab groups={l}></TableTab>),
+          success: (l: WorkStationGroup[]) => <TableTab groups={l}></TableTab>,
           loading: () => <p>Retrieving data from API server...</p>,
           failure: (_) => <p>Something has gone wrong!</p>,
         })}
