@@ -19,6 +19,7 @@ func main() {
 		log.Error("failed to get hostname", "err", err)
 		return
 	}
+	log.Info("got hostname", "hostname", host)
 
 	s := satellite{
 		// TODO: Make this configurable
