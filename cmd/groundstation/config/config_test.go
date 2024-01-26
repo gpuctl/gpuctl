@@ -37,6 +37,7 @@ func createTempConfigFile(content string, t *testing.T) (string, func()) {
 }
 
 func TestFileEmpty_EmptyCase(t *testing.T) {
+	t.Parallel()
 	content := ``
 
 	filename, cleanup := createTempConfigFile(content, t)
@@ -49,6 +50,7 @@ func TestFileEmpty_EmptyCase(t *testing.T) {
 }
 
 func TestFileEmpty_NonEmptyCase(t *testing.T) {
+	t.Parallel()
 	content := `see, it's not empty :)`
 
 	filename, cleanup := createTempConfigFile(content, t)
@@ -61,12 +63,14 @@ func TestFileEmpty_NonEmptyCase(t *testing.T) {
 }
 
 func TestFileEmpty_InvalidCase(t *testing.T) {
+	t.Parallel()
 	_, err := IsFileEmpty("dummy_path")
 
 	assert.Error(t, err)
 }
 
 func TestGetConfiguration_ValidConfig(t *testing.T) {
+	t.Parallel()
 	content := `
 [server]
 port = 9090`
@@ -81,6 +85,7 @@ port = 9090`
 }
 
 func TestGetConfiguration_DefaultConfig(t *testing.T) {
+	t.Parallel()
 	content := ``
 
 	filename, cleanup := createTempConfigFile(content, t)
@@ -94,6 +99,7 @@ func TestGetConfiguration_DefaultConfig(t *testing.T) {
 }
 
 func TestGetConfiguration_InvalidConfig(t *testing.T) {
+	t.Parallel()
 	content := `
 server: "should be a table, not a string"`
 	filename, cleanup := createTempConfigFile(content, t)
@@ -107,5 +113,6 @@ server: "should be a table, not a string"`
 }
 
 func TestPortToAddress(t *testing.T) {
+	t.Parallel()
 	assert.Equal(t, ":9090", PortToAddress(9090))
 }

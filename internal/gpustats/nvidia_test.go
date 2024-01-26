@@ -18,6 +18,7 @@ const (
 )
 
 func TestNvidiaSmiXMLParsing(t *testing.T) {
+	t.Parallel()
 	files, err := os.ReadDir(testDataRoot)
 	if err != nil {
 		t.Fatalf("Could not read test data root: %v", err)
@@ -71,6 +72,7 @@ func TestNvidiaSmiXMLParsing(t *testing.T) {
 }
 
 func TestNvidiaSmiFaultyInput(t *testing.T) {
+	t.Parallel()
 	files, err := os.ReadDir(testDataRoot)
 	if err != nil {
 		t.Fatalf("Could not read test data root: %v", err)
@@ -95,6 +97,7 @@ func TestNvidiaSmiFaultyInput(t *testing.T) {
 }
 
 func TestNvidiaSmiInvalidDataParse(t *testing.T) {
+	t.Parallel()
 	files, err := os.ReadDir(testDataRoot)
 	if err != nil {
 		t.Fatalf("Could not read test data root: %v", err)

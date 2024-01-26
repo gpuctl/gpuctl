@@ -8,6 +8,7 @@ import (
 )
 
 func TestAdd(t *testing.T) {
+	t.Parallel()
 	packet1 := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
 	packet1.MemoryUtilisation = 50
 	packet1.GPUUtilisation = 60
@@ -23,6 +24,7 @@ func TestAdd(t *testing.T) {
 }
 
 func TestAddFail(t *testing.T) {
+	t.Parallel()
 	packet1 := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
 	packet1.MemoryUtilisation = 50
 	packet1.GPUUtilisation = 60
@@ -33,6 +35,7 @@ func TestAddFail(t *testing.T) {
 }
 
 func TestUncontextualAdd(t *testing.T) {
+	t.Parallel()
 	packet1 := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
 	packet1.MemoryUtilisation = 50
 	packet1.GPUUtilisation = 60
@@ -47,6 +50,7 @@ func TestUncontextualAdd(t *testing.T) {
 }
 
 func TestScale(t *testing.T) {
+	t.Parallel()
 	packet := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
 	packet.MemoryUtilisation = 50
 
@@ -55,6 +59,7 @@ func TestScale(t *testing.T) {
 }
 
 func TestDefault(t *testing.T) {
+	t.Parallel()
 	packet := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
 	assert.Equal(t, "GPU1", packet.Name)
 	assert.Equal(t, float64(0), packet.MemoryUtilisation)

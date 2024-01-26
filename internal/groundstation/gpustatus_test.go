@@ -59,6 +59,7 @@ func assertResponseHas(t *testing.T, res *http.Response, expectedStatusCode int,
 }
 
 func TestHandleStatusSubmission(t *testing.T) {
+	t.Parallel()
 	validJSON := []byte(`{"gpu_name": "Test GPU", "gpu_brand": "BrandX", "driver_ver": "1.0", "memory_total": 4096, "memory_util": 50, "gpu_util": 50, "memory_used": 2048, "fan_speed": 70, "gpu_temp": 60}`)
 
 	res := simulateSubmissionAndGetResponse(validJSON, "POST")
@@ -67,6 +68,7 @@ func TestHandleStatusSubmission(t *testing.T) {
 }
 
 func TestHandleWrongMethodSubmission(t *testing.T) {
+	t.Parallel()
 	validJSON := []byte(`{"gpu_name": "Test GPU", "gpu_brand": "BrandX", "driver_ver": "1.0", "memory_total": 4096, "memory_util": 50, "gpu_util": 50, "memory_used": 2048, "fan_speed": 70, "gpu_temp": 60}`)
 
 	res := simulateSubmissionAndGetResponse(validJSON, "GET")
@@ -75,12 +77,14 @@ func TestHandleWrongMethodSubmission(t *testing.T) {
 }
 
 func TestHandleBadJsonSubmission(t *testing.T) {
+	t.Parallel()
 	res := simulateCorruptedSubmissionAndGetResponse("POST")
 
 	assertResponseHas(t, res, http.StatusBadRequest, "Read corrupted\n")
 }
 
 func TestHandleBadJsonDeserialisation(t *testing.T) {
+	t.Parallel()
 	invalidJSON := []byte(`{"gpu_name": "Test GPU", "gpu_brand": "BrandX", "driver_ver": 1.0}`)
 
 	res := simulateSubmissionAndGetResponse(invalidJSON, "POST")
