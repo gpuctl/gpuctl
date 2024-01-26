@@ -28,6 +28,7 @@ func NewServer(db database.Database) *Server {
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 	s.mux.ServeHTTP(w, r)
 }
 
