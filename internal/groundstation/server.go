@@ -3,9 +3,9 @@ package groundstation
 import (
 	"net/http"
 
+	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/uplink"
-	"github.com/gpuctl/gpuctl/internal/database"
 )
 
 type Server struct {

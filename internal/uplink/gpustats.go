@@ -4,8 +4,8 @@ package uplink
 const GPUStatsUrl = "/gs-api/status/"
 
 type StatsPackage struct {
-	Hostname string `json:"hostname"`
-	Stats GPUStats `json:"stats"`
+	Hostname string   `json:"hostname"`
+	Stats    GPUStats `json:"stats"`
 }
 
 type GPUStats struct {
