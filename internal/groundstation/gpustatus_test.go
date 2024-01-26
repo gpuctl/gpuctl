@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/stretchr/testify/assert"
@@ -25,7 +26,7 @@ func simulateCorruptedSubmissionAndGetResponse(method string) *http.Response {
 	req := httptest.NewRequest(method, uplink.GPUStatsUrl, &corruptedReader{})
 	w := httptest.NewRecorder()
 
-	s := groundstation.NewServer()
+	s := groundstation.NewServer(database.InMemory())
 	s.ServeHTTP(w, req)
 
 	res := w.Result()
@@ -38,7 +39,7 @@ func simulateSubmissionAndGetResponse(submission []byte, method string) *http.Re
 	req := httptest.NewRequest(method, uplink.GPUStatsUrl, bytes.NewBuffer(submission))
 	w := httptest.NewRecorder()
 
-	s := groundstation.NewServer()
+	s := groundstation.NewServer(database.InMemory())
 	s.ServeHTTP(w, req)
 
 	res := w.Result()

@@ -7,6 +7,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
@@ -14,7 +15,7 @@ import (
 func TestHeartbeatRace(t *testing.T) {
 	t.Parallel()
 
-	srv := groundstation.NewServer()
+	srv := groundstation.NewServer(database.InMemory())
 	var wg sync.WaitGroup
 
 	toSpawn := 100
