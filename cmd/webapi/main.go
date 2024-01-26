@@ -10,7 +10,8 @@ import (
 func main() {
 	slog.Info("Starting webapi")
 
-	srv := webapi.NewServer()
+	// TODO: Don't be nil
+	srv := webapi.NewServer(nil)
 
 	http.ListenAndServe(":8000", srv)
 }
