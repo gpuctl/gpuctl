@@ -17,14 +17,54 @@ func (f *Femto) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f.mux.ServeHTTP(w, r)
 }
 
-func OnPost[T any](f *Femto, pattern string, handle HandlerFunc[T]) {
+func OnPost[T any](f *Femto, pattern string, handle PostFunc[T]) {
 	f.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		doPost(f, w, r, handle)
 	})
 }
 
-func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle HandlerFunc[T]) {
+func OnGet[T any](f *Femto, pattern string, handle GetFunc[T]) {
+	f.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
+		doGet(f, w, r, handle)
+	})
+}
 
+func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFunc[T]) {
+	reqNo := f.nextReqNo()
+	log := f.logger().With(slog.Uint64("req_no", reqNo))
+
+	log.Info("New Request", "method", r.Method, "url", r.URL, "from", r.RemoteAddr)
+
+	if r.Method != http.MethodGet {
+		log.Info("Wanted GET, returned 405")
+		http.Error(w, "Expected GET", http.StatusMethodNotAllowed)
+		return
+	}
+
+	ise := func(ctx string, e error) {
+		log.Error(ctx, "err", e)
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+
+	data, err := handle(r, log)
+	if err != nil {
+		ise("application error", err)
+		return
+	}
+
+	jsonb, err := json.Marshal(data)
+	if err != nil {
+		ise("marshaling to json failed", err)
+		return
+	}
+
+	_, err = w.Write(jsonb)
+	if err != nil {
+		ise("writing failed", err)
+	}
+}
+
+func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle PostFunc[T]) {
 	reqNo := f.nextReqNo()
 	log := f.logger().With(slog.Uint64("req_no", reqNo))
 
@@ -65,4 +105,5 @@ func (f *Femto) logger() *slog.Logger {
 	return slog.Default()
 }
 
-type HandlerFunc[T any] func(T, *http.Request, *slog.Logger) error
+type PostFunc[T any] func(T, *http.Request, *slog.Logger) error
+type GetFunc[T any] func(*http.Request, *slog.Logger) (T, error)

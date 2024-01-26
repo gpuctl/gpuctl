@@ -1,5 +1,9 @@
+
+// These types need to be kept in sync with `internal/webapi/types.go`
+
 export type WorkStationGroup = {
   name: string;
+  // TODO: Consistant cases here
   workStations: WorkStationData[];
 };
 
@@ -8,6 +12,7 @@ export type WorkStationData = {
   gpus: GPUStats[];
 };
 
+// This needs to be kept in sync with `internal/uplink/
 export type GPUStats = {
   gpu_name: string;
   gpu_brand: string;

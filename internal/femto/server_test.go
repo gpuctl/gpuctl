@@ -90,3 +90,63 @@ func TestUserError(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Contains(t, string(data), "their is no spoon")
 }
+
+func TestGetHappyPath(t *testing.T) {
+	t.Parallel()
+
+	mux := new(femto.Femto)
+
+	type Foo struct {
+		X int
+	}
+
+	femto.OnGet(mux, "/happy", func(r *http.Request, l *slog.Logger) (Foo, error) {
+		return Foo{101}, nil
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/happy", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+	defer req.Body.Close()
+
+	assert.Equal(t, http.StatusOK, w.Code)
+
+	j := w.Body.Bytes()
+	assert.JSONEq(t, `{"X": 101}`, string(j))
+}
+
+type unit struct{}
+
+func TestGetWrongMethod(t *testing.T) {
+	t.Parallel()
+
+	mux := new(femto.Femto)
+	femto.OnGet(mux, "/api", func(r *http.Request, l *slog.Logger) (unit, error) {
+		return unit{}, nil
+	})
+
+	req := httptest.NewRequest(http.MethodPost, "/api", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+	defer req.Body.Close()
+
+	assert.Equal(t, http.StatusMethodNotAllowed, w.Code)
+	assert.Contains(t, w.Body.String(), "Expected GET")
+}
+
+func TestGetApplicationErr(t *testing.T) {
+	t.Parallel()
+
+	mux := new(femto.Femto)
+	femto.OnGet(mux, "/api", func(r *http.Request, l *slog.Logger) (unit, error) {
+		return unit{}, errors.New("Some application Error")
+	})
+
+	req := httptest.NewRequest(http.MethodGet, "/api", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+	defer req.Body.Close()
+
+	assert.Equal(t, http.StatusInternalServerError, w.Code)
+	assert.Contains(t, w.Body.String(), "Some application Error")
+}
