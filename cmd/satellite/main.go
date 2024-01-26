@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"log/slog"
 	"os"
 	"time"
@@ -11,8 +12,15 @@ import (
 )
 
 func main() {
+	fakeGpus := flag.Bool("fakegpu", false, "Use fake GPU data")
+
+	// don't define flags below here
+	flag.Parse()
+	// don't access flags above here
 
 	log := slog.Default()
+
+	log.Info("Starting satellite", "fakegpu", *fakeGpus)
 
 	host, err := os.Hostname()
 	if err != nil {
@@ -28,9 +36,12 @@ func main() {
 		hostname: host,
 	}
 
-	log.Info("Starting satellite")
-
-	hndlr := gpustats.NvidiaGPUHandler{}
+	var hndlr gpustats.GPUDataSource
+	if *fakeGpus {
+		hndlr = gpustats.FakeGPU{}
+	} else {
+		hndlr = gpustats.NvidiaGPUHandler{}
+	}
 
 	for {
 		log.Info("Sending heartbeat")
