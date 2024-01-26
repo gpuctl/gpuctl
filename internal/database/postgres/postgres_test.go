@@ -9,6 +9,10 @@ import (
 
 // run all the database unit tests on the postgres implementation
 func TestPostgres(t *testing.T) {
+	if testing.Short() {
+		t.Skip("not connecting to postgres in short tests")
+	}
+
 	// set default value that matches github workflow
 	url := os.Getenv("TEST_URL")
 	if url == "" {
