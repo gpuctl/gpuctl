@@ -1,4 +1,5 @@
 import "./App.css";
+import { TableTab } from "./Components/DataTable";
 import { useJarJar, useOnce } from "./Utils/Hooks";
 import { Validated, success, validationElim } from "./Utils/Utils";
 import { WorkstationCardMin } from "./Components/WorkstationCardMinimal";
@@ -80,7 +81,11 @@ function App() {
           loading: () => <p>Retrieving data from API server...</p>,
           failure: (_) => <p>Something has gone wrong!</p>,
         })}
-        <p>Tab le</p>
+        {validationElim(stats, {
+          success: (l: WorkStationGroup[]) => (<TableTab groups={l}></TableTab>),
+          loading: () => <p>Retrieving data from API server...</p>,
+          failure: (_) => <p>Something has gone wrong!</p>,
+        })}
       </Navbar>
     </ChakraProvider>
   );

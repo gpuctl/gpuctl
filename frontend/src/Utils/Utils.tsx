@@ -1,3 +1,5 @@
+import {GPUStats} from "../Data"
+
 /** Create an array of numbers that span between a given minimum and maximum */
 export const range = (min: number, max: number) =>
   Array.from(Array(max - min).keys()).map((x) => x + min);
@@ -105,6 +107,10 @@ export function validationElim<T, U>(
       return motive.loading();
     }
   }
+}
+
+export function isFree(s : GPUStats): Boolean {
+  return s.gpu_util < 5
 }
 
 export const mapSuccess = <T, U>(
