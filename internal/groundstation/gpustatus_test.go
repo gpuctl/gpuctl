@@ -86,7 +86,7 @@ func TestHandleBadJsonSubmission(t *testing.T) {
 
 func TestHandleBadJsonDeserialisation(t *testing.T) {
 	t.Parallel()
-	invalidJSON := []byte(`{"gpu_name": "Test GPU", "gpu_brand": "BrandX", "driver_ver": 1.0}`)
+	invalidJSON := []byte(`{"hostname": true}`)
 
 	res := simulateSubmissionAndGetResponse(invalidJSON, "POST")
 
