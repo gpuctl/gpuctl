@@ -17,6 +17,9 @@ func TestInMemory(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Empty(t, data)
 
+	err = db.UpdateLastSeen("foo")
+	assert.NoError(t, err)
+
 	err = db.AppendDataPoint("foo", uplink.GPUStats{
 		Name: "foo-1",
 	})
