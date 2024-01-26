@@ -19,6 +19,7 @@ func main() {
 		log.Error("failed to get hostname", "err", err)
 		return
 	}
+	log.Info("got hostname", "hostname", host)
 
 	s := satellite{
 		// TODO: Make this configurable
@@ -31,22 +32,23 @@ func main() {
 
 	hndlr := gpustats.NvidiaGPUHandler{}
 
-	for i := 0; i < 10; i++ {
-		log.Debug("Sending packets")
+	for {
+		log.Info("Sending heartbeat")
 		err := s.sendHeartBeat()
 		if err != nil {
 			log.Error("failed to send heartbeat", "err", err)
 		}
+		time.Sleep(2 * time.Second)
 		// TODO: testing only, should not send packets this frequently?
+		log.Info("Sending status")
 		err = s.sendGPUStatus(hndlr)
 		if err != nil {
 			log.Error("failed to send status", "err", err)
 		}
-		time.Sleep(50 * time.Millisecond)
+		time.Sleep(2 * time.Second)
 	}
 
 	log.Info("Stopped satellite")
-
 }
 
 type satellite struct {
@@ -70,6 +72,6 @@ func (s *satellite) sendGPUStatus(gpuhandler gpustats.GPUDataSource) error {
 
 	return femto.Post(
 		s.gsAddr+uplink.GPUStatsUrl,
-		stats,
+		uplink.StatsPackage{Hostname: s.hostname, Stats: stats},
 	)
 }
