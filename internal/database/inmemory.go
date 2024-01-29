@@ -8,6 +8,10 @@ import (
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
+var (
+	ErrAppendNotPresent = errors.New("appending to non present machine")
+)
+
 type inMemory struct {
 	stats    map[string][]uplink.GPUStatSample
 	lastSeen map[string]struct{}
@@ -25,7 +29,6 @@ func InMemory() Database {
 	}
 }
 
-var ErrAppendNotPresent = errors.New("appending to non present machine")
 
 // AppendDataPoint implements Database.
 func (m *inMemory) AppendDataPoint(host string, packet uplink.GPUStatSample) error {
@@ -37,6 +40,13 @@ func (m *inMemory) AppendDataPoint(host string, packet uplink.GPUStatSample) err
 	}
 
 	m.stats[host] = append(m.stats[host], packet)
+	return nil
+}
+
+func (m *inMemory) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
+	// TODO: add functionality
+	m.mu.Lock()
+	defer m.mu.Unlock()
 	return nil
 }
 

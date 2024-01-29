@@ -14,6 +14,9 @@ type Database interface {
 	//       this initial version assumes all machines have a single GPU
 	AppendDataPoint(host string, packet uplink.GPUStatSample) error
 
+	// Update the information for the GPU contained in uplink.GPUInfo
+	UpdateGPUContext(host string, info uplink.GPUInfo) error
+
 	// get the latest metrics for all approved machines
 	// returns map from hostname to slice of stats of gpus on that machine
 	LatestData() (map[string][]uplink.GPUStatSample, error)

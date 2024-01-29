@@ -223,6 +223,11 @@ func insertStats(id int64, packet uplink.GPUStatSample, now time.Time, tx *sql.T
 	return
 }
 
+func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
+	// TODO: write functionality for this (@daniel ?)
+	return nil
+}
+
 func (conn postgresConn) LatestData() (map[string][]uplink.GPUStatSample, error) {
 	rows, err := conn.db.Query(`SELECT g.Machine, g.Name, g.Brand,
 			g.DriverVersion, g.MemoryTotal, s.MemoryUtilisation,
