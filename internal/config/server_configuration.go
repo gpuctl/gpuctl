@@ -14,7 +14,7 @@ type ControlConfiguration struct {
 }
 
 func (s ControlConfiguration) Merge(config Configurable) Configurable {
-	sat_config, ok := config.(*ControlConfiguration)
+	sat_config, ok := config.(ControlConfiguration)
 
 	if !ok {
 		return s
