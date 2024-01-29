@@ -4,12 +4,12 @@ type ClientConfiguration struct {
 	Groundstation struct {
 		Hostname string `toml:"hostname"`
 		Port     int    `toml:"port"`
-	} `toml:"satellite"`
+	} `toml:"groundstation"`
 	Satellite struct {
 		Cache             string `toml:"cache"`
 		DataInterval      int    `toml:"data_interval"`
 		HeartbeatInterval int    `toml:"heartbeat_interval"`
-	}
+	} `toml:"satellite"`
 }
 
 func DefaultClientConfiguration() ClientConfiguration {
@@ -18,6 +18,11 @@ func DefaultClientConfiguration() ClientConfiguration {
 			Hostname string "toml:\"hostname\""
 			Port     int    "toml:\"port\""
 		}{"localhost", 8080},
+		Satellite: struct {
+			Cache             string "toml:\"cache\""
+			DataInterval      int    "toml:\"data_interval\""
+			HeartbeatInterval int    "toml:\"heartbeat_interval\""
+		}{"/tmp/satellite", 60, 2},
 	}
 }
 
