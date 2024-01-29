@@ -7,9 +7,9 @@ import (
 	"os"
 	"time"
 
+	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/gpustats"
-	"github.com/gpuctl/gpuctl/internal/groundstation/config"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
