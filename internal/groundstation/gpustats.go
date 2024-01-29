@@ -36,7 +36,7 @@ func (gs *groundstation) gpustats(data uplink.GpuStatsUpload, req *http.Request,
 }
 
 func (gs *groundstation) handleGPUInfo(host string, infos []uplink.GPUInfo) error {
-	for _, info := range(infos) {
+	for _, info := range infos {
 		err := gs.db.UpdateGPUContext(host, info)
 		if err != nil {
 			return err

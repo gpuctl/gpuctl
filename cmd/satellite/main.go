@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
-	"os/signal"
 	"log/slog"
 	"os"
+	"os/signal"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/femto"

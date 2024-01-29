@@ -29,7 +29,6 @@ func InMemory() Database {
 	}
 }
 
-
 // AppendDataPoint implements Database.
 func (m *inMemory) AppendDataPoint(host string, packet uplink.GPUStatSample) error {
 	m.mu.Lock()
