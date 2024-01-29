@@ -1,6 +1,8 @@
 package config
 
 import (
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -83,5 +85,33 @@ func TestGenerateAddress(t *testing.T) {
 			actual := GenerateAddress(tt.hostname, tt.port)
 			assert.Equal(t, tt.expected, actual)
 		})
+	}
+}
+
+func CreateTempConfigFile(content string, t *testing.T) (string, func()) {
+	t.Helper()
+
+	exePath, err := os.Executable()
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tmpfile, err := os.CreateTemp(filepath.Dir(exePath), "config.toml")
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if _, err := tmpfile.Write([]byte(content)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tmpfile.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	return tmpfile.Name(), func() {
+		os.Remove(tmpfile.Name())
 	}
 }

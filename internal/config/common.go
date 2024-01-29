@@ -4,10 +4,13 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"testing"
 
 	"github.com/BurntSushi/toml"
 )
+
+type Configurable interface {
+	Merge(config Configurable) Configurable
+}
 
 func PortToAddress(port int) string {
 	return fmt.Sprintf(":%d", port)
@@ -27,7 +30,7 @@ func IsFileEmpty(path string) (bool, error) {
 	return fileInfo.Size() == 0, nil
 }
 
-func GetConfiguration[T any](filename string, defaultGenerator func() T) (T, error) {
+func GetConfiguration[T Configurable](filename string, defaultGenerator func() T) (T, error) {
 	exePath, err := os.Executable()
 
 	if err != nil {
@@ -50,35 +53,7 @@ func GetConfiguration[T any](filename string, defaultGenerator func() T) (T, err
 	var config T
 
 	if _, err := toml.DecodeFile(configPath, &config); err != nil {
-		return defaultGenerator(), nil
+		return defaultGenerator(), err
 	}
-	return config, nil
-}
-
-func CreateTempConfigFile(content string, t *testing.T) (string, func()) {
-	t.Helper()
-
-	exePath, err := os.Executable()
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	tmpfile, err := os.CreateTemp(filepath.Dir(exePath), "config.toml")
-
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	if _, err := tmpfile.Write([]byte(content)); err != nil {
-		t.Fatal(err)
-	}
-
-	if err := tmpfile.Close(); err != nil {
-		t.Fatal(err)
-	}
-
-	return tmpfile.Name(), func() {
-		os.Remove(tmpfile.Name())
-	}
+	return config.Merge(defaultGenerator()).(T), nil
 }

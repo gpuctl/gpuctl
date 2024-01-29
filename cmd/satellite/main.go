@@ -33,12 +33,11 @@ func main() {
 
 	if err != nil {
 		log.Error("Failed to get satellite configuration from toml configuration file", "err", err)
+		os.Exit(-1)
 	}
 
 	s := satellite{
-		// TODO: Make this configurable
-		gsAddr: config.GenerateAddress(satellite_configuration.Groundstation.Hostname, satellite_configuration.Groundstation.Port),
-		// we assume hostnames don't change during the program's runtime
+		gsAddr:   config.GenerateAddress(satellite_configuration.Groundstation.Hostname, satellite_configuration.Groundstation.Port),
 		hostname: host,
 	}
 
@@ -53,7 +52,6 @@ func main() {
 				log.Error("failed to send heartbeat", "err", err)
 			}
 
-			// TODO: testing only, should not send packets this frequently?
 			time.Sleep(time.Duration(satellite_configuration.Satellite.HeartbeatInterval))
 		}
 	}()
@@ -65,7 +63,7 @@ func main() {
 			err := s.sendGPUStatus(backlog[stat])
 
 			if err != nil {
-				log.Error("failed to send status", "err", err)
+				log.Error("Failed to send backlogged GPU stat message", "err", err)
 			}
 		}
 
@@ -83,7 +81,7 @@ func main() {
 				err = s.sendGPUStatus(processStats(backlog))
 
 				if err != nil {
-					log.Error("failed to send status", "err", err)
+					log.Error("Failed to publish current GPU stat message", "err", err)
 				}
 			case <-collectGPUStatTicker.C:
 				log.Info("Collecting GPU Status")
@@ -91,7 +89,7 @@ func main() {
 				stat, err := hndlr.GPUStats()
 
 				if err != nil {
-					log.Error("Failed to get GPU stat from stat handler")
+					log.Error("Failed to get GPU stat from stat handler", "err", err)
 				}
 
 				backlog = append(backlog, stat)
@@ -120,7 +118,7 @@ func saveState(filename string, items []uplink.GPUStats) error {
 		return err
 	}
 
-	return os.WriteFile(filename, data, 0644)
+	return os.WriteFile(filename, data, 0o644)
 }
 
 func recoverState(filename string) ([]uplink.GPUStats, error) {
