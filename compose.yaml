@@ -4,6 +4,9 @@ services:
     environment:
       # TODO: USE PASSWORDS!! REMOVE THIS LINE!!
       POSTGRES_HOST_AUTH_METHOD: trust
+    healthcheck:
+      test: pg_isready -U postgres
+      interval: 10s
   control:
     image: gpuctl-control
     ports:
@@ -12,4 +15,5 @@ services:
     environment:
       GPU_DB_URL: postgres://postgres@postgres/postgres
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
