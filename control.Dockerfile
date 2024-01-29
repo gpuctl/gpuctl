@@ -1,10 +1,12 @@
 FROM golang:1.21
 
 WORKDIR /gpuctl
+COPY go.mod go.sum ./
+RUN go mod download && go mod verify
+
 COPY cmd ./cmd
 COPY internal ./internal
-COPY go.mod go.sum ./
 
-RUN go build ./cmd/control
+RUN go build -v ./cmd/control
 
 ENTRYPOINT ["./control", "-postgres"]
