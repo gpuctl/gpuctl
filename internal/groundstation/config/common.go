@@ -8,28 +8,12 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-type Configuration struct {
-	Server struct {
-		Port int `toml:"port"`
-	} `toml:"server"`
-	Database struct {
-		Url string `toml:"url"`
-	} `toml:"database"`
-}
-
-func DefaultConfiguration() Configuration {
-	return Configuration{
-		Server: struct {
-			Port int `toml:"port"`
-		}{Port: 8080},
-		Database: struct {
-			Url string `toml:"url"`
-		}{Url: "postgres://gpuctl@localhost/gpuctl"},
-	}
-}
-
 func PortToAddress(port int) string {
 	return fmt.Sprintf(":%d", port)
+}
+
+func GenerateAddress(hostname string, port int) string {
+	return fmt.Sprintf("http://%s%s", hostname, PortToAddress(port))
 }
 
 func IsFileEmpty(path string) (bool, error) {
@@ -42,11 +26,11 @@ func IsFileEmpty(path string) (bool, error) {
 	return fileInfo.Size() == 0, nil
 }
 
-func GetConfiguration(filename string) (Configuration, error) {
+func GetConfiguration[T any](filename string, defaultGenerator func() T) (T, error) {
 	exePath, err := os.Executable()
 
 	if err != nil {
-		return DefaultConfiguration(), err
+		return defaultGenerator(), err
 	}
 
 	exeDir := filepath.Dir(exePath)
@@ -55,17 +39,17 @@ func GetConfiguration(filename string) (Configuration, error) {
 	fileEmpty, err := IsFileEmpty(configPath)
 
 	if err != nil {
-		return DefaultConfiguration(), err
+		return defaultGenerator(), err
 	}
 
 	if fileEmpty {
-		return DefaultConfiguration(), nil
+		return defaultGenerator(), nil
 	}
 
-	var config Configuration
+	var config T
 
 	if _, err := toml.DecodeFile(configPath, &config); err != nil {
-		return DefaultConfiguration(), nil
+		return defaultGenerator(), nil
 	}
 	return config, nil
 }

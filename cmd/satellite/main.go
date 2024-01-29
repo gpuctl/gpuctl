@@ -8,56 +8,68 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/gpustats"
+	"github.com/gpuctl/gpuctl/internal/groundstation/config"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 func main() {
-	fakeGpus := flag.Bool("fakegpu", false, "Use fake GPU data")
-
-	// don't define flags below here
-	flag.Parse()
-	// don't access flags above here
+	flags := parseProgramFlags()
 
 	log := slog.Default()
 
-	log.Info("Starting satellite", "fakegpu", *fakeGpus)
+	log.Info("Starting satellite", "fakegpu", flags.fakeGPUs)
 
 	host, err := os.Hostname()
+
 	if err != nil {
 		log.Error("failed to get hostname", "err", err)
 		return
 	}
+
 	log.Info("got hostname", "hostname", host)
+
+	satellite_configuration, err := config.GetClientConfiguration("config.toml")
+
+	if err != nil {
+		log.Error("Failed to get satellite configuration from toml configuration file", "err", err)
+	}
 
 	s := satellite{
 		// TODO: Make this configurable
-		gsAddr: "http://localhost:8080",
+		gsAddr: config.GenerateAddress(satellite_configuration.Groundstation.Hostname, satellite_configuration.Groundstation.Port),
 		// we assume hostnames don't change during the program's runtime
 		hostname: host,
 	}
 
-	var hndlr gpustats.GPUDataSource
-	if *fakeGpus {
-		hndlr = gpustats.FakeGPU{}
-	} else {
-		hndlr = gpustats.NvidiaGPUHandler{}
-	}
+	hndlr := setGPUHandler(flags.fakeGPUs)
 
-	for {
-		log.Info("Sending heartbeat")
-		err := s.sendHeartBeat()
-		if err != nil {
-			log.Error("failed to send heartbeat", "err", err)
+	go func() {
+		for {
+			log.Info("Sending heartbeat")
+			err := s.sendHeartBeat()
+
+			if err != nil {
+				log.Error("failed to send heartbeat", "err", err)
+			}
+
+			// TODO: testing only, should not send packets this frequently?
+			time.Sleep(2 * time.Second)
 		}
-		time.Sleep(2 * time.Second)
-		// TODO: testing only, should not send packets this frequently?
-		log.Info("Sending status")
-		err = s.sendGPUStatus(hndlr)
-		if err != nil {
-			log.Error("failed to send status", "err", err)
+	}()
+
+	go func() {
+		for {
+			log.Info("Sending status")
+
+			err = s.sendGPUStatus(hndlr)
+
+			if err != nil {
+				log.Error("failed to send status", "err", err)
+			}
+
+			time.Sleep(2 * time.Second)
 		}
-		time.Sleep(2 * time.Second)
-	}
+	}()
 
 	log.Info("Stopped satellite")
 }
@@ -65,6 +77,27 @@ func main() {
 type satellite struct {
 	hostname string
 	gsAddr   string
+}
+
+type flags struct {
+	fakeGPUs bool
+}
+
+func parseProgramFlags() flags {
+	fakeGpus := flag.Bool("fakegpu", false, "Use fake GPU data")
+	flag.Parse()
+
+	return flags{
+		fakeGPUs: *fakeGpus,
+	}
+}
+
+func setGPUHandler(isFakeGPUs bool) gpustats.GPUDataSource {
+	if isFakeGPUs {
+		return gpustats.FakeGPU{}
+	} else {
+		return gpustats.NvidiaGPUHandler{}
+	}
 }
 
 func (s *satellite) sendHeartBeat() error {

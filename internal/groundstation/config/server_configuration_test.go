@@ -82,7 +82,7 @@ url = "postgres://tony@ic.ac.uk/squares"`
 
 	filename = filepath.Base(filename)
 
-	config, err := GetConfiguration(filename)
+	config, err := GetServerConfiguration(filename)
 	assert.NoError(t, err)
 	assert.Equal(t, 9090, config.Server.Port)
 	assert.Equal(t, "postgres://tony@ic.ac.uk/squares", config.Database.Url)
@@ -97,7 +97,7 @@ func TestGetConfiguration_DefaultConfig(t *testing.T) {
 
 	filename = filepath.Base(filename)
 
-	config, err := GetConfiguration(filename)
+	config, err := GetServerConfiguration(filename)
 	assert.NoError(t, err)
 	assert.Equal(t, 8080, config.Server.Port)
 }
@@ -111,7 +111,7 @@ server: "should be a table, not a string"`
 
 	filename = filepath.Base(filename)
 
-	config, err := GetConfiguration(filename)
+	config, err := GetServerConfiguration(filename)
 	assert.NoError(t, err)
 	assert.Equal(t, 8080, config.Server.Port)
 }
