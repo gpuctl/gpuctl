@@ -5,6 +5,11 @@ type ClientConfiguration struct {
 		Hostname string `toml:"hostname"`
 		Port     int    `toml:"port"`
 	} `toml:"satellite"`
+	Satellite struct {
+		Cache             string `toml:"cache"`
+		DataInterval      int    `toml:"data_interval"`
+		HeartbeatInterval int    `toml:"heartbeat_interval"`
+	}
 }
 
 func DefaultClientConfiguration() ClientConfiguration {

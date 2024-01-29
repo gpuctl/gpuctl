@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log/slog"
 	"os"
@@ -53,21 +54,50 @@ func main() {
 			}
 
 			// TODO: testing only, should not send packets this frequently?
-			time.Sleep(2 * time.Second)
+			time.Sleep(time.Duration(satellite_configuration.Satellite.HeartbeatInterval))
 		}
 	}()
 
 	go func() {
-		for {
-			log.Info("Sending status")
+		backlog, _ := recoverState(satellite_configuration.Satellite.Cache)
 
-			err = s.sendGPUStatus(hndlr)
+		for stat := range backlog {
+			err := s.sendGPUStatus(backlog[stat])
 
 			if err != nil {
 				log.Error("failed to send status", "err", err)
 			}
+		}
 
-			time.Sleep(2 * time.Second)
+		backlog = make([]uplink.GPUStats, 0)
+
+		collectGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval) * time.Second)
+		publishGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval) * time.Second)
+
+		for {
+			select {
+			case <-publishGPUStatTicker.C:
+
+				log.Info("Sending status")
+
+				err = s.sendGPUStatus(processStats(backlog))
+
+				if err != nil {
+					log.Error("failed to send status", "err", err)
+				}
+			case <-collectGPUStatTicker.C:
+				log.Info("Collecting GPU Status")
+
+				stat, err := hndlr.GPUStats()
+
+				if err != nil {
+					log.Error("Failed to get GPU stat from stat handler")
+				}
+
+				backlog = append(backlog, stat)
+				saveState(satellite_configuration.Satellite.Cache, backlog)
+			}
+
 		}
 	}()
 
@@ -81,6 +111,39 @@ type satellite struct {
 
 type flags struct {
 	fakeGPUs bool
+}
+
+func saveState(filename string, items []uplink.GPUStats) error {
+	data, err := json.Marshal(items)
+
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(filename, data, 0644)
+}
+
+func recoverState(filename string) ([]uplink.GPUStats, error) {
+	data, err := os.ReadFile(filename)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var state []uplink.GPUStats
+
+	err = json.Unmarshal(data, &state)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return state, nil
+}
+
+// Dummy function to process list of stats
+func processStats(stats []uplink.GPUStats) uplink.GPUStats {
+	return stats[len(stats)-1]
 }
 
 func parseProgramFlags() flags {
@@ -107,13 +170,18 @@ func (s *satellite) sendHeartBeat() error {
 	)
 }
 
-func (s *satellite) sendGPUStatus(gpuhandler gpustats.GPUDataSource) error {
+func (s *satellite) sendGPUStatusWithSource(gpuhandler gpustats.GPUDataSource) error {
 	stats, err := gpuhandler.GPUStats()
 
 	if err != nil {
 		return err
 	}
 
+	return s.sendGPUStatus(stats)
+
+}
+
+func (s *satellite) sendGPUStatus(stats uplink.GPUStats) error {
 	return femto.Post(
 		s.gsAddr+uplink.GPUStatsUrl,
 		uplink.StatsPackage{Hostname: s.hostname, Stats: stats},
