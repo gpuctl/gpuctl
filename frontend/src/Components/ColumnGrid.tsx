@@ -19,9 +19,9 @@ export const ColumnGrid = ({
   const numCols = Math.min(
     Math.max(
       1,
-      Math.floor((width - hMinSpacing) / (minChildWidth + hMinSpacing))
+      Math.floor((width - hMinSpacing) / (minChildWidth + hMinSpacing)),
     ),
-    children.length
+    children.length,
   );
   const tempSpace = (width - numCols * minChildWidth) / (numCols + 1);
   const hspacing = numCols === 1 ? 0 : tempSpace;

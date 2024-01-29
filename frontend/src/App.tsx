@@ -30,7 +30,7 @@ const sortData = (gs: WorkStationGroup[]) =>
   gs.map(({ name, workStations }) => ({
     name: name,
     workStations: workStations.sort((ws1, ws2) =>
-      ws1.name.localeCompare(ws2.name)
+      ws1.name.localeCompare(ws2.name),
     ),
   }));
 

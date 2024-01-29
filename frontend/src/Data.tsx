@@ -1,4 +1,3 @@
-
 // These types need to be kept in sync with `internal/webapi/types.go`
 
 export type WorkStationGroup = {
