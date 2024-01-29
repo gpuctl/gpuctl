@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
@@ -22,24 +23,10 @@ func main() {
 	log := slog.Default()
 	log.Info("Starting control server")
 
-	var db database.Database
-	var err error
+	db, err := initialiseDatabase(inMemDb, postgresDb)
 
-	if *inMemDb && *postgresDb {
-		fatal("cannot have both `-inmemdb` and `-postgres`")
-	} else if *inMemDb {
-		db = database.InMemory()
-	} else if *postgresDb {
-		dbUrl, pres := os.LookupEnv("GPU_DB_URL")
-		if !pres {
-			fatal("failed to read environment variable GPU_DB_URL")
-		}
-		db, err = postgres.New(dbUrl)
-		if err != nil {
-			fatal("failed to connect to database: " + err.Error())
-		}
-	} else {
-		fatal("must pass one of `-inmemdb` and `-postgres`")
+	if err != nil {
+		fatal("failed to initialise database: " + err.Error())
 	}
 
 	gs := groundstation.NewServer(db)
@@ -57,6 +44,25 @@ func main() {
 	slog.Info("started servers")
 	err = <-errs
 	slog.Error("got an error", "err", err)
+}
+
+func initialiseDatabase(inMemDb *bool, postgresDb *bool) (database.Database, error) {
+	switch {
+	case *inMemDb && *postgresDb:
+		return nil, fmt.Errorf("cannot have both '-inmemdb' and '-postgres'")
+	case *inMemDb:
+		return database.InMemory(), nil
+	case *postgresDb:
+		dbUrl, pres := os.LookupEnv("GPU_DB_URL")
+
+		if !pres {
+			return nil, fmt.Errorf("failed to read enviroment variable GPU_DB_URL")
+		}
+
+		return postgres.New(dbUrl)
+	default:
+		return nil, fmt.Errorf("must pass in one of '-inmemdb' and '-postgres'")
+	}
 }
 
 func fatal(s string) {
