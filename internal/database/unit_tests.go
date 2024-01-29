@@ -26,7 +26,7 @@ var UnitTests = [...]unitTest{
 }
 
 // fake data for adding during tests
-var fakeDataInfo = uplink.GPUInfo{Hostname: "hostname", Name: "GT 1030", Brand: "NVidia",
+var fakeDataInfo = uplink.GPUInfo{Name: "GT 1030", Brand: "NVidia",
 	DriverVersion: "v1.4.5", MemoryTotal: 4}
 var fakeDataSample = uplink.GPUStatSample{MemoryUtilisation: 25.4,
 	GPUUtilisation: 63.5, MemoryUsed: 1.24, FanSpeed: 35.2, Temp: 54.3}

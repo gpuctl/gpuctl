@@ -4,18 +4,15 @@ import (
 	"testing"
 
 	"github.com/gpuctl/gpuctl/internal/gpustats"
+	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/stretchr/testify/assert"
 )
 
 func TestAdd(t *testing.T) {
 	t.Parallel()
-	packet1 := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
-	packet1.MemoryUtilisation = 50
-	packet1.GPUUtilisation = 60
 
-	packet2 := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
-	packet2.MemoryUtilisation = 30
-	packet2.GPUUtilisation = 40
+	packet1 := uplink.GPUStatSample{Uuid: "id", MemoryUtilisation: 50, GPUUtilisation: 60}
+	packet2 := uplink.GPUStatSample{Uuid: "id", MemoryUtilisation: 30, GPUUtilisation: 40}
 
 	combinedPacket, err := gpustats.Add(packet1, packet2)
 	assert.NoError(t, err)
@@ -25,43 +22,20 @@ func TestAdd(t *testing.T) {
 
 func TestAddFail(t *testing.T) {
 	t.Parallel()
-	packet1 := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
-	packet1.MemoryUtilisation = 50
-	packet1.GPUUtilisation = 60
 
-	packet3 := gpustats.Default("GPU2", "BrandB", "2.0", 2048)
-	_, err := gpustats.Add(packet1, packet3)
+	packet1 := uplink.GPUStatSample{Uuid: "id", MemoryUtilisation: 50, GPUUtilisation: 60}
+	packet2 := uplink.GPUStatSample{Uuid: "not_id", MemoryUtilisation: 30, GPUUtilisation: 40}
+
+	_, err := gpustats.Add(packet1, packet2)
 	assert.Error(t, err)
-}
-
-func TestUncontextualAdd(t *testing.T) {
-	t.Parallel()
-	packet1 := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
-	packet1.MemoryUtilisation = 50
-	packet1.GPUUtilisation = 60
-
-	packet2 := gpustats.Default("GPU2", "BrandB", "2.0", 2048)
-	packet2.MemoryUtilisation = 30
-	packet2.GPUUtilisation = 40
-
-	uncontextualSum := gpustats.AddUncontextual(packet1, packet2)
-	assert.Equal(t, float64(80), uncontextualSum.MemoryUtilisation)
-	assert.Equal(t, float64(100), uncontextualSum.GPUUtilisation)
 }
 
 func TestScale(t *testing.T) {
 	t.Parallel()
-	packet := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
-	packet.MemoryUtilisation = 50
+	packet := uplink.GPUStatSample{Uuid: "id", MemoryUtilisation: 50, GPUUtilisation: 60}
 
 	scaledPacket := gpustats.Scale(packet, 2)
-	assert.Equal(t, float64(100), scaledPacket.MemoryUtilisation)
-}
 
-func TestDefault(t *testing.T) {
-	t.Parallel()
-	packet := gpustats.Default("GPU1", "BrandA", "1.0", 1024)
-	// NOTE: This invariant was broken in the "big refactor"
-	//assert.Equal(t, "GPU1", packet.Name)
-	assert.Equal(t, float64(0), packet.MemoryUtilisation)
+	assert.Equal(t, float64(100), scaledPacket.MemoryUtilisation)
+	assert.Equal(t, float64(120), scaledPacket.GPUUtilisation)
 }
