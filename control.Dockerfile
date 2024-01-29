@@ -7,4 +7,4 @@ COPY go.mod go.sum ./
 
 RUN go build ./cmd/control
 
-CMD ./control -postgres
+ENTRYPOINT ["./control", "-postgres"]
