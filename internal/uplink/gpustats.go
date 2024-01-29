@@ -4,13 +4,13 @@ package uplink
 const GPUStatsUrl = "/gs-api/status/"
 
 type GpuStatsUpload struct {
-	GPUInfos []GPUInfo  `json:"information"`
+	Hostname string          `json:"hostname"`
+	GPUInfos []GPUInfo       `json:"information"`
 	Stats    []GPUStatSample `json:"stats"`
 }
 
 // Contextual information about the GPU
 type GPUInfo struct {
-	Hostname string     `json:"hostname"`
 	Uuid          string `json:"uuid"`
 	Name          string `json:"gpu_name"`
 	Brand         string `json:"gpu_brand"`

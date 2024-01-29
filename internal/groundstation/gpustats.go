@@ -12,10 +12,10 @@ func (gs *groundstation) gpustats(data uplink.GpuStatsUpload, req *http.Request,
 
 	// NOTE: just commented this during the big refactor -jyry
 	/*
-	err := gs.db.UpdateLastSeen(sample.Uuid)
-	if err != nil {
-		return err
-	}
+		err := gs.db.UpdateLastSeen(sample.Uuid)
+		if err != nil {
+			return err
+		}
 	*/
 
 	for _, sample := range data.Stats {

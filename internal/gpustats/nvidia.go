@@ -214,7 +214,7 @@ type gpu struct {
 		EnforcedPowerLimit string `xml:"enforced_power_limit"`
 		MinPowerLimit      string `xml:"min_power_limit"`
 		MaxPowerLimit      string `xml:"max_power_limit"`
-	} `xml:"power_readings"`
+	} `xml:"gpu_power_readings"`
 	Clocks struct {
 		GraphicsClock string `xml:"graphics_clock"`
 		SmClock       string `xml:"sm_clock"`
@@ -270,34 +270,78 @@ type processes struct {
 	} `xml:"process_info"`
 }
 
+func (xml NvidiaSmiLog) ExtractGPUInfo() ([]uplink.GPUInfo, error) {
+	var res []uplink.GPUInfo
+
+	for _, gpu := range xml.Gpu {
+		mem, err := parseUIntWithUnit(gpu.FbMemoryUsage.Total)
+		if err != nil {
+			return nil, err
+		}
+		res = append(res,
+			uplink.GPUInfo{
+				Uuid:          gpu.Uuid,
+				Name:          gpu.ProductName,
+				Brand:         gpu.ProductBrand,
+				DriverVersion: xml.DriverVersion,
+				MemoryTotal:   mem,
+			})
+	}
+
+	return res, nil
+}
+
 // Filter down the relevant information from our nvidia-smi dump
-func (xml NvidiaSmiLog) FilterStats() ([]uplink.GPUStatSample, error) {
+func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 	var res []uplink.GPUStatSample
+
 	for _, gpu := range xml.Gpu {
 		// TODO: add the new information as well
 		fanSpeed, err := parseFloatWithUnit(gpu.FanSpeed)
-		isDirty := err != nil
-		memoryUsed, err := parseFloatWithUnit(gpu.FbMemoryUsage.Used)
-		isDirty = isDirty || err != nil
-		temp, err := parseFloatWithUnit(gpu.Temperature.GpuTemp)
-		isDirty = isDirty || err != nil
-		gpuUtil, err := parseFloatWithUnit(gpu.Utilization.GpuUtil)
-		isDirty = isDirty || err != nil
-		memUtil, err := parseFloatWithUnit(gpu.Utilization.MemoryUtil)
-		isDirty = isDirty || err != nil
+		memoryUsed, err_ := parseFloatWithUnit(gpu.FbMemoryUsage.Used)
+		err = errors.Join(err, err_)
+		temp, err_ := parseFloatWithUnit(gpu.Temperature.GpuTemp)
+		err = errors.Join(err, err_)
+		gpuUtil, err_ := parseFloatWithUnit(gpu.Utilization.GpuUtil)
+		err = errors.Join(err, err_)
+		memUtil, err_ := parseFloatWithUnit(gpu.Utilization.MemoryUtil)
+		err = errors.Join(err, err_)
+		memTemp, err_ := parseFloatWithUnit(gpu.Temperature.MemoryTemp)
+		err = errors.Join(err, err_)
+		graphicsVolt, err_ := parseFloatWithUnit(gpu.Voltage.GraphicsVolt)
+		err = errors.Join(err, err_)
+		powerDraw, err_ := parseFloatWithUnit(gpu.PowerReadings.PowerDraw) // SUS
+		err = errors.Join(err, err_)
+		gFreq, err_ := parseFloatWithUnit(gpu.Clocks.GraphicsClock)
+		err = errors.Join(err, err_)
+		maxGFreq, err_ := parseFloatWithUnit(gpu.MaxClocks.GraphicsClock)
+		err = errors.Join(err, err_)
+		mFreq, err_ := parseFloatWithUnit(gpu.Clocks.MemClock)
+		err = errors.Join(err, err_)
+		maxMFreq, err_ := parseFloatWithUnit(gpu.MaxClocks.MemClock)
+		err = errors.Join(err, err_)
+
+		// report back catastrophic failures
+		if err != nil {
+			return nil, err
+		}
 
 		curr := uplink.GPUStatSample{
+			Uuid:              gpu.Uuid,
 			MemoryUtilisation: memUtil,
 			GPUUtilisation:    gpuUtil,
 			MemoryUsed:        memoryUsed,
 			FanSpeed:          fanSpeed,
 			Temp:              temp,
+			MemoryTemp:        memTemp,
+			GraphicsVoltage:   graphicsVolt,
+			PowerDraw:         powerDraw,
+			GraphicsClock:     gFreq,
+			MaxGraphicsClock:  maxGFreq,
+			MemoryClock:       mFreq,
+			MaxMemoryClock:    maxMFreq,
 		}
 
-		// report back catastrophic failures
-		if isDirty {
-			return nil, ErrBadField
-		}
 		res = append(res, curr)
 	}
 	return res, nil
@@ -360,5 +404,5 @@ func (h NvidiaGPUHandler) GPUStats() ([]uplink.GPUStatSample, error) {
 	if err != nil {
 		return nil, err
 	}
-	return smi.FilterStats()
+	return smi.ExtractGPUStatSample()
 }

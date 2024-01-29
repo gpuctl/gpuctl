@@ -74,7 +74,6 @@ func (s *satellite) sendHeartBeat() error {
 	)
 }
 
-
 func (s *satellite) sendGPUInfo(gpuhandler gpustats.GPUDataSource) error {
 	// TODO Get info
 	return femto.Post(
