@@ -8,16 +8,19 @@ import (
 
 type FakeGPU struct{}
 
-func (FakeGPU) GPUStats() ([]uplink.GPUStatSample, error) {
-
-	return []uplink.GPUStatSample{{
-		/* TODO: delete these
+func (FakeGPU) GetGPUInformation() ([]uplink.GPUInfo, error) {
+	return []uplink.GPUInfo{{
+		Uuid:          "some_id",
 		Name:          "GPU-inator",
 		Brand:         "doofenshmirtz evil inc",
 		DriverVersion: "3.141592",
 		MemoryTotal:   1,
-		*/
+	}}, nil
+}
+func (FakeGPU) GetGPUStatus() ([]uplink.GPUStatSample, error) {
 
+	return []uplink.GPUStatSample{{
+		Uuid:              "some_id",
 		MemoryUtilisation: rand.Float64(),
 		GPUUtilisation:    rand.Float64(),
 		MemoryUsed:        rand.Float64() * 2000,

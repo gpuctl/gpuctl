@@ -3,5 +3,6 @@ package gpustats
 import "github.com/gpuctl/gpuctl/internal/uplink"
 
 type GPUDataSource interface {
-	GPUStats() ([]uplink.GPUStatSample, error)
+	GetGPUStatus() ([]uplink.GPUStatSample, error)
+	GetGPUInformation() ([]uplink.GPUInfo, error)
 }

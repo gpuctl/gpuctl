@@ -399,10 +399,19 @@ func GetNvidiaGPUStatus() (NvidiaSmiLog, error) {
 type NvidiaGPUHandler struct{}
 
 // Run the whole pipeline of getting GPU information
-func (h NvidiaGPUHandler) GPUStats() ([]uplink.GPUStatSample, error) {
+func (h NvidiaGPUHandler) GetGPUStatus() ([]uplink.GPUStatSample, error) {
 	smi, err := GetNvidiaGPUStatus()
 	if err != nil {
 		return nil, err
 	}
 	return smi.ExtractGPUStatSample()
+}
+
+// Run the whole pipeline of getting GPU information
+func (h NvidiaGPUHandler) GetGPUInformation() ([]uplink.GPUInfo, error) {
+	smi, err := GetNvidiaGPUStatus()
+	if err != nil {
+		return nil, err
+	}
+	return smi.ExtractGPUInfo()
 }
