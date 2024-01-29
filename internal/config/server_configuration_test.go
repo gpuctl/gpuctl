@@ -51,7 +51,7 @@ server: "should be a table, not a string"`
 	filename = filepath.Base(filename)
 
 	config, err := config.GetServerConfiguration(filename)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 	assert.Equal(t, 8080, config.Server.Port)
 }
 

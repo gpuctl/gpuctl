@@ -53,7 +53,7 @@ func GetConfiguration[T Configurable](filename string, defaultGenerator func() T
 	var config T
 
 	if _, err := toml.DecodeFile(configPath, &config); err != nil {
-		return defaultGenerator(), nil
+		return defaultGenerator(), err
 	}
 	return config.Merge(defaultGenerator()).(T), nil
 }

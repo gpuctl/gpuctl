@@ -63,7 +63,7 @@ groundstation: "should be a table, not a string"`
 	filename = filepath.Base(filename)
 
 	config, err := config.GetClientConfiguration(filename)
-	assert.NoError(t, err)
+	assert.Error(t, err)
 	assert.Equal(t, "localhost", config.Groundstation.Hostname)
 	assert.Equal(t, 8080, config.Groundstation.Port)
 
