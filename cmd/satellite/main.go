@@ -74,6 +74,15 @@ func (s *satellite) sendHeartBeat() error {
 	)
 }
 
+
+func (s *satellite) sendGPUInfo(gpuhandler gpustats.GPUDataSource) error {
+	// TODO Get info
+	return femto.Post(
+		s.gsAddr+uplink.GPUStatsUrl,
+		uplink.GpuStatsUpload{GPUInfos: nil},
+	)
+}
+
 func (s *satellite) sendGPUStatus(gpuhandler gpustats.GPUDataSource) error {
 	stats, err := gpuhandler.GPUStats()
 
@@ -83,6 +92,6 @@ func (s *satellite) sendGPUStatus(gpuhandler gpustats.GPUDataSource) error {
 
 	return femto.Post(
 		s.gsAddr+uplink.GPUStatsUrl,
-		uplink.GpuStatsUpload{Hostname: s.hostname, Stats: stats},
+		uplink.GpuStatsUpload{Stats: stats},
 	)
 }

@@ -1,8 +1,6 @@
 package gpustats
 
 import (
-	"errors"
-
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
@@ -16,16 +14,8 @@ type UncontextualGPUStats struct {
 
 // Combine two GPUStats instances into one.
 func Add(l, r uplink.GPUStatSample) (uplink.GPUStatSample, error) {
-	if r.Name != l.Name || r.Brand != l.Brand || r.DriverVersion != l.DriverVersion || r.MemoryTotal != l.MemoryTotal {
-		// TODO: Expose this error publicly.
-		return uplink.GPUStatSample{}, errors.New("two packets with different contexts cannot be aggregated using Add, consider using UncontextualAdd")
-	}
-
+	// TODO: add new additions
 	return uplink.GPUStatSample{
-		Name:              r.Name,
-		Brand:             r.Brand,
-		DriverVersion:     r.DriverVersion,
-		MemoryTotal:       r.MemoryTotal,
 		MemoryUtilisation: l.MemoryUtilisation + r.MemoryUtilisation,
 		GPUUtilisation:    l.GPUUtilisation + r.GPUUtilisation,
 		FanSpeed:          l.FanSpeed + r.FanSpeed,
@@ -47,11 +37,8 @@ func AddUncontextual(l, r uplink.GPUStatSample) UncontextualGPUStats {
 
 // Scale each value in s by scalar
 func Scale(s uplink.GPUStatSample, scalar float64) uplink.GPUStatSample {
+	// TODO: add new data in refactor
 	return uplink.GPUStatSample{
-		Name:              s.Name,
-		Brand:             s.Brand,
-		DriverVersion:     s.DriverVersion,
-		MemoryTotal:       s.MemoryTotal,
 		MemoryUtilisation: s.MemoryUtilisation * scalar,
 		GPUUtilisation:    s.GPUUtilisation * scalar,
 		FanSpeed:          s.FanSpeed * scalar,
@@ -62,12 +49,8 @@ func Scale(s uplink.GPUStatSample, scalar float64) uplink.GPUStatSample {
 
 // Identity returns the identity element of GPUStats for the UncontextualCombine operation.
 func Default(name string, brand string, driverVersion string, memoryTotal uint64) uplink.GPUStatSample {
+	// TODO: add new data from refactor
 	return uplink.GPUStatSample{
-		Name:          name,
-		Brand:         brand,
-		DriverVersion: driverVersion,
-		MemoryTotal:   memoryTotal,
-
 		MemoryUtilisation: 0,
 		GPUUtilisation:    0,
 		MemoryUsed:        0,

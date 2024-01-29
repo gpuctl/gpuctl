@@ -6,7 +6,6 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
-	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 type Server struct {
@@ -49,7 +48,7 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 		mostRecent := samples[len(samples)-1]
 
 		workstations = append(workstations,
-			workStationData{Name: name, Gpus: []uplink.GPUStatSample{mostRecent}},
+			workStationData{Name: name, Gpus: []OldGPUStatSample{ToOldGPUStats(mostRecent)}},
 		)
 	}
 

@@ -274,10 +274,9 @@ type processes struct {
 func (xml NvidiaSmiLog) FilterStats() ([]uplink.GPUStatSample, error) {
 	var res []uplink.GPUStatSample
 	for _, gpu := range xml.Gpu {
+		// TODO: add the new information as well
 		fanSpeed, err := parseFloatWithUnit(gpu.FanSpeed)
 		isDirty := err != nil
-		memoryTotal, err := parseUIntWithUnit(gpu.FbMemoryUsage.Total)
-		isDirty = isDirty || err != nil
 		memoryUsed, err := parseFloatWithUnit(gpu.FbMemoryUsage.Used)
 		isDirty = isDirty || err != nil
 		temp, err := parseFloatWithUnit(gpu.Temperature.GpuTemp)
@@ -288,10 +287,6 @@ func (xml NvidiaSmiLog) FilterStats() ([]uplink.GPUStatSample, error) {
 		isDirty = isDirty || err != nil
 
 		curr := uplink.GPUStatSample{
-			Name:              gpu.ProductName,
-			Brand:             gpu.ProductBrand,
-			DriverVersion:     xml.DriverVersion,
-			MemoryTotal:       memoryTotal,
 			MemoryUtilisation: memUtil,
 			GPUUtilisation:    gpuUtil,
 			MemoryUsed:        memoryUsed,
