@@ -49,7 +49,7 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 		mostRecent := samples[len(samples)-1]
 
 		workstations = append(workstations,
-			workStationData{Name: name, Gpus: []uplink.GPUStats{mostRecent}},
+			workStationData{Name: name, Gpus: []uplink.GPUStatSample{mostRecent}},
 		)
 	}
 

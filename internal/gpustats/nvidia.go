@@ -26,7 +26,7 @@ type NvidiaSmiLog struct {
 	DriverVersion string   `xml:"driver_version"`
 	CudaVersion   string   `xml:"cuda_version"`
 	AttachedGpus  string   `xml:"attached_gpus"`
-	Gpu           gpu      `xml:"gpu"`
+	Gpu           []gpu    `xml:"gpu"`
 }
 
 type gpu struct {
@@ -271,37 +271,40 @@ type processes struct {
 }
 
 // Filter down the relevant information from our nvidia-smi dump
-func (xml NvidiaSmiLog) FilterStats() (uplink.GPUStats, error) {
-	fanSpeed, err := parseFloatWithUnit(xml.Gpu.FanSpeed)
-	isDirty := err != nil
-	memoryTotal, err := parseUIntWithUnit(xml.Gpu.FbMemoryUsage.Total)
-	isDirty = isDirty || err != nil
-	memoryUsed, err := parseFloatWithUnit(xml.Gpu.FbMemoryUsage.Used)
-	isDirty = isDirty || err != nil
-	temp, err := parseFloatWithUnit(xml.Gpu.Temperature.GpuTemp)
-	isDirty = isDirty || err != nil
-	gpuUtil, err := parseFloatWithUnit(xml.Gpu.Utilization.GpuUtil)
-	isDirty = isDirty || err != nil
-	memUtil, err := parseFloatWithUnit(xml.Gpu.Utilization.MemoryUtil)
-	isDirty = isDirty || err != nil
+func (xml NvidiaSmiLog) FilterStats() ([]uplink.GPUStatSample, error) {
+	var res []uplink.GPUStatSample
+	for _, gpu := range xml.Gpu {
+		fanSpeed, err := parseFloatWithUnit(gpu.FanSpeed)
+		isDirty := err != nil
+		memoryTotal, err := parseUIntWithUnit(gpu.FbMemoryUsage.Total)
+		isDirty = isDirty || err != nil
+		memoryUsed, err := parseFloatWithUnit(gpu.FbMemoryUsage.Used)
+		isDirty = isDirty || err != nil
+		temp, err := parseFloatWithUnit(gpu.Temperature.GpuTemp)
+		isDirty = isDirty || err != nil
+		gpuUtil, err := parseFloatWithUnit(gpu.Utilization.GpuUtil)
+		isDirty = isDirty || err != nil
+		memUtil, err := parseFloatWithUnit(gpu.Utilization.MemoryUtil)
+		isDirty = isDirty || err != nil
 
-	res := uplink.GPUStats{
-		Name:              xml.Gpu.ProductName,
-		Brand:             xml.Gpu.ProductBrand,
-		DriverVersion:     xml.DriverVersion,
-		MemoryTotal:       memoryTotal,
-		MemoryUtilisation: memUtil,
-		GPUUtilisation:    gpuUtil,
-		MemoryUsed:        memoryUsed,
-		FanSpeed:          fanSpeed,
-		Temp:              temp,
+		curr := uplink.GPUStatSample{
+			Name:              gpu.ProductName,
+			Brand:             gpu.ProductBrand,
+			DriverVersion:     xml.DriverVersion,
+			MemoryTotal:       memoryTotal,
+			MemoryUtilisation: memUtil,
+			GPUUtilisation:    gpuUtil,
+			MemoryUsed:        memoryUsed,
+			FanSpeed:          fanSpeed,
+			Temp:              temp,
+		}
+
+		// report back catastrophic failures
+		if isDirty {
+			return nil, ErrBadField
+		}
+		res = append(res, curr)
 	}
-
-	// report back catastrophic failures
-	if isDirty {
-		return res, ErrBadField
-	}
-
 	return res, nil
 }
 
@@ -357,10 +360,10 @@ func GetNvidiaGPUStatus() (NvidiaSmiLog, error) {
 type NvidiaGPUHandler struct{}
 
 // Run the whole pipeline of getting GPU information
-func (h NvidiaGPUHandler) GPUStats() (uplink.GPUStats, error) {
+func (h NvidiaGPUHandler) GPUStats() ([]uplink.GPUStatSample, error) {
 	smi, err := GetNvidiaGPUStatus()
 	if err != nil {
-		return uplink.GPUStats{}, err
+		return nil, err
 	}
 	return smi.FilterStats()
 }

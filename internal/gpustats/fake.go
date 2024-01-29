@@ -8,9 +8,9 @@ import (
 
 type FakeGPU struct{}
 
-func (FakeGPU) GPUStats() (uplink.GPUStats, error) {
+func (FakeGPU) GPUStats() (uplink.GPUStatSample, error) {
 
-	return uplink.GPUStats{
+	return uplink.GPUStatSample{
 		Name:          "GPU-inator",
 		Brand:         "doofenshmirtz evil inc",
 		DriverVersion: "3.141592",

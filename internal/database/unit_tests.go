@@ -26,7 +26,7 @@ var UnitTests = [...]unitTest{
 }
 
 // fake data for adding during tests
-var fakeData = uplink.GPUStats{Name: "GT 1030", Brand: "NVidia",
+var fakeData = uplink.GPUStatSample{Name: "GT 1030", Brand: "NVidia",
 	DriverVersion: "v1.4.5", MemoryTotal: 4, MemoryUtilisation: 25.4,
 	GPUUtilisation: 63.5, MemoryUsed: 1.24, FanSpeed: 35.2, Temp: 54.3}
 
@@ -36,7 +36,7 @@ const margin float64 = 0.01
 func floatsNear(a float64, b float64) bool {
 	return math.Abs(a-b) < margin
 }
-func statsNear(a uplink.GPUStats, b uplink.GPUStats) bool {
+func statsNear(a uplink.GPUStatSample, b uplink.GPUStatSample) bool {
 	return (a.Name == b.Name) &&
 		(a.Brand == b.Brand) &&
 		(a.DriverVersion == b.DriverVersion) &&

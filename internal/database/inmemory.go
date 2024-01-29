@@ -9,7 +9,7 @@ import (
 )
 
 type inMemory struct {
-	stats    map[string][]uplink.GPUStats
+	stats    map[string][]uplink.GPUStatSample
 	lastSeen map[string]struct{}
 	mu       sync.Mutex
 }
@@ -20,7 +20,7 @@ type inMemory struct {
 // server running.
 func InMemory() Database {
 	return &inMemory{
-		stats:    make(map[string][]uplink.GPUStats),
+		stats:    make(map[string][]uplink.GPUStatSample),
 		lastSeen: make(map[string]struct{}),
 	}
 }
@@ -28,7 +28,7 @@ func InMemory() Database {
 var ErrAppendNotPresent = errors.New("appending to non present machine")
 
 // AppendDataPoint implements Database.
-func (m *inMemory) AppendDataPoint(host string, packet uplink.GPUStats) error {
+func (m *inMemory) AppendDataPoint(host string, packet uplink.GPUStatSample) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
@@ -41,7 +41,7 @@ func (m *inMemory) AppendDataPoint(host string, packet uplink.GPUStats) error {
 }
 
 // LatestData implements Database.
-func (m *inMemory) LatestData() (map[string][]uplink.GPUStats, error) {
+func (m *inMemory) LatestData() (map[string][]uplink.GPUStatSample, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

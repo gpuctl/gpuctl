@@ -148,7 +148,7 @@ func updateLastSeen(host string, now time.Time, tx *sql.Tx) (err error) {
 	return
 }
 
-func (conn postgresConn) AppendDataPoint(host string, packet uplink.GPUStats) error {
+func (conn postgresConn) AppendDataPoint(host string, packet uplink.GPUStatSample) error {
 	var err error
 
 	tx, err := conn.db.Begin()
@@ -196,7 +196,7 @@ func (conn postgresConn) AppendDataPoint(host string, packet uplink.GPUStats) er
 	return tx.Commit()
 }
 
-func createGPU(host string, packet uplink.GPUStats, tx *sql.Tx) (id int64, err error) {
+func createGPU(host string, packet uplink.GPUStatSample, tx *sql.Tx) (id int64, err error) {
 	newId := tx.QueryRow(`INSERT INTO GPUs
 		(Machine, Name, Brand, DriverVersion, MemoryTotal)
 		VALUES ($1, $2, $3, $4, $5)
@@ -207,7 +207,7 @@ func createGPU(host string, packet uplink.GPUStats, tx *sql.Tx) (id int64, err e
 	return
 }
 
-func insertStats(id int64, packet uplink.GPUStats, now time.Time, tx *sql.Tx) (err error) {
+func insertStats(id int64, packet uplink.GPUStatSample, now time.Time, tx *sql.Tx) (err error) {
 	_, err = tx.Exec(`INSERT INTO Stats
 		(Gpu, Recieved, MemoryUtilisation, GpuUtilisation, MemoryUsed,
 			FanSpeed, Temp)
@@ -218,7 +218,7 @@ func insertStats(id int64, packet uplink.GPUStats, now time.Time, tx *sql.Tx) (e
 	return
 }
 
-func (conn postgresConn) LatestData() (map[string][]uplink.GPUStats, error) {
+func (conn postgresConn) LatestData() (map[string][]uplink.GPUStatSample, error) {
 	rows, err := conn.db.Query(`SELECT g.Machine, g.Name, g.Brand,
 			g.DriverVersion, g.MemoryTotal, s.MemoryUtilisation,
 			s.GpuUtilisation, s.MemoryUsed, s.FanSpeed, s.Temp
@@ -234,11 +234,11 @@ func (conn postgresConn) LatestData() (map[string][]uplink.GPUStats, error) {
 		return nil, err
 	}
 
-	var latest = make(map[string][]uplink.GPUStats)
+	var latest = make(map[string][]uplink.GPUStatSample)
 
 	for rows.Next() {
 		var host string
-		var stat uplink.GPUStats
+		var stat uplink.GPUStatSample
 
 		err = rows.Scan(&host, &stat.Name, &stat.Brand,
 			&stat.DriverVersion, &stat.MemoryTotal,

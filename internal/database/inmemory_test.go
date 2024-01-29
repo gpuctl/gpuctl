@@ -20,7 +20,7 @@ func TestInMemory(t *testing.T) {
 	err = db.UpdateLastSeen("foo")
 	assert.NoError(t, err)
 
-	err = db.AppendDataPoint("foo", uplink.GPUStats{
+	err = db.AppendDataPoint("foo", uplink.GPUStatSample{
 		Name: "foo-1",
 	})
 	assert.NoError(t, err)

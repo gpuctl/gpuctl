@@ -15,13 +15,13 @@ type UncontextualGPUStats struct {
 }
 
 // Combine two GPUStats instances into one.
-func Add(l, r uplink.GPUStats) (uplink.GPUStats, error) {
+func Add(l, r uplink.GPUStatSample) (uplink.GPUStatSample, error) {
 	if r.Name != l.Name || r.Brand != l.Brand || r.DriverVersion != l.DriverVersion || r.MemoryTotal != l.MemoryTotal {
 		// TODO: Expose this error publicly.
-		return uplink.GPUStats{}, errors.New("two packets with different contexts cannot be aggregated using Add, consider using UncontextualAdd")
+		return uplink.GPUStatSample{}, errors.New("two packets with different contexts cannot be aggregated using Add, consider using UncontextualAdd")
 	}
 
-	return uplink.GPUStats{
+	return uplink.GPUStatSample{
 		Name:              r.Name,
 		Brand:             r.Brand,
 		DriverVersion:     r.DriverVersion,
@@ -35,7 +35,7 @@ func Add(l, r uplink.GPUStats) (uplink.GPUStats, error) {
 }
 
 // Combine two UncontextualGPUStats instances into one.
-func AddUncontextual(l, r uplink.GPUStats) UncontextualGPUStats {
+func AddUncontextual(l, r uplink.GPUStatSample) UncontextualGPUStats {
 	return UncontextualGPUStats{
 		MemoryUtilisation: l.MemoryUtilisation + r.MemoryUtilisation,
 		GPUUtilisation:    l.GPUUtilisation + r.GPUUtilisation,
@@ -46,8 +46,8 @@ func AddUncontextual(l, r uplink.GPUStats) UncontextualGPUStats {
 }
 
 // Scale each value in s by scalar
-func Scale(s uplink.GPUStats, scalar float64) uplink.GPUStats {
-	return uplink.GPUStats{
+func Scale(s uplink.GPUStatSample, scalar float64) uplink.GPUStatSample {
+	return uplink.GPUStatSample{
 		Name:              s.Name,
 		Brand:             s.Brand,
 		DriverVersion:     s.DriverVersion,
@@ -61,8 +61,8 @@ func Scale(s uplink.GPUStats, scalar float64) uplink.GPUStats {
 }
 
 // Identity returns the identity element of GPUStats for the UncontextualCombine operation.
-func Default(name string, brand string, driverVersion string, memoryTotal uint64) uplink.GPUStats {
-	return uplink.GPUStats{
+func Default(name string, brand string, driverVersion string, memoryTotal uint64) uplink.GPUStatSample {
+	return uplink.GPUStatSample{
 		Name:          name,
 		Brand:         brand,
 		DriverVersion: driverVersion,

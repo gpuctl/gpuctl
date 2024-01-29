@@ -15,5 +15,5 @@ type workstationGroup struct {
 
 type workStationData struct {
 	Name string            `json:"name"`
-	Gpus []uplink.GPUStats `json:"gpus"`
+	Gpus []uplink.GPUStatSample `json:"gpus"`
 }
