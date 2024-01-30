@@ -251,16 +251,12 @@ type gpu struct {
 			SupportedGraphicsClock []string `xml:"supported_graphics_clock"`
 		} `xml:"supported_mem_clock"`
 	} `xml:"supported_clocks"`
-	// TODO: `Processes` is wrong, need to accomodate running processes
 	Processes          processes `xml:"processes"`
 	AccountedProcesses string    `xml:"accounted_processes"`
 }
 
 type processes struct {
-	XMLName     xml.Name `xml:"processes"`
-	Text        string   `xml:",chardata"`
 	ProcessInfo []struct {
-		Text              string `xml:",chardata"`
 		GpuInstanceID     string `xml:"gpu_instance_id"`
 		ComputeInstanceID string `xml:"compute_instance_id"`
 		Pid               string `xml:"pid"`
@@ -278,6 +274,7 @@ func (xml NvidiaSmiLog) ExtractGPUInfo() ([]uplink.GPUInfo, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		res = append(res,
 			uplink.GPUInfo{
 				Uuid:          gpu.Uuid,
@@ -326,6 +323,26 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 			return nil, err
 		}
 
+		// Filter processes
+		procs := []uplink.GPUProcInfo{}
+
+		for _, proc := range gpu.Processes.ProcessInfo {
+			procmem, err := parseFloatWithUnit(proc.UsedMemory)
+			pid, err2 := strconv.ParseUint(proc.Pid, 10, 0)
+
+			err = errors.Join(err, err2)
+			if err != nil {
+				return nil, err
+			}
+
+			procs = append(procs,
+				uplink.GPUProcInfo{
+					Pid:     pid,
+					Name:    proc.ProcessName,
+					MemUsed: procmem,
+				})
+		}
+
 		curr := uplink.GPUStatSample{
 			Uuid:              gpu.Uuid,
 			MemoryUtilisation: memUtil,
@@ -340,6 +357,7 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 			MaxGraphicsClock:  maxGFreq,
 			MemoryClock:       mFreq,
 			MaxMemoryClock:    maxMFreq,
+			RunningProcesses:  procs,
 		}
 
 		res = append(res, curr)

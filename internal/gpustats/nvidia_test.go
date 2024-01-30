@@ -69,6 +69,7 @@ func TestNvidiaSmiXMLParsing(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Could not read test result data at %s: %v", resloc, err)
 		}
+
 		var expected uplink.GpuStatsUpload
 		err = json.Unmarshal(expected_dump, &expected)
 		if err != nil {
@@ -79,21 +80,6 @@ func TestNvidiaSmiXMLParsing(t *testing.T) {
 			t.Errorf("Result data did not match expected. \nGot      %s \nexpected %s \n(file: %s)", resultJson, string(expected_dump), fileloc)
 		}
 
-		/*
-			// Read expected json
-			var expected []byte
-
-			{
-				sp := strings.Split(filename, ".")
-				resloc := testDataRoot + "/" + sp[0] + ".json"
-				expected = dump
-			}
-
-			j = append(j, '\n') // HACK: annoying newline at the end of stored data...
-			if !bytes.Equal(expected, j) {
-				t.Errorf("Parsed data did not match expected output (file %s):\n%s!=\n%s", fileloc, j, expected)
-			}
-		*/
 
 	}
 }

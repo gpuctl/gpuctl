@@ -20,17 +20,24 @@ type GPUInfo struct {
 
 // Temporal statistics for a GPU
 type GPUStatSample struct {
-	Uuid              string  `json:"uuid"`
-	MemoryUtilisation float64 `json:"memory_util"`        // Percentage of memory used
-	GPUUtilisation    float64 `json:"gpu_util"`           // Percentage of memory used
-	MemoryUsed        float64 `json:"memory_used"`        // In megabytes
-	FanSpeed          float64 `json:"fan_speed"`          // Percentage of fan speed
-	Temp              float64 `json:"gpu_temp"`           // Celcius
-	MemoryTemp        float64 `json:"memory_temp"`        // Celcius
-	GraphicsVoltage   float64 `json:"graphics_voltage"`   // Volts
-	PowerDraw         float64 `json:"power_draw"`         // Watts
-	GraphicsClock     float64 `json:"graphics_clock"`     // Mhz
-	MaxGraphicsClock  float64 `json:"max_graphics_clock"` // Mhz
-	MemoryClock       float64 `json:"memory_clock"`       // Mhz
-	MaxMemoryClock    float64 `json:"max_memory_clock"`   // Mhz
+	Uuid              string        `json:"uuid"`
+	MemoryUtilisation float64       `json:"memory_util"`        // Percentage of memory used
+	GPUUtilisation    float64       `json:"gpu_util"`           // Percentage of memory used
+	MemoryUsed        float64       `json:"memory_used"`        // In megabytes
+	FanSpeed          float64       `json:"fan_speed"`          // Percentage of fan speed
+	Temp              float64       `json:"gpu_temp"`           // Celcius
+	MemoryTemp        float64       `json:"memory_temp"`        // Celcius
+	GraphicsVoltage   float64       `json:"graphics_voltage"`   // Volts
+	PowerDraw         float64       `json:"power_draw"`         // Watts
+	GraphicsClock     float64       `json:"graphics_clock"`     // Mhz
+	MaxGraphicsClock  float64       `json:"max_graphics_clock"` // Mhz
+	MemoryClock       float64       `json:"memory_clock"`       // Mhz
+	MaxMemoryClock    float64       `json:"max_memory_clock"`   // Mhz
+	RunningProcesses  []GPUProcInfo `json:"processes"`          // List of processes running
+}
+
+type GPUProcInfo struct {
+	Pid     uint64  `json:"pid"`
+	Name    string  `json:"name"`
+	MemUsed float64 `json:"used_memory"`
 }
