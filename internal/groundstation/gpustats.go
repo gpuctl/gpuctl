@@ -11,12 +11,10 @@ func (gs *groundstation) gpustats(data uplink.GpuStatsUpload, req *http.Request,
 	log.Info("Got GPU stats", "stats", data.Stats)
 
 	// NOTE: just commented this during the big refactor -jyry
-	/*
-		err := gs.db.UpdateLastSeen(sample.Uuid)
-		if err != nil {
-			return err
-		}
-	*/
+	err := gs.db.UpdateLastSeen(data.Hostname)
+	if err != nil {
+		return err
+	}
 
 	if len(data.GPUInfos) > 0 {
 		err := gs.handleGPUInfo(data.Hostname, data.GPUInfos)
@@ -47,7 +45,7 @@ func (gs *groundstation) handleGPUInfo(host string, infos []uplink.GPUInfo) erro
 
 func (gs *groundstation) handleGPUStatSamples(host string, stats []uplink.GPUStatSample) error {
 	for _, sample := range stats {
-		err := gs.db.AppendDataPoint(sample.Uuid, sample)
+		err := gs.db.AppendDataPoint(sample)
 		if err != nil {
 			return err
 		}

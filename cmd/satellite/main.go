@@ -4,7 +4,6 @@ import (
 	"flag"
 	"log/slog"
 	"os"
-	"os/signal"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/femto"
