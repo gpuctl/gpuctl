@@ -33,7 +33,7 @@ func main() {
 
 	if err != nil {
 		log.Error("Failed to get satellite configuration from toml configuration file", "err", err)
-		os.Exit(-1)
+		os.Exit(1)
 	}
 
 	s := satellite{

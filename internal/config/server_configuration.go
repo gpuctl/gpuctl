@@ -13,7 +13,7 @@ type ControlConfiguration struct {
 	Database Database `toml:"database"`
 }
 
-func (s ControlConfiguration) Merge(config Configurable) Configurable {
+func (s ControlConfiguration) Merge(config Mergable) Mergable {
 	sat_config, ok := config.(ControlConfiguration)
 
 	if !ok {

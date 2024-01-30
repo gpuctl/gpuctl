@@ -16,7 +16,7 @@ type SatelliteConfiguration struct {
 	Satellite     Satellite     `toml:"satellite"`
 }
 
-func (s SatelliteConfiguration) Merge(config Configurable) Configurable {
+func (s SatelliteConfiguration) Merge(config Mergable) Mergable {
 	sat_config, ok := config.(SatelliteConfiguration)
 
 	if !ok {
