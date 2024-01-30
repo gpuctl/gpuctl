@@ -200,7 +200,7 @@ func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 	rows, err := conn.db.Query(`SELECT g.Machine, g.Name, g.Brand,
 			g.DriverVersion, g.MemoryTotal, s.MemoryUtilisation,
 			s.GpuUtilisation, s.MemoryUsed, s.FanSpeed, s.Temp
-		FROM GPUs g INNER JOIN Stats s ON g.Id = s.Gpu
+		FROM GPUs g INNER JOIN Stats s ON g.Uuid = s.Gpu
 		INNER JOIN (
 			SELECT Gpu, Max(Received) Received
 			FROM Stats
