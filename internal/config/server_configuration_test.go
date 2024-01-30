@@ -16,7 +16,7 @@ port = 9090
 
 [database]
 url = "postgres://tony@ic.ac.uk/squares"`
-	filename, cleanup := config.CreateTempConfigFile(content, t)
+	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
 	filename = filepath.Base(filename)
@@ -31,7 +31,7 @@ func TestGetConfiguration_DefaultConfig(t *testing.T) {
 	t.Parallel()
 	content := ``
 
-	filename, cleanup := config.CreateTempConfigFile(content, t)
+	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
 	filename = filepath.Base(filename)
@@ -45,7 +45,7 @@ func TestGetConfiguration_InvalidConfig(t *testing.T) {
 	t.Parallel()
 	content := `
 server: "should be a table, not a string"`
-	filename, cleanup := config.CreateTempConfigFile(content, t)
+	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
 	filename = filepath.Base(filename)

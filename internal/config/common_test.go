@@ -1,10 +1,11 @@
-package config
+package config_test
 
 import (
 	"os"
 	"path/filepath"
 	"testing"
 
+	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -15,7 +16,7 @@ func TestFileEmpty_EmptyCase(t *testing.T) {
 	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
-	isEmpty, err := IsFileEmpty(filename)
+	isEmpty, err := config.IsFileEmpty(filename)
 
 	assert.NoError(t, err)
 	assert.True(t, isEmpty)
@@ -28,7 +29,7 @@ func TestFileEmpty_NonEmptyCase(t *testing.T) {
 	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
-	isEmpty, err := IsFileEmpty(filename)
+	isEmpty, err := config.IsFileEmpty(filename)
 
 	assert.NoError(t, err)
 	assert.False(t, isEmpty)
@@ -36,7 +37,7 @@ func TestFileEmpty_NonEmptyCase(t *testing.T) {
 
 func TestFileEmpty_InvalidCase(t *testing.T) {
 	t.Parallel()
-	_, err := IsFileEmpty("dummy_path")
+	_, err := config.IsFileEmpty("dummy_path")
 
 	assert.Error(t, err)
 }
@@ -82,7 +83,7 @@ func TestGenerateAddress(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			actual := GenerateAddress(tt.hostname, tt.port)
+			actual := config.GenerateAddress(tt.hostname, tt.port)
 			assert.Equal(t, tt.expected, actual)
 		})
 	}

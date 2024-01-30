@@ -19,7 +19,7 @@ port = 8081
 cache = "/tmp/satellite"
 data_interval = 60
 heartbeat_interval = 5`
-	filename, cleanup := config.CreateTempConfigFile(content, t)
+	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
 	filename = filepath.Base(filename)
@@ -37,7 +37,7 @@ func TestGetClientConfiguration_DefaultConfig(t *testing.T) {
 	t.Parallel()
 	content := ``
 
-	filename, cleanup := config.CreateTempConfigFile(content, t)
+	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
 	filename = filepath.Base(filename)
@@ -57,7 +57,7 @@ func TestGetClientConfiguration_InvalidConfig(t *testing.T) {
 	content := `
 groundstation: "should be a table, not a string"`
 
-	filename, cleanup := config.CreateTempConfigFile(content, t)
+	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
 	filename = filepath.Base(filename)
