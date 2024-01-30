@@ -64,12 +64,12 @@ groundstation: "should be a table, not a string"`
 
 	config, err := config.GetClientConfiguration(filename)
 	assert.Error(t, err)
-	assert.Equal(t, "localhost", config.Groundstation.Hostname)
-	assert.Equal(t, 8080, config.Groundstation.Port)
+	assert.Equal(t, "", config.Groundstation.Hostname)
+	assert.Equal(t, 0, config.Groundstation.Port)
 
-	assert.Equal(t, "/tmp/satellite", config.Satellite.Cache)
-	assert.Equal(t, 2, config.Satellite.HeartbeatInterval)
-	assert.Equal(t, 60, config.Satellite.DataInterval)
+	assert.Equal(t, "", config.Satellite.Cache)
+	assert.Equal(t, 0, config.Satellite.HeartbeatInterval)
+	assert.Equal(t, 0, config.Satellite.DataInterval)
 }
 
 func TestSatelliteConfigurationMerge(t *testing.T) {

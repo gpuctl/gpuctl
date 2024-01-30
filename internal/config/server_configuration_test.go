@@ -52,7 +52,8 @@ server: "should be a table, not a string"`
 
 	config, err := config.GetServerConfiguration(filename)
 	assert.Error(t, err)
-	assert.Equal(t, 8080, config.Server.Port)
+	assert.Equal(t, 0, config.Server.Port)
+	assert.Equal(t, "", config.Database.Url)
 }
 
 func TestPortToAddress(t *testing.T) {

@@ -39,5 +39,5 @@ func DefaultControlConfiguration() ControlConfiguration {
 }
 
 func GetServerConfiguration(filename string) (ControlConfiguration, error) {
-	return GetConfiguration[ControlConfiguration](filename, DefaultControlConfiguration)
+	return getConfiguration[ControlConfiguration](filename, DefaultControlConfiguration)
 }

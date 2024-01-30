@@ -54,5 +54,5 @@ func DefaultSatelliteConfiguration() SatelliteConfiguration {
 }
 
 func GetClientConfiguration(filename string) (SatelliteConfiguration, error) {
-	return GetConfiguration[SatelliteConfiguration](filename, DefaultSatelliteConfiguration)
+	return getConfiguration[SatelliteConfiguration](filename, DefaultSatelliteConfiguration)
 }

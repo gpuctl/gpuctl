@@ -30,7 +30,7 @@ func IsFileEmpty(path string) (bool, error) {
 	return fileInfo.Size() == 0, nil
 }
 
-func GetConfiguration[T Mergable](filename string, defaultGenerator func() T) (T, error) {
+func getConfiguration[T Mergable](filename string, defaultGenerator func() T) (T, error) {
 	exePath, err := os.Executable()
 
 	if err != nil {
