@@ -58,7 +58,7 @@ func databaseStartsEmpty(t *testing.T, db Database) {
 }
 
 func appendingFailsIfMachineMissing(t *testing.T, db Database) {
-	err := db.AppendDataPoint("beaver", fakeDataSample)
+	err := db.AppendDataPoint(fakeDataSample)
 	if err == nil {
 		t.Fatalf("Error expected but none occurred")
 	}
@@ -69,7 +69,7 @@ func appendingFailsIfMachineMissing(t *testing.T, db Database) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	err = db.AppendDataPoint("beaver", fakeDataSample)
+	err = db.AppendDataPoint(fakeDataSample)
 	if err == nil {
 		t.Fatalf("Error expected but none occurred")
 	}
@@ -83,7 +83,7 @@ func appendedDataPointsAreSaved(t *testing.T, db Database) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	db.AppendDataPoint(fakeHost, fakeDataSample)
+	db.AppendDataPoint(fakeDataSample)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -97,8 +97,18 @@ func appendedDataPointsAreSaved(t *testing.T, db Database) {
 	if len(results) != 1 {
 		t.Fatalf("'results' is the wrong length. Expected: 1, Was: %d", len(results))
 	}
-	gpus, ok := results[fakeHost]
-	if !ok {
+
+	var found = false
+	var gpus []uplink.GPUStatSample
+	for _, machine := range results {
+		if machine.Hostname == fakeHost {
+			found = true
+			gpus = machine.Stats
+			break
+		}
+	}
+
+	if !found {
 		t.Fatalf("'results' didn't contain entry for '%s'", fakeHost)
 	}
 	if len(gpus) != 1 {

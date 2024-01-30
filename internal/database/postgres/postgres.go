@@ -41,8 +41,6 @@ func New(databaseUrl string) (database.Database, error) {
 
 func createTables(db *sql.DB) error {
 	// TODO: Find a way to generate this from gpustats.go?
-	// TODO: Allow passing in a parameter to create temporary tables for use
-	// with the unit tests
 
 	// We have to make all rows non-null, because we can't scan a null value
 	// into a Go variable
@@ -59,13 +57,13 @@ func createTables(db *sql.DB) error {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS GPUs (
-		Id serial NOT NULL,
+		Uuid int NOT NULL,
 		Machine text NOT NULL REFERENCES Machines (Hostname),
 		Name text NOT NULL,
 		Brand text NOT NULL,
 		DriverVersion text NOT NULL,
 		MemoryTotal integer NOT NULL,
-		PRIMARY KEY (Id)
+		PRIMARY KEY (Uuid)
 	);`)
 
 	if err != nil {
@@ -73,21 +71,28 @@ func createTables(db *sql.DB) error {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Stats (
-		Gpu integer REFERENCES GPUs (Id) NOT NULL,
-		Recieved timestamp NOT NULL,
+		Gpu integer REFERENCES GPUs (Uuid) NOT NULL,
+		Received timestamp NOT NULL,
 		MemoryUtilisation real NOT NULL,
 		GpuUtilisation real NOT NULL,
 		MemoryUsed real NOT NULL,
 		FanSpeed real NOT NULL,
 		Temp real NOT NULL,
-		PRIMARY KEY (Gpu, Recieved)
+		MemoryTemp real NOT NULL,
+		GraphicsVoltage real NOT NULL,
+		PowerDraw real NOT NULL,
+		GraphicsClock real NOT NULL,
+		MaxGraphicsClock real NOT NULL,
+		MemoryClock real NOT NULL,
+		MaxMemoryClock real NOT NULL,
+		PRIMARY KEY (Gpu, Received)
 	);`)
 
 	return err
 }
 
 // implement interface
-func (conn postgresConn) UpdateLastSeen(uuid string) error {
+func (conn postgresConn) UpdateLastSeen(host string) error {
 	var err error
 
 	tx, err := conn.db.Begin()
@@ -95,15 +100,15 @@ func (conn postgresConn) UpdateLastSeen(uuid string) error {
 		return err
 	}
 
-	slog.Debug("checking if machine exists")
-	lastSeen, err := getLastSeen(uuid, tx)
+	// check if machine exists
+	lastSeen, err := getLastSeen(host, tx)
 
 	now := time.Now()
 	if err == nil {
 		// machine existed, check if time is in future
 		if lastSeen.Before(now) {
 			// last seen was before now, update it
-			err = updateLastSeen(uuid, now, tx)
+			err = updateLastSeen(host, now, tx)
 
 			if err != nil {
 				return errors.Join(err, tx.Rollback())
@@ -111,7 +116,7 @@ func (conn postgresConn) UpdateLastSeen(uuid string) error {
 		}
 	} else if errors.Is(err, sql.ErrNoRows) {
 		// this machine isn't in the db, so add it
-		err = createMachine(uuid, now, tx)
+		err = createMachine(host, now, tx)
 		if err != nil {
 			return errors.Join(err, tx.Rollback())
 		}
@@ -148,57 +153,23 @@ func updateLastSeen(host string, now time.Time, tx *sql.Tx) (err error) {
 	return
 }
 
-func (conn postgresConn) AppendDataPoint(host string, packet uplink.GPUStatSample) error {
-	var err error
-
-	tx, err := conn.db.Begin()
-	if err != nil {
-		return err
-	}
-
-	// Find matching GPU
-
-	// TODO: replace with Query
-	// This silently discards all rows other than the first
-	row := tx.QueryRow(`SELECT Id
-		FROM GPUs
-		WHERE Machine=$1`,
-		host)
-	var id int64
-	err = row.Scan(&id)
-
-	// check error type. If no rows found, add a new GPU
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			// Didn't find an existing entry, so add a new GPU
-
-			// use TOFU approach, only set the name, brand, etc. on
-			// the first packet; future AppendDataPoint calls only
-			// add the 'dynamic' data to Stats
-			// TODO: reevaluate whether this is a good idea (what
-			// happens when a driver update occurs?)
-
-			// TODO: the great refactor made this code impossible. Commented out for now because it wont work
-			/*
-				id, err = createGPU(host, packet, tx)
-				if err != nil {
-					return errors.Join(err, tx.Rollback())
-				}
-			*/
-			return errors.Join(err, tx.Rollback())
-		} else {
-			return errors.Join(err, tx.Rollback())
-		}
-	}
-
-	// GPU should now exist, so push stats
+func (conn postgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 	now := time.Now()
-	err = insertStats(id, packet, now, tx)
-	if err != nil {
-		return errors.Join(err, tx.Rollback())
-	}
 
-	return tx.Commit()
+	_, err := conn.db.Exec(`INSERT INTO Stats
+		(Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed,
+		FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw,
+		GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
+		$14)`,
+		sample.Uuid, now,
+		sample.MemoryUtilisation, sample.GPUUtilisation,
+		sample.MemoryUsed, sample.FanSpeed, sample.Temp,
+		sample.MemoryTemp, sample.GraphicsVoltage, sample.PowerDraw,
+		sample.GraphicsClock, sample.MaxGraphicsClock,
+		sample.MemoryClock, sample.MaxMemoryClock)
+
+	return err
 }
 
 func createGPU(host string, gpuinfo uplink.GPUInfo, tx *sql.Tx) (id int64, err error) {
@@ -212,39 +183,42 @@ func createGPU(host string, gpuinfo uplink.GPUInfo, tx *sql.Tx) (id int64, err e
 	return
 }
 
-func insertStats(id int64, packet uplink.GPUStatSample, now time.Time, tx *sql.Tx) (err error) {
-	_, err = tx.Exec(`INSERT INTO Stats
-		(Gpu, Recieved, MemoryUtilisation, GpuUtilisation, MemoryUsed,
-			FanSpeed, Temp)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-		id, now, packet.MemoryUtilisation, packet.GPUUtilisation,
-		packet.MemoryUsed, packet.FanSpeed, packet.Temp)
-
-	return
-}
-
 func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
-	// TODO: write functionality for this (@daniel ?)
-	return nil
+	// Insert the new context we've received into the db, overwriting the
+	// existing info
+	_, err := conn.db.Exec(`INSERT INTO GPUs
+		(Uuid, Machine, Name, Brand, DriverVersion, MemoryTotal)
+		VALUES ($1, $2, $3, $4, $5, $6)
+		ON CONFLICT DO UPDATE`,
+		packet.Uuid, host, packet.Name, packet.Brand,
+		packet.DriverVersion, packet.MemoryTotal)
+
+	return err
 }
 
-func (conn postgresConn) LatestData() (map[string][]uplink.GPUStatSample, error) {
+func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 	rows, err := conn.db.Query(`SELECT g.Machine, g.Name, g.Brand,
 			g.DriverVersion, g.MemoryTotal, s.MemoryUtilisation,
 			s.GpuUtilisation, s.MemoryUsed, s.FanSpeed, s.Temp
-		FROM GPUs g INNER JOIN Stats s ON g.Id = s.Gpu
+		FROM GPUs g INNER JOIN Stats s ON g.Uuid = s.Gpu
 		INNER JOIN (
-			SELECT Gpu, Max(Recieved) Recieved
+			SELECT Gpu, Max(Received) Received
 			FROM Stats
 			GROUP BY Gpu
-		) latest ON s.Gpu = latest.Gpu AND s.Recieved = latest.Recieved
+		) latest ON s.Gpu = latest.Gpu AND s.Received = latest.Received
 	`)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var latest = make(map[string][]uplink.GPUStatSample)
+	// collect rows into a map of hostname to {GPUInfo, Stat} because
+	// they'll come out of the db out of hostname order
+	type gpus struct {
+		infos []uplink.GPUInfo
+		stats []uplink.GPUStatSample
+	}
+	var latest = make(map[string]gpus)
 
 	for rows.Next() {
 		var host string
@@ -261,8 +235,15 @@ func (conn postgresConn) LatestData() (map[string][]uplink.GPUStatSample, error)
 		}
 
 		slog.Debug("got stat from table", "host", host, "info", info, "stat", stat)
-		latest[host] = append(latest[host], stat)
+		latest[host] = gpus{infos: append(latest[host].infos, info), stats: append(latest[host].stats, stat)}
 	}
 
-	return latest, rows.Close()
+	// flatten map structure
+	var result []uplink.GpuStatsUpload
+	for key, value := range latest {
+		result = append(result, uplink.GpuStatsUpload{Hostname: key,
+			GPUInfos: value.infos, Stats: value.stats})
+	}
+
+	return result, rows.Close()
 }
