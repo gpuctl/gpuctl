@@ -50,10 +50,14 @@ func GetConfiguration[T Mergable](filename string, defaultGenerator func() T) (T
 		return defaultGenerator(), nil
 	}
 
-	var config T
+	config := defaultGenerator()
 
 	if _, err := toml.DecodeFile(configPath, &config); err != nil {
-		return defaultGenerator(), err
+		// Explicit decision to zero this error state
+		// as to ensure that bugs arise later if this error
+		// state is misused
+		var zero T
+		return zero, err
 	}
-	return config.Merge(defaultGenerator()).(T), nil
+	return config, nil
 }
