@@ -49,8 +49,3 @@ func Scale(s uplink.GPUStatSample, scalar float64) uplink.GPUStatSample {
 		MaxMemoryClock:    s.MaxMemoryClock * scalar,
 	}
 }
-
-// Identity returns the identity element of GPUStats for the UncontextualCombine operation.
-func Default(name string, brand string, driverVersion string, memoryTotal uint64) uplink.GPUStatSample {
-	return uplink.GPUStatSample{}
-}

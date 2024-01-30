@@ -80,7 +80,6 @@ func TestNvidiaSmiXMLParsing(t *testing.T) {
 			t.Errorf("Result data did not match expected. \nGot      %s \nexpected %s \n(file: %s)", resultJson, string(expected_dump), fileloc)
 		}
 
-
 	}
 }
 

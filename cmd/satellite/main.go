@@ -47,16 +47,6 @@ func main() {
 	// Send initial infopacket of GPUInfo
 	s.sendGPUInfo(hndlr)
 
-	// Set up neat ctrl-c breaking
-	termsig := make(chan os.Signal, 1)
-	signal.Notify(termsig, os.Interrupt)
-
-	go func() {
-		<-termsig
-		log.Info("Stopping satellite...")
-		os.Exit(0)
-	}()
-
 	// Start sending heartbeats and statuses
 	for {
 		log.Info("Sending heartbeat")
