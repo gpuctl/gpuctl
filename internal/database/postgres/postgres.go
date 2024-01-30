@@ -72,7 +72,7 @@ func createTables(db *sql.DB) error {
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Stats (
 		Gpu integer REFERENCES GPUs (Uuid) NOT NULL,
-		Recieved timestamp NOT NULL,
+		Received timestamp NOT NULL,
 		MemoryUtilisation real NOT NULL,
 		GpuUtilisation real NOT NULL,
 		MemoryUsed real NOT NULL,
@@ -85,7 +85,7 @@ func createTables(db *sql.DB) error {
 		MaxGraphicsClock real NOT NULL,
 		MemoryClock real NOT NULL,
 		MaxMemoryClock real NOT NULL,
-		PRIMARY KEY (Gpu, Recieved)
+		PRIMARY KEY (Gpu, Received)
 	);`)
 
 	return err
@@ -157,7 +157,7 @@ func (conn postgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 	now := time.Now()
 
 	_, err := conn.db.Exec(`INSERT INTO Stats
-		(Gpu, Recieved, MemoryUtilisation, GpuUtilisation, MemoryUsed,
+		(Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed,
 		FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw,
 		GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
@@ -184,7 +184,7 @@ func createGPU(host string, gpuinfo uplink.GPUInfo, tx *sql.Tx) (id int64, err e
 }
 
 func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
-	// Insert the new context we've recieved into the db, overwriting the
+	// Insert the new context we've received into the db, overwriting the
 	// existing info
 	_, err := conn.db.Exec(`INSERT INTO GPUs
 		(Uuid, Machine, Name, Brand, DriverVersion, MemoryTotal)
@@ -202,10 +202,10 @@ func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 			s.GpuUtilisation, s.MemoryUsed, s.FanSpeed, s.Temp
 		FROM GPUs g INNER JOIN Stats s ON g.Id = s.Gpu
 		INNER JOIN (
-			SELECT Gpu, Max(Recieved) Recieved
+			SELECT Gpu, Max(Received) Received
 			FROM Stats
 			GROUP BY Gpu
-		) latest ON s.Gpu = latest.Gpu AND s.Recieved = latest.Recieved
+		) latest ON s.Gpu = latest.Gpu AND s.Received = latest.Received
 	`)
 
 	if err != nil {
