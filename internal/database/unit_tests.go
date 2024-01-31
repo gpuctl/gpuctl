@@ -21,15 +21,20 @@ type unitTest struct {
 var UnitTests = [...]unitTest{
 	{"DatabaseStartsEmpty", databaseStartsEmpty},
 	{"AppendingFailsIfMachineMissing", appendingFailsIfMachineMissing},
+	{"AppendingFailsIfContextMissing", appendingFailsIfContextMissing},
 	{"AppendedDataPointsAreSaved", appendedDataPointsAreSaved},
 	{"MultipleHeartbeats", multipleHeartbeats},
 }
 
 // fake data for adding during tests
-var fakeDataInfo = uplink.GPUInfo{Name: "GT 1030", Brand: "NVidia",
+// TODO: update with processes when they're implemented
+var fakeDataInfo = uplink.GPUInfo{Uuid: "42", Name: "GT 1030", Brand: "NVidia",
 	DriverVersion: "v1.4.5", MemoryTotal: 4}
-var fakeDataSample = uplink.GPUStatSample{MemoryUtilisation: 25.4,
-	GPUUtilisation: 63.5, MemoryUsed: 1.24, FanSpeed: 35.2, Temp: 54.3}
+var fakeDataSample = uplink.GPUStatSample{Uuid: "42",
+	MemoryUtilisation: 25.4, GPUUtilisation: 63.5, MemoryUsed: 1.24,
+	FanSpeed: 35.2, Temp: 54.3, MemoryTemp: 45.3, GraphicsVoltage: 150.0,
+	PowerDraw: 143.5, GraphicsClock: 50, MaxGraphicsClock: 134.4,
+	MemoryClock: 650.3, MaxMemoryClock: 750, RunningProcesses: nil}
 
 // functions for approximately comparing floats and data structs
 const margin float64 = 0.01
@@ -75,10 +80,28 @@ func appendingFailsIfMachineMissing(t *testing.T, db Database) {
 	}
 }
 
+func appendingFailsIfContextMissing(t *testing.T, db Database) {
+	fakeHost := "rabbit"
+
+	err := db.UpdateLastSeen(fakeHost)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	err = db.AppendDataPoint(fakeDataSample)
+	if err == nil {
+		t.Fatalf("Error expected but none occurred")
+	}
+}
+
 func appendedDataPointsAreSaved(t *testing.T, db Database) {
 	fakeHost := "elk"
 
 	err := db.UpdateLastSeen(fakeHost)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+	err = db.UpdateGPUContext(fakeHost, fakeDataInfo)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
