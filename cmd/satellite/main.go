@@ -44,7 +44,11 @@ func main() {
 	}
 
 	// Send initial infopacket of GPUInfo
-	s.sendGPUInfo(hndlr)
+	log.Info("Sending initial GPU context")
+	err = s.sendGPUInfo(hndlr)
+	if err != nil {
+		log.Error("Failed to send GPU context", "err", err)
+	}
 
 	// Start sending heartbeats and statuses
 	for {
