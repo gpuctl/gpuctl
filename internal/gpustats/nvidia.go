@@ -3,6 +3,7 @@ package gpustats
 import (
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -270,7 +271,7 @@ func (xml NvidiaSmiLog) ExtractGPUInfo() ([]uplink.GPUInfo, error) {
 	var res []uplink.GPUInfo
 
 	for _, gpu := range xml.Gpu {
-		mem, err := parseUIntWithUnit(gpu.FbMemoryUsage.Total)
+		mem, err := parseUIntWithUnit(gpu.FbMemoryUsage.Total, "mem usage")
 		if err != nil {
 			return nil, err
 		}
@@ -294,28 +295,28 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 
 	for _, gpu := range xml.Gpu {
 		// TODO: add the new information as well
-		fanSpeed, err := parseFloatWithUnit(gpu.FanSpeed)
-		memoryUsed, err_ := parseFloatWithUnit(gpu.FbMemoryUsage.Used)
+		fanSpeed, err := parseFloatWithUnit(gpu.FanSpeed, "fan speed")
+		memoryUsed, err_ := parseFloatWithUnit(gpu.FbMemoryUsage.Used, "mem used")
 		err = errors.Join(err, err_)
-		temp, err_ := parseFloatWithUnit(gpu.Temperature.GpuTemp)
+		temp, err_ := parseFloatWithUnit(gpu.Temperature.GpuTemp, "gpu temp")
 		err = errors.Join(err, err_)
-		gpuUtil, err_ := parseFloatWithUnit(gpu.Utilization.GpuUtil)
+		gpuUtil, err_ := parseFloatWithUnit(gpu.Utilization.GpuUtil, "gpu util")
 		err = errors.Join(err, err_)
-		memUtil, err_ := parseFloatWithUnit(gpu.Utilization.MemoryUtil)
+		memUtil, err_ := parseFloatWithUnit(gpu.Utilization.MemoryUtil, "mem util")
 		err = errors.Join(err, err_)
-		memTemp, err_ := parseFloatWithUnit(gpu.Temperature.MemoryTemp)
+		memTemp, err_ := parseFloatWithUnit(gpu.Temperature.MemoryTemp, "mem temp")
 		err = errors.Join(err, err_)
-		graphicsVolt, err_ := parseFloatWithUnit(gpu.Voltage.GraphicsVolt)
+		graphicsVolt, err_ := parseFloatWithUnit(gpu.Voltage.GraphicsVolt, "gpu volt")
 		err = errors.Join(err, err_)
-		powerDraw, err_ := parseFloatWithUnit(gpu.PowerReadings.PowerDraw) // SUS
+		powerDraw, err_ := parseFloatWithUnit(gpu.PowerReadings.PowerDraw, "power draw") // SUS
 		err = errors.Join(err, err_)
-		gFreq, err_ := parseFloatWithUnit(gpu.Clocks.GraphicsClock)
+		gFreq, err_ := parseFloatWithUnit(gpu.Clocks.GraphicsClock, "gpu clock")
 		err = errors.Join(err, err_)
-		maxGFreq, err_ := parseFloatWithUnit(gpu.MaxClocks.GraphicsClock)
+		maxGFreq, err_ := parseFloatWithUnit(gpu.MaxClocks.GraphicsClock, "gpu max clock")
 		err = errors.Join(err, err_)
-		mFreq, err_ := parseFloatWithUnit(gpu.Clocks.MemClock)
+		mFreq, err_ := parseFloatWithUnit(gpu.Clocks.MemClock, "mem clock")
 		err = errors.Join(err, err_)
-		maxMFreq, err_ := parseFloatWithUnit(gpu.MaxClocks.MemClock)
+		maxMFreq, err_ := parseFloatWithUnit(gpu.MaxClocks.MemClock, "max mem clock")
 		err = errors.Join(err, err_)
 
 		// report back catastrophic failures
@@ -327,7 +328,7 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 		procs := []uplink.GPUProcInfo{}
 
 		for _, proc := range gpu.Processes.ProcessInfo {
-			procmem, err := parseFloatWithUnit(proc.UsedMemory)
+			procmem, err := parseFloatWithUnit(proc.UsedMemory, "proc used mem")
 			pid, err2 := strconv.ParseUint(proc.Pid, 10, 0)
 
 			err = errors.Join(err, err2)
@@ -366,32 +367,51 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 }
 
 // Helper function for extracting GPU data such as available memory and fan speed
-func parseUIntWithUnit(input string) (uint64, error) {
+func parseUIntWithUnit(input string, name string) (uint64, error) {
 	part, _, _ := strings.Cut(input, " ")
 	// Interpret N/A as 0
 	if part == NvidiaNotApplicable {
 		return 0, nil
 	}
-	return strconv.ParseUint(part, 10, 0)
+
+	// wrap error up in name of component on failure
+	val, err := strconv.ParseUint(part, 10, 0)
+	if err != nil {
+		err = fmt.Errorf("parsing %s: %w", name, err)
+	}
+
+	return val, err
 }
 
 // Helper function for extracting GPU data such as temp
-func parseIntWithUnit(input string) (int64, error) {
+func parseIntWithUnit(input string, name string) (int64, error) {
 	part, _, _ := strings.Cut(input, " ")
 	// Interpret N/A as 0
 	if part == NvidiaNotApplicable {
 		return 0, nil
 	}
-	return strconv.ParseInt(part, 10, 0)
+
+	val, err := strconv.ParseInt(part, 10, 0)
+	if err != nil {
+		err = fmt.Errorf("parsing %s: %w", name, err)
+	}
+
+	return val, err
 }
 
-func parseFloatWithUnit(input string) (float64, error) {
+func parseFloatWithUnit(input string, name string) (float64, error) {
 	part, _, _ := strings.Cut(input, " ")
 	// Interpret N/A as 0
 	if part == NvidiaNotApplicable {
 		return 0, nil
 	}
-	return strconv.ParseFloat(part, 10)
+
+	val, err := strconv.ParseFloat(part, 10)
+	if err != nil {
+		err = fmt.Errorf("parsing %s: %w", name, err)
+	}
+
+	return val, err
 }
 
 // Helper function to unmarshal Nvidia XML dump
