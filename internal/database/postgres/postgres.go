@@ -172,17 +172,6 @@ func (conn postgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 	return err
 }
 
-func createGPU(host string, gpuinfo uplink.GPUInfo, tx *sql.Tx) (id int64, err error) {
-	newId := tx.QueryRow(`INSERT INTO GPUs
-		(Machine, Name, Brand, DriverVersion, MemoryTotal)
-		VALUES ($1, $2, $3, $4, $5)
-		RETURNING Id`,
-		host, gpuinfo.Name, gpuinfo.Brand, gpuinfo.DriverVersion,
-		gpuinfo.MemoryTotal)
-	err = newId.Scan(&id)
-	return
-}
-
 func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
 	// Insert the new context we've received into the db, overwriting the
 	// existing info
