@@ -47,22 +47,23 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 			continue
 		}
 
-		ws = append(ws, workStationData{
-			Name: machine.Hostname,
-			Gpus: make([]OldGPUStatSample, 0),
-		})
-
+		gpus := make([]OldGPUStatSample, 0)
 		for i := range machine.Stats {
-			// TODO: Remove hardcoded workstation
-			ws[0].Gpus = append(ws[0].Gpus, zipStats(
+			gpus = append(gpus, zipStats(
 				machine.Hostname,
 				machine.GPUInfos[i],
 				machine.Stats[i],
 			))
 		}
+
+		ws = append(ws, workStationData{
+			Name: machine.Hostname,
+			Gpus: gpus,
+		})
 	}
 
-	return []workstationGroup{{Name: "Shared", WorkStations: ws}}, nil
+	result := []workstationGroup{{Name: "Shared", WorkStations: ws}}
+	return result, nil
 }
 
 // Bodge together stats and contextual data to make OldGpuStats
