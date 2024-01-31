@@ -1,47 +1,47 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
 	"log/slog"
 	"os"
 	"time"
 
+	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/gpustats"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 func main() {
-	fakeGpus := flag.Bool("fakegpu", false, "Use fake GPU data")
-
-	// don't define flags below here
-	flag.Parse()
-	// don't access flags above here
+	flags := parseProgramFlags()
 
 	log := slog.Default()
 
-	log.Info("Starting satellite", "fakegpu", *fakeGpus)
+	log.Info("Starting satellite", "fakegpu", flags.fakeGPUs)
 
 	host, err := os.Hostname()
+
 	if err != nil {
 		log.Error("failed to get hostname", "err", err)
 		return
 	}
+
 	log.Info("got hostname", "hostname", host)
 
+	satellite_configuration, err := config.GetClientConfiguration("config.toml")
+
+	if err != nil {
+		log.Error("Failed to get satellite configuration from toml configuration file", "err", err)
+		os.Exit(1)
+	}
+
 	s := satellite{
-		// TODO: Make this configurable
-		gsAddr: "http://localhost:8080",
-		// we assume hostnames don't change during the program's runtime
+		gsAddr:   config.GenerateAddress(satellite_configuration.Groundstation.Hostname, satellite_configuration.Groundstation.Port),
 		hostname: host,
 	}
 
-	var hndlr gpustats.GPUDataSource
-	if *fakeGpus {
-		hndlr = gpustats.FakeGPU{}
-	} else {
-		hndlr = gpustats.NvidiaGPUHandler{}
-	}
+	hndlr := setGPUHandler(flags.fakeGPUs)
 
 	// Send initial infopacket of GPUInfo
 	log.Info("Sending initial GPU context")
@@ -50,27 +50,122 @@ func main() {
 		log.Error("Failed to send GPU context", "err", err)
 	}
 
-	// Start sending heartbeats and statuses
-	for {
-		log.Info("Sending heartbeat")
-		err := s.sendHeartBeat()
-		if err != nil {
-			log.Error("Failed to send heartbeat", "err", err)
+	go func() {
+		for {
+			log.Info("Sending heartbeat")
+			err := s.sendHeartBeat()
+
+			if err != nil {
+				log.Error("failed to send heartbeat", "err", err)
+			}
+
+			time.Sleep(time.Duration(satellite_configuration.Satellite.HeartbeatInterval))
 		}
-		time.Sleep(2 * time.Second)
-		// TODO: testing only, should not send packets this frequently?
-		log.Info("Sending status")
-		err = s.sendGPUStatus(hndlr)
-		if err != nil {
-			log.Error("Failed to send status", "err", err)
+	}()
+
+	go func() {
+		backlog, _ := recoverState(satellite_configuration.Satellite.Cache)
+
+		for stat := range backlog {
+			err := s.sendGPUStatus(backlog[stat])
+
+			if err != nil {
+				log.Error("Failed to send backlogged GPU stat message", "err", err)
+			}
 		}
-		time.Sleep(2 * time.Second)
-	}
+
+		backlog = make([][]uplink.GPUStatSample, 0)
+
+		collectGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval) * time.Second)
+		publishGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval) * time.Second)
+
+		for {
+			select {
+			case <-publishGPUStatTicker.C:
+
+				log.Info("Sending status")
+
+				err = s.sendGPUStatus(processStats(backlog))
+
+				if err != nil {
+					log.Error("Failed to publish current GPU stat message", "err", err)
+				}
+			case <-collectGPUStatTicker.C:
+				log.Info("Collecting GPU Status")
+
+				stat, err := hndlr.GetGPUStatus()
+
+				if err != nil {
+					log.Error("Failed to get GPU stat from stat handler", "err", err)
+				}
+
+				backlog = append(backlog, stat)
+				saveState(satellite_configuration.Satellite.Cache, backlog)
+			}
+
+		}
+	}()
+
+	log.Info("Stopped satellite")
 }
 
 type satellite struct {
 	hostname string
 	gsAddr   string
+}
+
+type flags struct {
+	fakeGPUs bool
+}
+
+func saveState(filename string, items [][]uplink.GPUStatSample) error {
+	data, err := json.Marshal(items)
+
+	if err != nil {
+		return err
+	}
+
+	return os.WriteFile(filename, data, 0o644)
+}
+
+func recoverState(filename string) ([][]uplink.GPUStatSample, error) {
+	data, err := os.ReadFile(filename)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var state [][]uplink.GPUStatSample
+
+	err = json.Unmarshal(data, &state)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return state, nil
+}
+
+// Dummy function to process list of stats
+func processStats(stats [][]uplink.GPUStatSample) []uplink.GPUStatSample {
+	return stats[len(stats)-1]
+}
+
+func parseProgramFlags() flags {
+	fakeGpus := flag.Bool("fakegpu", false, "Use fake GPU data")
+	flag.Parse()
+
+	return flags{
+		fakeGPUs: *fakeGpus,
+	}
+}
+
+func setGPUHandler(isFakeGPUs bool) gpustats.GPUDataSource {
+	if isFakeGPUs {
+		return gpustats.FakeGPU{}
+	} else {
+		return gpustats.NvidiaGPUHandler{}
+	}
 }
 
 func (s *satellite) sendHeartBeat() error {
@@ -92,13 +187,18 @@ func (s *satellite) sendGPUInfo(gpuhandler gpustats.GPUDataSource) error {
 	)
 }
 
-func (s *satellite) sendGPUStatus(gpuhandler gpustats.GPUDataSource) error {
+func (s *satellite) sendGPUStatusWithSource(gpuhandler gpustats.GPUDataSource) error {
 	stats, err := gpuhandler.GetGPUStatus()
 
 	if err != nil {
 		return err
 	}
 
+	return s.sendGPUStatus(stats)
+
+}
+
+func (s *satellite) sendGPUStatus(stats []uplink.GPUStatSample) error {
 	return femto.Post(
 		s.gsAddr+uplink.GPUStatsUrl,
 		uplink.GpuStatsUpload{Hostname: s.hostname, Stats: stats},
