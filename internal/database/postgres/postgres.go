@@ -189,7 +189,10 @@ func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) er
 	_, err := conn.db.Exec(`INSERT INTO GPUs
 		(Uuid, Machine, Name, Brand, DriverVersion, MemoryTotal)
 		VALUES ($1, $2, $3, $4, $5, $6)
-		ON CONFLICT DO UPDATE`,
+		ON CONFLICT (Uuid) DO UPDATE
+		SET (Uuid, Machine, Name, Brand, DriverVersion, MemoryTotal)
+		= (EXCLUDED.Uuid, EXCLUDED.Machine, EXCLUDED.Name,
+		EXCLUDED.Brand, EXCLUDED.DriverVersion, EXCLUDED.MemoryTotal)`,
 		packet.Uuid, host, packet.Name, packet.Brand,
 		packet.DriverVersion, packet.MemoryTotal)
 
