@@ -1,3 +1,5 @@
+// TODO: restore once the rest of webapi is tested
+
 package webapi
 
 import (
