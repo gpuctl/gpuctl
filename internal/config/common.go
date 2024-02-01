@@ -8,10 +8,6 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-type Mergable interface {
-	Merge(config Mergable) Mergable
-}
-
 func PortToAddress(port int) string {
 	return fmt.Sprintf(":%d", port)
 }
@@ -30,7 +26,7 @@ func IsFileEmpty(path string) (bool, error) {
 	return fileInfo.Size() == 0, nil
 }
 
-func getConfiguration[T Mergable](filename string, defaultGenerator func() T) (T, error) {
+func getConfiguration[T any](filename string, defaultGenerator func() T) (T, error) {
 	exePath, err := os.Executable()
 
 	if err != nil {
