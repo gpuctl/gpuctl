@@ -5,7 +5,7 @@ import { Validated, Validation, discard, loading } from "./Utils";
  * Daniel named this
  */
 export const useJarJar = <T,>(
-  f: () => Promise<Validated<T>>
+  f: () => Promise<Validated<T>>,
 ): [Validation<T>, EffectCallback] => {
   const [v, setV] = useState<Validation<T>>(loading());
   const updateV = discard(async () => {

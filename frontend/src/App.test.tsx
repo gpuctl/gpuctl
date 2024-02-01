@@ -21,7 +21,7 @@ after fetch succeeds, no longer show that message`, async () => {
   render(<App />);
 
   const statuses = await screen.findAllByText(
-    "Retrieving data from API server..."
+    "Retrieving data from API server...",
   );
   statuses.forEach((status) => expect(status).toBeInTheDocument());
 
@@ -71,7 +71,7 @@ test("data is fetched again after refresh interval", async () => {
   await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
   (await screen.findAllByText("31 °C", { exact: false })).forEach((temp) =>
-    expect(temp).toBeInTheDocument()
+    expect(temp).toBeInTheDocument(),
   );
   data[0].workStations[0].gpus[0].gpu_temp = 100;
   jest.advanceTimersByTime(REFRESH_INTERVAL + 1);
