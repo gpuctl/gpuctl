@@ -1,4 +1,3 @@
-import { act } from "@testing-library/react";
 import { EffectCallback, RefObject, useEffect, useState } from "react";
 import { Validated, Validation, discard, loading } from "./Utils";
 
@@ -6,12 +5,11 @@ import { Validated, Validation, discard, loading } from "./Utils";
  * Daniel named this
  */
 export const useJarJar = <T,>(
-  f: () => Promise<Validated<T>>,
+  f: () => Promise<Validated<T>>
 ): [Validation<T>, EffectCallback] => {
   const [v, setV] = useState<Validation<T>>(loading());
   const updateV = discard(async () => {
-    const x = await f();
-    act(() => setV(x));
+    setV(await f());
   });
 
   useOnce(updateV);
