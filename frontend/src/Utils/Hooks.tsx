@@ -1,4 +1,3 @@
-import { act } from "@testing-library/react";
 import { EffectCallback, RefObject, useEffect, useState } from "react";
 import { Validated, Validation, discard, loading } from "./Utils";
 
@@ -11,7 +10,7 @@ export const useJarJar = <T,>(
   const [v, setV] = useState<Validation<T>>(loading());
   const updateV = discard(async () => {
     const x = await f();
-    act(() => setV(x));
+    setV(x);
   });
 
   useOnce(updateV);
