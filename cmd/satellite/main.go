@@ -63,50 +63,58 @@ func main() {
 		}
 	}()
 
-	go func() {
-		backlog, _ := recoverState(satellite_configuration.Satellite.Cache)
+	backlog, _ := recoverState(satellite_configuration.Satellite.Cache)
 
-		for stat := range backlog {
-			err := s.sendGPUStatus(backlog[stat])
+	for stat := range backlog {
+		err := s.sendGPUStatus(backlog[stat])
 
-			if err != nil {
-				log.Error("Failed to send backlogged GPU stat message", "err", err)
-			}
+		if err != nil {
+			log.Error("Failed to send backlogged GPU stat message", "err", err)
+		}
+	}
+
+	backlog = make([][]uplink.GPUStatSample, 0)
+
+	collectGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval))
+	publishGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval))
+
+	// Go has no API for a ticker with an instantaneous first tick (see
+	// https://github.com/golang/go/issues/17601) so we have to use a clunky
+	// work-around
+	publishGPUStats := func() {
+		log.Info("Sending status")
+
+		err = s.sendGPUStatus(processStats(backlog))
+
+		if err != nil {
+			log.Error("Failed to publish current GPU stat message", "err", err)
+		}
+	}
+
+	collectGPUStats := func() {
+		log.Info("Collecting GPU Status")
+
+		stat, err := hndlr.GetGPUStatus()
+
+		if err != nil {
+			log.Error("Failed to get GPU stat from stat handler", "err", err)
 		}
 
-		backlog = make([][]uplink.GPUStatSample, 0)
+		backlog = append(backlog, stat)
+		saveState(satellite_configuration.Satellite.Cache, backlog)
+	}
 
-		collectGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval) * time.Second)
-		publishGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval) * time.Second)
+	collectGPUStats()
+	publishGPUStats()
 
-		for {
-			select {
-			case <-publishGPUStatTicker.C:
-
-				log.Info("Sending status")
-
-				err = s.sendGPUStatus(processStats(backlog))
-
-				if err != nil {
-					log.Error("Failed to publish current GPU stat message", "err", err)
-				}
-			case <-collectGPUStatTicker.C:
-				log.Info("Collecting GPU Status")
-
-				stat, err := hndlr.GetGPUStatus()
-
-				if err != nil {
-					log.Error("Failed to get GPU stat from stat handler", "err", err)
-				}
-
-				backlog = append(backlog, stat)
-				saveState(satellite_configuration.Satellite.Cache, backlog)
-			}
-
+	for {
+		select {
+		case <-publishGPUStatTicker.C:
+			publishGPUStats()
+		case <-collectGPUStatTicker.C:
+			collectGPUStats()
 		}
-	}()
-
-	log.Info("Stopped satellite")
+	}
 }
 
 type satellite struct {
