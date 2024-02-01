@@ -29,6 +29,9 @@ jobs:
           - 5432:5432
 
     steps:
+      #
+      # Install Dependencies
+      #
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
@@ -38,14 +41,18 @@ jobs:
           node-version: 18
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
-      - name: Install Dependencies
+      - name: Install Frontend Dependencies
         run: npm ci
         working-directory: ./frontend
-      - name: Check Formatting
-        run: npm run fmt-check
-        working-directory: ./frontend
-      - name: Check for formatting errors
-        run: test -z $(gofmt -l .)
+      #
+      # Unified Build
+      #
+      - name: Run build
+        run: make all -j$(nproc)
+      
+      #
+      # Go stuff
+      #
       - name: Build and test Go with race detector
         run: go test ./... -race
       - name: Build and test Go with coverage
@@ -62,17 +69,21 @@ jobs:
         # coverage check currently only checks total coverage
       - name: Check for insufficient coverage
         run: test 75 -le $(go tool cover -func=cover.out | tail -n 1 | grep -Eo "[[:space:]][[:digit:]]+")
-      - name: Install Frontend Dependencies
-        run: |
-          cd ./frontend
-          npm ci
+      - name: Check Go Formatting
+        run: test -z $(gofmt -l .)
+      
+      #
+      # Frontend
+      #
       - name: Build Frontend
-        run: |
-          cd ./frontend
-          npm run build
+        run: npm run build
+        working-directory: ./frontend
       - name: Run Frontend Tests
+        working-directory: ./frontend
+        run: npm test
         env:
           CI: true
-        run: |
-          cd ./frontend
-          npm test
+      - name: Check Frontend Formatting
+        run: npm run fmt-check
+        working-directory: ./frontend
+      
