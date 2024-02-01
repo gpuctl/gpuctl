@@ -15,7 +15,7 @@ import { Navbar } from "./Components/Navbar";
 import { ColumnGrid } from "./Components/ColumnGrid";
 import { WorkStationGroup } from "./Data";
 
-const API_URL = "http://localhost:8000";
+const API_URL = "";
 export const REFRESH_INTERVAL = 5000;
 
 // Currently does not attempt to do any validation of the returned GPU stats,

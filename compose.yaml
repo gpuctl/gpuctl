@@ -4,6 +4,8 @@ services:
     environment:
       # TODO: USE PASSWORDS!! REMOVE THIS LINE!!
       POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: pg_isready -U postgres
       interval: 10s
@@ -21,5 +23,16 @@ services:
     ports:
       - "80:80"
       - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
     depends_on:
       - control
+
+volumes:
+  caddy_data:
+    external: true
+  caddy_config:
+  postgres_data:
+    external: true

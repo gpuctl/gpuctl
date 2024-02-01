@@ -1,3 +1,8 @@
 :80 {
+	# forward groundstation and web-api requests to control
+	# should match ports set in ./control.conf
+	reverse_proxy /gs-api/* control:8080
+	reverse_proxy /api/* control:8000
+
 	file_server
 }
