@@ -8,12 +8,18 @@ services:
       test: pg_isready -U postgres
       interval: 10s
   control:
-    image: gpuctl-control
-    ports:
-      - 127.0.0.1:8000:8000
-      - 127.0.0.1:8080:8080
+    build:
+      dockerfile: ./control.Dockerfile
     environment:
       GPU_DB_URL: postgres://postgres@postgres/postgres
     depends_on:
       postgres:
         condition: service_healthy
+  frontend:
+    build:
+      dockerfile: ./frontend.Dockerfile
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - control
