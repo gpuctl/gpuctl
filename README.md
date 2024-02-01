@@ -2,8 +2,8 @@
 
 ## Deploying
 
-Needs a Postgres database. URL is passed in as `DATABASE_URL`. For _reasons_,
-don't use `postgres://postgres@localhost/postgres`.
+Needs a Postgres database. URL is passed in in the `control.yaml` file. For
+_reasons_, don't use `postgres://postgres@localhost/postgres`.
 
 ## Running tests
 
@@ -16,3 +16,15 @@ It will *ERASE* the contents of this database as part of test cleanup, so *DO
 NOT* use it for deployment.
 
 You can override this by setting the `TEST_URL` environment variable.
+
+## Deploying
+
+Deploys using Docker and Docker Compose. You will need external volumes for
+storing persistant database contents and certificates:
+
+```
+docker volume create caddy_data
+docker volume create postgres_data
+
+docker compose up --build -d
+```
