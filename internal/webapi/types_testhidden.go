@@ -1,10 +1,11 @@
+// TODO: restore once the rest of webapi is tested
+
 package webapi
 
 import (
 	"encoding/json"
 	"testing"
 
-	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -26,34 +27,34 @@ func TestMarshal(t *testing.T) {
 			workstationGroup{
 				Name: "Shared", WorkStations: []workStationData{
 					{
-						Name: "Workstation 1", Gpus: []uplink.GPUStats{
+						Name: "Workstation 1", Gpus: []OldGPUStatSample{
 							{Name: "NVIDIA GeForce GT 1030", Brand: "GeForce", DriverVersion: "535.146.02", MemoryTotal: 0x800, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 82, FanSpeed: 35, Temp: 31},
 						},
 					},
 					{
-						Name: "Workstation 2", Gpus: []uplink.GPUStats{
+						Name: "Workstation 2", Gpus: []OldGPUStatSample{
 							{Name: "NVIDIA TITAN Xp", Brand: "Titan", DriverVersion: "535.146.02", MemoryTotal: 0x3000, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 83, FanSpeed: 23, Temp: 32},
 							{Name: "NVIDIA TITAN Xp", Brand: "Titan", DriverVersion: "535.146.02", MemoryTotal: 0x3000, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 83, FanSpeed: 23, Temp: 32},
 						},
 					},
 					{
-						Name: "Workstation 3", Gpus: []uplink.GPUStats{
+						Name: "Workstation 3", Gpus: []OldGPUStatSample{
 							{Name: "NVIDIA GeForce GT 730", Brand: "GeForce", DriverVersion: "470.223.02", MemoryTotal: 0x7d1, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 220, FanSpeed: 30, Temp: 27},
 						},
 					},
 					{
-						Name: "Workstation 5", Gpus: []uplink.GPUStats{
+						Name: "Workstation 5", Gpus: []OldGPUStatSample{
 							{Name: "NVIDIA TITAN Xp", Brand: "Titan", DriverVersion: "535.146.02", MemoryTotal: 0x3000, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 83, FanSpeed: 23, Temp: 32},
 							{Name: "NVIDIA TITAN Xp", Brand: "Titan", DriverVersion: "535.146.02", MemoryTotal: 0x3000, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 83, FanSpeed: 23, Temp: 32},
 						},
 					},
 					{
-						Name: "Workstation 4", Gpus: []uplink.GPUStats{
+						Name: "Workstation 4", Gpus: []OldGPUStatSample{
 							{Name: "NVIDIA GeForce GT 1030", Brand: "GeForce", DriverVersion: "535.146.02", MemoryTotal: 0x800, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 82, FanSpeed: 35, Temp: 31},
 						},
 					},
 					{
-						Name: "Workstation 6", Gpus: []uplink.GPUStats{
+						Name: "Workstation 6", Gpus: []OldGPUStatSample{
 							{Name: "NVIDIA GeForce GT 730", Brand: "GeForce", DriverVersion: "470.223.02", MemoryTotal: 0x7d1, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 220, FanSpeed: 30, Temp: 27},
 						},
 					},

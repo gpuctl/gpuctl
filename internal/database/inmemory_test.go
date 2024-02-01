@@ -20,9 +20,10 @@ func TestInMemory(t *testing.T) {
 	err = db.UpdateLastSeen("foo")
 	assert.NoError(t, err)
 
-	err = db.AppendDataPoint("foo", uplink.GPUStats{
-		Name: "foo-1",
-	})
+	err = db.UpdateGPUContext("foo", uplink.GPUInfo{})
+	assert.NoError(t, err)
+
+	err = db.AppendDataPoint(uplink.GPUStatSample{})
 	assert.NoError(t, err)
 
 	data, err = db.LatestData()

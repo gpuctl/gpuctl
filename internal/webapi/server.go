@@ -32,6 +32,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	s.mux.ServeHTTP(w, r)
 }
 
+// This function involves a lot of weird unwrapping
+// TODO: See if we can get the database layer to do it for us
 func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 	data, err := a.db.LatestData()
 
@@ -39,21 +41,53 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 		return nil, err
 	}
 
-	var workstations []workStationData
-
-	for name, samples := range data {
-		if len(samples) == 0 {
+	var ws []workStationData
+	for _, machine := range data {
+		if len(machine.Stats) == 0 {
 			continue
 		}
 
-		mostRecent := samples[len(samples)-1]
+		gpus := make([]OldGPUStatSample, 0)
+		for i := range machine.Stats {
+			gpus = append(gpus, zipStats(
+				machine.Hostname,
+				machine.GPUInfos[i],
+				machine.Stats[i],
+			))
+		}
 
-		workstations = append(workstations,
-			workStationData{Name: name, Gpus: []uplink.GPUStats{mostRecent}},
-		)
+		ws = append(ws, workStationData{
+			Name: machine.Hostname,
+			Gpus: gpus,
+		})
 	}
 
-	return []workstationGroup{
-		{Name: "Shared", WorkStations: workstations},
-	}, nil
+	result := []workstationGroup{{Name: "Shared", WorkStations: ws}}
+	return result, nil
+}
+
+// Bodge together stats and contextual data to make OldGpuStats
+func zipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) OldGPUStatSample {
+	return OldGPUStatSample{
+		Hostname: host,
+		// info from GPUInfo
+		Uuid:          info.Uuid,
+		Name:          info.Name,
+		Brand:         info.Brand,
+		DriverVersion: info.DriverVersion,
+		MemoryTotal:   info.MemoryTotal,
+		// info from GPUStatSample
+		MemoryUtilisation: stat.MemoryUtilisation,
+		GPUUtilisation:    stat.GPUUtilisation,
+		MemoryUsed:        stat.MemoryUsed,
+		FanSpeed:          stat.FanSpeed,
+		Temp:              stat.Temp,
+		MemoryTemp:        stat.MemoryTemp,
+		GraphicsVoltage:   stat.GraphicsVoltage,
+		PowerDraw:         stat.PowerDraw,
+		GraphicsClock:     stat.GraphicsClock,
+		MaxGraphicsClock:  stat.MaxGraphicsClock,
+		MemoryClock:       stat.MemoryClock,
+		MaxMemoryClock:    stat.MaxMemoryClock,
+	}
 }

@@ -1,13 +1,16 @@
 package gpustats
 
 import (
-	"bytes"
+	//	"bytes"
 	"encoding/json"
-	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
+
 	"strings"
 	"testing"
+
+	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 const (
@@ -29,7 +32,7 @@ func TestNvidiaSmiXMLParsing(t *testing.T) {
 			continue
 		}
 		fileloc := testDataRoot + "/" + filename
-		dump, err := ioutil.ReadFile(fileloc)
+		dump, err := os.ReadFile(fileloc)
 		if err != nil {
 			t.Fatalf("Could not read test data: %v", err)
 		}
@@ -39,33 +42,42 @@ func TestNvidiaSmiXMLParsing(t *testing.T) {
 			continue
 		}
 
-		r, err := res.FilterStats()
+		stats, err := res.ExtractGPUStatSample()
 		if err != nil {
-			t.Errorf("Could not produce filtered status packet from nvidia-smi dump: %v (file %s) %v", err, fileloc, r)
+			t.Errorf("Could not extract GPU status from nvidia-smi dump: %v (file %s)", err, fileloc)
 			continue
 		}
 
-		j, err := json.Marshal(r)
+		info, err := res.ExtractGPUInfo()
+		if err != nil {
+			t.Errorf("Could not extract general GPU info from nvidia-smi dump: %v (file %s)", err, fileloc)
+			continue
+		}
+
+		result := uplink.GpuStatsUpload{Hostname: "", GPUInfos: info, Stats: stats}
+		resultJson, err := json.Marshal(result)
+
 		if err != nil {
 			t.Errorf("Could not marshal status packet to JSON: %v (file %s)", err, fileloc)
 			continue
 		}
-		// Read expected json
-		var expected []byte
 
-		{
-			sp := strings.Split(filename, ".")
-			resloc := testDataRoot + "/" + sp[0] + ".json"
-			dump, err := ioutil.ReadFile(resloc)
-			if err != nil {
-				t.Fatalf("Could not read test result data at %s: %v", resloc, err)
-			}
-			expected = dump
+		// Compare parsed resultJson data with expected output
+		sp := strings.Split(filename, ".")
+		resloc := testDataRoot + "/" + sp[0] + ".json"
+		expected_dump, err := os.ReadFile(resloc)
+		if err != nil {
+			t.Fatalf("Could not read test result data at %s: %v", resloc, err)
 		}
 
-		j = append(j, '\n') // HACK: annoying newline at the end of stored data...
-		if !bytes.Equal(expected, j) {
-			t.Errorf("Parsed data did not match expected output (file %s):\n%s!=\n%s", fileloc, j, expected)
+		var expected uplink.GpuStatsUpload
+		err = json.Unmarshal(expected_dump, &expected)
+		if err != nil {
+			t.Fatalf("Could not unmarshal test result data at %s: %v", resloc, err)
+		}
+
+		if !reflect.DeepEqual(result, expected) {
+			t.Errorf("Result data did not match expected. \nGot      %s \nexpected %s \n(file: %s)", resultJson, string(expected_dump), fileloc)
 		}
 
 	}
@@ -84,7 +96,7 @@ func TestNvidiaSmiFaultyInput(t *testing.T) {
 			continue
 		}
 		fileloc := testDataRoot + "/" + filename
-		dump, err := ioutil.ReadFile(fileloc)
+		dump, err := os.ReadFile(fileloc)
 		if err != nil {
 			t.Fatalf("Could not read test data: %v", err)
 		}
@@ -109,7 +121,7 @@ func TestNvidiaSmiInvalidDataParse(t *testing.T) {
 			continue
 		}
 		fileloc := testDataRoot + "/" + filename
-		dump, err := ioutil.ReadFile(fileloc)
+		dump, err := os.ReadFile(fileloc)
 		if err != nil {
 			t.Fatalf("Could not read test data: %v", err)
 		}
@@ -119,7 +131,7 @@ func TestNvidiaSmiInvalidDataParse(t *testing.T) {
 			continue
 		}
 
-		_, err = smi.FilterStats()
+		_, err = smi.ExtractGPUStatSample()
 		if err == nil {
 			t.Errorf("Accepted mangled data in parsing fields of nvidia-smi data (file %s)", fileloc)
 			continue

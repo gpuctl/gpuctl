@@ -21,14 +21,20 @@ type unitTest struct {
 var UnitTests = [...]unitTest{
 	{"DatabaseStartsEmpty", databaseStartsEmpty},
 	{"AppendingFailsIfMachineMissing", appendingFailsIfMachineMissing},
+	{"AppendingFailsIfContextMissing", appendingFailsIfContextMissing},
 	{"AppendedDataPointsAreSaved", appendedDataPointsAreSaved},
 	{"MultipleHeartbeats", multipleHeartbeats},
 }
 
 // fake data for adding during tests
-var fakeData = uplink.GPUStats{Name: "GT 1030", Brand: "NVidia",
-	DriverVersion: "v1.4.5", MemoryTotal: 4, MemoryUtilisation: 25.4,
-	GPUUtilisation: 63.5, MemoryUsed: 1.24, FanSpeed: 35.2, Temp: 54.3}
+// TODO: update with processes when they're implemented
+var fakeDataInfo = uplink.GPUInfo{Uuid: "GPU-7d86d61f-acb4-a007-7535-203264c18e6a", Name: "GT 1030", Brand: "NVidia",
+	DriverVersion: "v1.4.5", MemoryTotal: 4}
+var fakeDataSample = uplink.GPUStatSample{Uuid: "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	MemoryUtilisation: 25.4, GPUUtilisation: 63.5, MemoryUsed: 1.24,
+	FanSpeed: 35.2, Temp: 54.3, MemoryTemp: 45.3, GraphicsVoltage: 150.0,
+	PowerDraw: 143.5, GraphicsClock: 50, MaxGraphicsClock: 134.4,
+	MemoryClock: 650.3, MaxMemoryClock: 750, RunningProcesses: nil}
 
 // functions for approximately comparing floats and data structs
 const margin float64 = 0.01
@@ -36,12 +42,8 @@ const margin float64 = 0.01
 func floatsNear(a float64, b float64) bool {
 	return math.Abs(a-b) < margin
 }
-func statsNear(a uplink.GPUStats, b uplink.GPUStats) bool {
-	return (a.Name == b.Name) &&
-		(a.Brand == b.Brand) &&
-		(a.DriverVersion == b.DriverVersion) &&
-		(a.MemoryTotal == b.MemoryTotal) &&
-		floatsNear(a.MemoryUtilisation, b.MemoryUtilisation) &&
+func statsNear(a uplink.GPUStatSample, b uplink.GPUStatSample) bool {
+	return floatsNear(a.MemoryUtilisation, b.MemoryUtilisation) &&
 		floatsNear(a.GPUUtilisation, b.GPUUtilisation) &&
 		floatsNear(a.MemoryUsed, b.MemoryUsed) &&
 		floatsNear(a.FanSpeed, b.FanSpeed) &&
@@ -61,7 +63,7 @@ func databaseStartsEmpty(t *testing.T, db Database) {
 }
 
 func appendingFailsIfMachineMissing(t *testing.T, db Database) {
-	err := db.AppendDataPoint("beaver", fakeData)
+	err := db.AppendDataPoint(fakeDataSample)
 	if err == nil {
 		t.Fatalf("Error expected but none occurred")
 	}
@@ -72,7 +74,21 @@ func appendingFailsIfMachineMissing(t *testing.T, db Database) {
 		t.Fatalf("Unexpected error: %v", err)
 	}
 
-	err = db.AppendDataPoint("beaver", fakeData)
+	err = db.AppendDataPoint(fakeDataSample)
+	if err == nil {
+		t.Fatalf("Error expected but none occurred")
+	}
+}
+
+func appendingFailsIfContextMissing(t *testing.T, db Database) {
+	fakeHost := "rabbit"
+
+	err := db.UpdateLastSeen(fakeHost)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
+
+	err = db.AppendDataPoint(fakeDataSample)
 	if err == nil {
 		t.Fatalf("Error expected but none occurred")
 	}
@@ -85,8 +101,12 @@ func appendedDataPointsAreSaved(t *testing.T, db Database) {
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
+	err = db.UpdateGPUContext(fakeHost, fakeDataInfo)
+	if err != nil {
+		t.Fatalf("Unexpected error: %v", err)
+	}
 
-	db.AppendDataPoint(fakeHost, fakeData)
+	db.AppendDataPoint(fakeDataSample)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -100,15 +120,25 @@ func appendedDataPointsAreSaved(t *testing.T, db Database) {
 	if len(results) != 1 {
 		t.Fatalf("'results' is the wrong length. Expected: 1, Was: %d", len(results))
 	}
-	gpus, ok := results[fakeHost]
-	if !ok {
+
+	var found = false
+	var gpus []uplink.GPUStatSample
+	for _, machine := range results {
+		if machine.Hostname == fakeHost {
+			found = true
+			gpus = machine.Stats
+			break
+		}
+	}
+
+	if !found {
 		t.Fatalf("'results' didn't contain entry for '%s'", fakeHost)
 	}
 	if len(gpus) != 1 {
 		t.Fatalf("'results[%s]' is the wrong length. Expected: 1, Was: %d", fakeHost, len(gpus))
 	}
-	if !statsNear(gpus[0], fakeData) {
-		t.Fatalf("Appended data doesn't match returned latest data. Expected: %v, Got: %v", fakeData, gpus[0])
+	if !statsNear(gpus[0], fakeDataSample) {
+		t.Fatalf("Appended data doesn't match returned latest data. Expected: %v, Got: %v", fakeDataSample, gpus[0])
 	}
 }
 

@@ -43,6 +43,13 @@ func main() {
 
 	hndlr := setGPUHandler(flags.fakeGPUs)
 
+	// Send initial infopacket of GPUInfo
+	log.Info("Sending initial GPU context")
+	err = s.sendGPUInfo(hndlr)
+	if err != nil {
+		log.Error("Failed to send GPU context", "err", err)
+	}
+
 	go func() {
 		for {
 			log.Info("Sending heartbeat")
@@ -67,7 +74,7 @@ func main() {
 			}
 		}
 
-		backlog = make([]uplink.GPUStats, 0)
+		backlog = make([][]uplink.GPUStatSample, 0)
 
 		collectGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval) * time.Second)
 		publishGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval) * time.Second)
@@ -86,7 +93,7 @@ func main() {
 			case <-collectGPUStatTicker.C:
 				log.Info("Collecting GPU Status")
 
-				stat, err := hndlr.GPUStats()
+				stat, err := hndlr.GetGPUStatus()
 
 				if err != nil {
 					log.Error("Failed to get GPU stat from stat handler", "err", err)
@@ -111,7 +118,7 @@ type flags struct {
 	fakeGPUs bool
 }
 
-func saveState(filename string, items []uplink.GPUStats) error {
+func saveState(filename string, items [][]uplink.GPUStatSample) error {
 	data, err := json.Marshal(items)
 
 	if err != nil {
@@ -121,14 +128,14 @@ func saveState(filename string, items []uplink.GPUStats) error {
 	return os.WriteFile(filename, data, 0o644)
 }
 
-func recoverState(filename string) ([]uplink.GPUStats, error) {
+func recoverState(filename string) ([][]uplink.GPUStatSample, error) {
 	data, err := os.ReadFile(filename)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var state []uplink.GPUStats
+	var state [][]uplink.GPUStatSample
 
 	err = json.Unmarshal(data, &state)
 
@@ -140,7 +147,7 @@ func recoverState(filename string) ([]uplink.GPUStats, error) {
 }
 
 // Dummy function to process list of stats
-func processStats(stats []uplink.GPUStats) uplink.GPUStats {
+func processStats(stats [][]uplink.GPUStatSample) []uplink.GPUStatSample {
 	return stats[len(stats)-1]
 }
 
@@ -168,8 +175,20 @@ func (s *satellite) sendHeartBeat() error {
 	)
 }
 
+func (s *satellite) sendGPUInfo(gpuhandler gpustats.GPUDataSource) error {
+	info, err := gpuhandler.GetGPUInformation()
+	if err != nil {
+		return err
+	}
+
+	return femto.Post(
+		s.gsAddr+uplink.GPUStatsUrl,
+		uplink.GpuStatsUpload{Hostname: s.hostname, GPUInfos: info},
+	)
+}
+
 func (s *satellite) sendGPUStatusWithSource(gpuhandler gpustats.GPUDataSource) error {
-	stats, err := gpuhandler.GPUStats()
+	stats, err := gpuhandler.GetGPUStatus()
 
 	if err != nil {
 		return err
@@ -179,9 +198,9 @@ func (s *satellite) sendGPUStatusWithSource(gpuhandler gpustats.GPUDataSource) e
 
 }
 
-func (s *satellite) sendGPUStatus(stats uplink.GPUStats) error {
+func (s *satellite) sendGPUStatus(stats []uplink.GPUStatSample) error {
 	return femto.Post(
 		s.gsAddr+uplink.GPUStatsUrl,
-		uplink.StatsPackage{Hostname: s.hostname, Stats: stats},
+		uplink.GpuStatsUpload{Hostname: s.hostname, Stats: stats},
 	)
 }

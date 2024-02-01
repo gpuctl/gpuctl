@@ -10,11 +10,12 @@ type Database interface {
 	UpdateLastSeen(host string) error
 
 	// record a new data point for a satellite in the data store
-	// TODO: rework to take snapshot for multiple GPUs
-	//       this initial version assumes all machines have a single GPU
-	AppendDataPoint(host string, packet uplink.GPUStats) error
+	// will error if this gpu hasn't sent a context packet yet
+	AppendDataPoint(sample uplink.GPUStatSample) error
+
+	// Update the information for the GPU contained in uplink.GPUInfo
+	UpdateGPUContext(host string, info uplink.GPUInfo) error
 
 	// get the latest metrics for all approved machines
-	// returns map from hostname to slice of stats of gpus on that machine
-	LatestData() (map[string][]uplink.GPUStats, error)
+	LatestData() ([]uplink.GpuStatsUpload, error)
 }

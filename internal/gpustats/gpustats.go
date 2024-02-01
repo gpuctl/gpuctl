@@ -6,72 +6,46 @@ import (
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
-type UncontextualGPUStats struct {
-	MemoryUtilisation float64 `json:"memory_util"`
-	GPUUtilisation    float64 `json:"gpu_util"`
-	MemoryUsed        float64 `json:"memory_used"`
-	FanSpeed          float64 `json:"fan_speed"`
-	Temp              float64 `json:"gpu_temp"`
-}
+var (
+	SampleAdditionError = errors.New("two packets with different contexts cannot be aggregated using Add, consider using UncontextualAdd")
+)
 
-// Combine two GPUStats instances into one.
-func Add(l, r uplink.GPUStats) (uplink.GPUStats, error) {
-	if r.Name != l.Name || r.Brand != l.Brand || r.DriverVersion != l.DriverVersion || r.MemoryTotal != l.MemoryTotal {
-		// TODO: Expose this error publicly.
-		return uplink.GPUStats{}, errors.New("two packets with different contexts cannot be aggregated using Add, consider using UncontextualAdd")
+// Combine two GPUStatSamples instances into one.
+func Add(l, r uplink.GPUStatSample) (uplink.GPUStatSample, error) {
+	if l.Uuid != r.Uuid {
+		return uplink.GPUStatSample{}, SampleAdditionError
 	}
 
-	return uplink.GPUStats{
-		Name:              r.Name,
-		Brand:             r.Brand,
-		DriverVersion:     r.DriverVersion,
-		MemoryTotal:       r.MemoryTotal,
+	return uplink.GPUStatSample{
 		MemoryUtilisation: l.MemoryUtilisation + r.MemoryUtilisation,
 		GPUUtilisation:    l.GPUUtilisation + r.GPUUtilisation,
 		FanSpeed:          l.FanSpeed + r.FanSpeed,
 		Temp:              l.Temp + r.Temp,
 		MemoryUsed:        l.MemoryUsed + r.MemoryUsed,
+		MemoryTemp:        l.MemoryTemp + r.MemoryTemp,
+		GraphicsVoltage:   l.GraphicsVoltage + r.GraphicsVoltage,
+		PowerDraw:         l.PowerDraw + r.PowerDraw,
+		GraphicsClock:     l.GraphicsClock + r.GraphicsClock,
+		MaxGraphicsClock:  l.MaxGraphicsClock + r.MaxGraphicsClock,
+		MemoryClock:       l.MemoryClock + r.MemoryClock,
+		MaxMemoryClock:    l.MaxMemoryClock + r.MaxMemoryClock,
 	}, nil
 }
 
-// Combine two UncontextualGPUStats instances into one.
-func AddUncontextual(l, r uplink.GPUStats) UncontextualGPUStats {
-	return UncontextualGPUStats{
-		MemoryUtilisation: l.MemoryUtilisation + r.MemoryUtilisation,
-		GPUUtilisation:    l.GPUUtilisation + r.GPUUtilisation,
-		FanSpeed:          l.FanSpeed + r.FanSpeed,
-		Temp:              l.Temp + r.Temp,
-		MemoryUsed:        l.MemoryUsed + r.MemoryUsed,
-	}
-}
-
 // Scale each value in s by scalar
-func Scale(s uplink.GPUStats, scalar float64) uplink.GPUStats {
-	return uplink.GPUStats{
-		Name:              s.Name,
-		Brand:             s.Brand,
-		DriverVersion:     s.DriverVersion,
-		MemoryTotal:       s.MemoryTotal,
+func Scale(s uplink.GPUStatSample, scalar float64) uplink.GPUStatSample {
+	return uplink.GPUStatSample{
 		MemoryUtilisation: s.MemoryUtilisation * scalar,
 		GPUUtilisation:    s.GPUUtilisation * scalar,
 		FanSpeed:          s.FanSpeed * scalar,
 		Temp:              s.Temp * scalar,
 		MemoryUsed:        s.MemoryUsed * scalar,
-	}
-}
-
-// Identity returns the identity element of GPUStats for the UncontextualCombine operation.
-func Default(name string, brand string, driverVersion string, memoryTotal uint64) uplink.GPUStats {
-	return uplink.GPUStats{
-		Name:          name,
-		Brand:         brand,
-		DriverVersion: driverVersion,
-		MemoryTotal:   memoryTotal,
-
-		MemoryUtilisation: 0,
-		GPUUtilisation:    0,
-		MemoryUsed:        0,
-		FanSpeed:          0,
-		Temp:              0,
+		MemoryTemp:        s.MemoryTemp * scalar,
+		GraphicsVoltage:   s.GraphicsVoltage * scalar,
+		PowerDraw:         s.PowerDraw * scalar,
+		GraphicsClock:     s.GraphicsClock * scalar,
+		MaxGraphicsClock:  s.MaxGraphicsClock * scalar,
+		MemoryClock:       s.MemoryClock * scalar,
+		MaxMemoryClock:    s.MaxMemoryClock * scalar,
 	}
 }
