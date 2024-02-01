@@ -3,6 +3,7 @@ package config_test
 import (
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/stretchr/testify/assert"
@@ -17,8 +18,8 @@ port = 8081
 
 [satellite]
 cache = "/tmp/satellite"
-data_interval = 60
-heartbeat_interval = 5`
+data_interval = "666s"
+heartbeat_interval = "55s"`
 	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
@@ -29,8 +30,8 @@ heartbeat_interval = 5`
 	assert.Equal(t, "local.groundstation", config.Groundstation.Hostname)
 	assert.Equal(t, 8081, config.Groundstation.Port)
 	assert.Equal(t, "/tmp/satellite", config.Satellite.Cache)
-	assert.Equal(t, 60, config.Satellite.DataInterval)
-	assert.Equal(t, 5, config.Satellite.HeartbeatInterval)
+	assert.Equal(t, 666*time.Second, config.Satellite.DataInterval())
+	assert.Equal(t, 55*time.Second, config.Satellite.HeartbeatInterval())
 }
 
 func TestGetClientConfiguration_DefaultConfig(t *testing.T) {
@@ -48,8 +49,8 @@ func TestGetClientConfiguration_DefaultConfig(t *testing.T) {
 	assert.Equal(t, 8080, config.Groundstation.Port)
 
 	assert.Equal(t, "/tmp/satellite", config.Satellite.Cache)
-	assert.Equal(t, 2, config.Satellite.HeartbeatInterval)
-	assert.Equal(t, 60, config.Satellite.DataInterval)
+	assert.Equal(t, 60*time.Second, config.Satellite.DataInterval())
+	assert.Equal(t, 2*time.Second, config.Satellite.HeartbeatInterval())
 }
 
 func TestGetClientConfiguration_InvalidConfig(t *testing.T) {
@@ -68,6 +69,6 @@ groundstation: "should be a table, not a string"`
 	assert.Equal(t, 0, config.Groundstation.Port)
 
 	assert.Equal(t, "", config.Satellite.Cache)
-	assert.Equal(t, 0, config.Satellite.HeartbeatInterval)
-	assert.Equal(t, 0, config.Satellite.DataInterval)
+	assert.Equal(t, time.Duration(0), config.Satellite.HeartbeatInterval())
+	assert.Equal(t, time.Duration(0), config.Satellite.DataInterval())
 }

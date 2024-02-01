@@ -59,7 +59,7 @@ func main() {
 				log.Error("failed to send heartbeat", "err", err)
 			}
 
-			time.Sleep(time.Duration(satellite_configuration.Satellite.HeartbeatInterval))
+			time.Sleep(satellite_configuration.Satellite.HeartbeatInterval())
 		}
 	}()
 
@@ -75,8 +75,8 @@ func main() {
 
 	backlog = make([][]uplink.GPUStatSample, 0)
 
-	collectGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval))
-	publishGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval))
+	collectGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval()))
+	publishGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval()))
 
 	// Go has no API for a ticker with an instantaneous first tick (see
 	// https://github.com/golang/go/issues/17601) so we have to use a clunky
