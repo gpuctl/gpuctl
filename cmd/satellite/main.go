@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"flag"
 	"log/slog"
 	"os"
 	"time"
@@ -14,11 +13,9 @@ import (
 )
 
 func main() {
-	flags := parseProgramFlags()
-
 	log := slog.Default()
 
-	log.Info("Starting satellite", "fakegpu", flags.fakeGPUs)
+	log.Info("Starting satellite")
 
 	host, err := os.Hostname()
 
@@ -29,7 +26,9 @@ func main() {
 
 	log.Info("got hostname", "hostname", host)
 
-	satellite_configuration, err := config.GetClientConfiguration("config.toml")
+	satellite_configuration, err := config.GetClientConfiguration("satellite.conf")
+
+	log.Info("got config", "config", satellite_configuration)
 
 	if err != nil {
 		log.Error("Failed to get satellite configuration from toml configuration file", "err", err)
@@ -41,7 +40,7 @@ func main() {
 		hostname: host,
 	}
 
-	hndlr := setGPUHandler(flags.fakeGPUs)
+	hndlr := setGPUHandler(satellite_configuration.Satellite.FakeGPU)
 
 	// Send initial infopacket of GPUInfo
 	log.Info("Sending initial GPU context")
@@ -157,15 +156,6 @@ func recoverState(filename string) ([][]uplink.GPUStatSample, error) {
 // Dummy function to process list of stats
 func processStats(stats [][]uplink.GPUStatSample) []uplink.GPUStatSample {
 	return stats[len(stats)-1]
-}
-
-func parseProgramFlags() flags {
-	fakeGpus := flag.Bool("fakegpu", false, "Use fake GPU data")
-	flag.Parse()
-
-	return flags{
-		fakeGPUs: *fakeGpus,
-	}
 }
 
 func setGPUHandler(isFakeGPUs bool) gpustats.GPUDataSource {

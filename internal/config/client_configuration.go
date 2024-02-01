@@ -9,6 +9,7 @@ type Satellite struct {
 	Cache             string `toml:"cache"`
 	DataInterval      int    `toml:"data_interval"`
 	HeartbeatInterval int    `toml:"heartbeat_interval"`
+	FakeGPU           bool   `toml:"fake_gpu"`
 }
 
 type SatelliteConfiguration struct {
@@ -49,7 +50,7 @@ func (s SatelliteConfiguration) Merge(config Mergable) Mergable {
 func DefaultSatelliteConfiguration() SatelliteConfiguration {
 	return SatelliteConfiguration{
 		Groundstation: Groundstation{"localhost", 8080},
-		Satellite:     Satellite{"/tmp/satellite", 60, 2},
+		Satellite:     Satellite{"/tmp/satellite", 60, 2, false},
 	}
 }
 

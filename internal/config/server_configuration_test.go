@@ -12,10 +12,13 @@ func TestGetConfiguration_ValidConfig(t *testing.T) {
 	t.Parallel()
 	content := `
 [server]
-port = 9090
+groundstation_port = 9090
+webapi_port = 9070
 
 [database]
-url = "postgres://tony@ic.ac.uk/squares"`
+postgres = true
+url = "postgres://tony@ic.ac.uk/squares"
+test_url = "postgres://postgres@localhost/gpuctl-tests"`
 	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
@@ -23,8 +26,12 @@ url = "postgres://tony@ic.ac.uk/squares"`
 
 	config, err := config.GetServerConfiguration(filename)
 	assert.NoError(t, err)
-	assert.Equal(t, 9090, config.Server.Port)
-	assert.Equal(t, "postgres://tony@ic.ac.uk/squares", config.Database.Url)
+	assert.Equal(t, 9090, config.Server.GSPort)
+	assert.Equal(t, 9070, config.Server.WAPort)
+	assert.Equal(t, true, config.Database.Postgres)
+	assert.Equal(t, false, config.Database.InMemory)
+	assert.Equal(t, "postgres://tony@ic.ac.uk/squares", config.Database.PostgresUrl)
+	assert.Equal(t, "postgres://postgres@localhost/gpuctl-tests", config.Database.TestUrl)
 }
 
 func TestGetConfiguration_DefaultConfig(t *testing.T) {
@@ -38,7 +45,7 @@ func TestGetConfiguration_DefaultConfig(t *testing.T) {
 
 	config, err := config.GetServerConfiguration(filename)
 	assert.NoError(t, err)
-	assert.Equal(t, 8080, config.Server.Port)
+	assert.Equal(t, 8080, config.Server.GSPort)
 }
 
 func TestGetConfiguration_InvalidConfig(t *testing.T) {
@@ -52,8 +59,10 @@ server: "should be a table, not a string"`
 
 	config, err := config.GetServerConfiguration(filename)
 	assert.Error(t, err)
-	assert.Equal(t, 0, config.Server.Port)
-	assert.Equal(t, "", config.Database.Url)
+	assert.Equal(t, 0, config.Server.GSPort)
+	assert.Equal(t, 0, config.Server.WAPort)
+	assert.Equal(t, "", config.Database.PostgresUrl)
+	assert.Equal(t, "", config.Database.TestUrl)
 }
 
 func TestPortToAddress(t *testing.T) {
@@ -63,19 +72,21 @@ func TestPortToAddress(t *testing.T) {
 
 func TestControlConfigurationMerge(t *testing.T) {
 	defaultConfig := config.ControlConfiguration{
-		Database: config.Database{Url: "postgres://default-url"},
-		Server:   config.Server{Port: 8080},
+		Database: config.Database{PostgresUrl: "postgres://default-url", TestUrl: "postgres://test-url"},
+		Server:   config.Server{GSPort: 8080, WAPort: 8000},
 	}
 
 	fileConfig := config.ControlConfiguration{
-		Database: config.Database{Url: ""},
-		Server:   config.Server{Port: 9090},
+		Database: config.Database{PostgresUrl: "", TestUrl: "postgres://non-default-test"},
+		Server:   config.Server{GSPort: 9090, WAPort: 0},
 	}
 
 	mergedConfig := fileConfig.Merge(defaultConfig).(config.ControlConfiguration)
 
-	assert.Equal(t, "postgres://default-url", mergedConfig.Database.Url, "Expected default database URL to be applied")
-	assert.Equal(t, 9090, mergedConfig.Server.Port, "Expected file config server port to be applied")
+	assert.Equal(t, "postgres://default-url", mergedConfig.Database.PostgresUrl, "Expected default database URL to be applied")
+	assert.Equal(t, "postgres://non-default-test", mergedConfig.Database.TestUrl, "Expected file config test URL to be applied")
+	assert.Equal(t, 9090, mergedConfig.Server.GSPort, "Expected file config server groundstation port to be applied")
+	assert.Equal(t, 8000, mergedConfig.Server.WAPort, "Expected default config server web api port to be applied")
 }
 
 func TestControlConfigurationMerge_UnhappyPath(t *testing.T) {
