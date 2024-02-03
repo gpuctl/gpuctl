@@ -11,4 +11,4 @@ RUN go build -v ./cmd/control
 
 COPY control.conf ./
 
-ENTRYPOINT "./control"
+ENTRYPOINT ["./control"]
