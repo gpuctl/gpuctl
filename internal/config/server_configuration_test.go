@@ -56,11 +56,9 @@ server: "should be a table, not a string"`
 
 	filename = filepath.Base(filename)
 
-	config, err := config.GetServerConfiguration(filename)
+	conf, err := config.GetServerConfiguration(filename)
 	assert.Error(t, err)
-	assert.Equal(t, 0, config.Server.GSPort)
-	assert.Equal(t, 0, config.Server.WAPort)
-	assert.Equal(t, "", config.Database.PostgresUrl)
+	assert.Equal(t, config.ControlConfiguration{}, conf)
 }
 
 func TestPortToAddress(t *testing.T) {
