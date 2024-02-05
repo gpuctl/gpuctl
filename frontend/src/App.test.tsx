@@ -2,13 +2,15 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { default as App, REFRESH_INTERVAL } from "./App";
 import { EXAMPLE_DATA_1, WorkStationGroup } from "./Data";
 
-test("renders welcome message", () => {
+test("renders welcome message", async () => {
   mockFetch(EXAMPLE_DATA_1);
   jest.useFakeTimers();
 
   render(<App />);
-  const welcome = screen.getByText("Welcome to the GPU Control Room!");
+  const welcome = await screen.findByText("Welcome to the GPU Control Room!");
   expect(welcome).toBeInTheDocument();
+
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 });
 
 test(`before fetch succeeds inform the user that data is being fetched
@@ -18,10 +20,16 @@ after fetch succeeds, no longer show that message`, async () => {
 
   render(<App />);
 
-  const statuses = screen.getAllByText("Retrieving data from API server...");
+  const statuses = await screen.findAllByText(
+    "Retrieving data from API server...",
+  );
   statuses.forEach((status) => expect(status).toBeInTheDocument());
 
   await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+
+  // This is janky, but I don't know a better way to wait for the state change
+  // to have occured than to wait for the results to be visible
+  await screen.findAllByText("31 °C", { exact: false });
 
   const new_status = screen.queryByText("Retrieving data from API server...");
   expect(new_status).not.toBeInTheDocument();
@@ -47,7 +55,7 @@ test("retrieves data from API server and displays correctly", async () => {
 
         screen
           .getAllByText(gpu.gpu_temp + " °C", { exact: false })
-          .forEach((temp) => expect(temp).toBeInTheDocument());
+          .forEach((gpu_temp) => expect(gpu_temp).toBeInTheDocument());
       });
     });
   });
@@ -62,10 +70,15 @@ test("data is fetched again after refresh interval", async () => {
 
   await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
-  screen
-    .getAllByText("31 °C", { exact: false })
-    .forEach((temp) => expect(temp).toBeInTheDocument());
-  data[0].workStations[0].gpus[0].gpu_temp = 100;
+  (await screen.findAllByText("31 °C", { exact: false })).forEach((temp) =>
+    expect(temp).toBeInTheDocument(),
+  );
+
+  const group = data[0];
+  const workStation = group.workStations[0];
+  const gpu = workStation.gpus[0];
+  gpu.gpu_temp = 100;
+
   jest.advanceTimersByTime(REFRESH_INTERVAL + 1);
 
   await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
@@ -74,8 +87,8 @@ test("data is fetched again after refresh interval", async () => {
   // to rerender after every fetch (just in case)
   view.rerender(<App />);
 
-  const new_temp = screen.getByText("100 °C", { exact: false });
-  expect(new_temp).toBeInTheDocument();
+  const new_gpu_temp = await screen.findByText("100 °C", { exact: false });
+  expect(new_gpu_temp).toBeInTheDocument();
 });
 
 const mockFetch = (s: WorkStationGroup[]) => {
