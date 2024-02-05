@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/google/uuid"
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/database/postgres"
@@ -83,8 +84,9 @@ func (auth configFileAuthenticator) CreateToken(packet webapi.APIAuthPacket) (fe
 	if username != auth.username || password != auth.password {
 		return "", femto.InvalidCredientalsError
 	}
-	auth.currentTokens["asdfg"] = true
-	return "asdfg", nil
+	token := uuid.New().String()
+	auth.currentTokens[token] = true
+	return token, nil
 }
 
 func (auth configFileAuthenticator) RevokeToken(token femto.AuthToken) error {
