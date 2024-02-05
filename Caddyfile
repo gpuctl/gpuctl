@@ -1,8 +1,15 @@
-:80 {
+https://gpuctl.perial.co.uk {
 	# forward groundstation and web-api requests to control
-	# should match ports set in ./control.toml
+	# should match ports set in ./control.toml.default
 	reverse_proxy /gs-api/* control:8080
 	reverse_proxy /api/* control:8000
 
 	file_server
+
+	# use DNS validation because this domain isn't accessible outside the
+	# imperial network. Depending on how you deploy, this could be replaced
+	# with plain HTTP validation
+	tls {
+		dns hetzner {env.HETZNER_DNS_API_TOKEN}
+	}
 }
