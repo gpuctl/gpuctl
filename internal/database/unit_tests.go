@@ -7,6 +7,7 @@ package database
 
 import (
 	"math"
+	"reflect"
 	"testing"
 
 	"github.com/gpuctl/gpuctl/internal/uplink"
@@ -43,11 +44,22 @@ func floatsNear(a float64, b float64) bool {
 	return math.Abs(a-b) < margin
 }
 func statsNear(a uplink.GPUStatSample, b uplink.GPUStatSample) bool {
-	return floatsNear(a.MemoryUtilisation, b.MemoryUtilisation) &&
-		floatsNear(a.GPUUtilisation, b.GPUUtilisation) &&
-		floatsNear(a.MemoryUsed, b.MemoryUsed) &&
-		floatsNear(a.FanSpeed, b.FanSpeed) &&
-		floatsNear(a.Temp, b.Temp)
+	aType := reflect.ValueOf(a)
+	bType := reflect.ValueOf(b)
+
+	for i := 0; i < aType.NumField(); i++ {
+		aVal := aType.Field(i)
+
+		if !aVal.CanFloat() {
+			continue
+		}
+
+		if !floatsNear(aVal.Float(), bType.Field(i).Float()) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func databaseStartsEmpty(t *testing.T, db Database) {
