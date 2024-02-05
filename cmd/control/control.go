@@ -69,8 +69,8 @@ func initialiseDatabase(conf config.Database) (database.Database, error) {
 
 func AuthenticatorFromConfig(config config.ControlConfiguration) configFileAuthenticator {
 	return configFileAuthenticator{
-		username: config.Auth.Username,
-		password: config.Auth.Password,
+		username:      config.Auth.Username,
+		password:      config.Auth.Password,
 		currentTokens: make(map[femto.AuthToken]bool),
 	}
 }
@@ -80,7 +80,7 @@ func (auth configFileAuthenticator) CreateToken(packet webapi.APIAuthPacket) (fe
 	password := packet.Password
 
 	// TODO write a proper authentication thingy
-	if (username != auth.username || password != auth.password) {
+	if username != auth.username || password != auth.password {
 		return "", femto.InvalidCredientalsError
 	}
 	auth.currentTokens["asdfg"] = true

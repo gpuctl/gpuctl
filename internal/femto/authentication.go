@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	NotAuthenticatedError = errors.New("User does not have a valid authentication token")
+	NotAuthenticatedError   = errors.New("User does not have a valid authentication token")
 	InvalidCredientalsError = errors.New("Invalid credientals for creating an authentication token")
 )
 

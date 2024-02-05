@@ -12,14 +12,14 @@ type Database struct {
 }
 
 type AuthConfig struct {
-	Username string   `toml:"username"`
-	Password string   `toml:"password"`
+	Username string `toml:"username"`
+	Password string `toml:"password"`
 }
 
 type ControlConfiguration struct {
-	Server        Server   `toml:"server"`
-	Database      Database `toml:"database"`
-	Auth		  AuthConfig  `toml:"auth"`
+	Server   Server     `toml:"server"`
+	Database Database   `toml:"database"`
+	Auth     AuthConfig `toml:"auth"`
 }
 
 func (s ControlConfiguration) Merge(config Mergable) Mergable {

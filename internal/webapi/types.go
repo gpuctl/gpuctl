@@ -64,6 +64,6 @@ type OldGPUStatSample struct {
 	MaxMemoryClock    float64 `json:"max_memory_clock"`   // Mhz
 }
 
-type MachineMove struct {}
+type MachineMove struct{}
 
-type MachineAddInfo struct {}
+type MachineAddInfo struct{}
