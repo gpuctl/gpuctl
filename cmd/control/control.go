@@ -1,12 +1,12 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
 
+	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/database/postgres"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
@@ -14,31 +14,31 @@ import (
 )
 
 func main() {
-
-	inMemDb := flag.Bool("inmemdb", false, "Use an transient, in-memory database")
-	postgresDb := flag.Bool("postgres", false, "Use a posgresql database from GPU_DB_URL")
-
-	flag.Parse()
-
 	log := slog.Default()
 	log.Info("Starting control server")
 
-	db, err := initialiseDatabase(inMemDb, postgresDb)
+	conf, err := config.GetServerConfiguration("control.toml")
+	if err != nil {
+		fatal("failed to get config: " + err.Error())
+	}
 
+	db, err := initialiseDatabase(conf.Database)
 	if err != nil {
 		fatal("failed to initialise database: " + err.Error())
 	}
 
 	gs := groundstation.NewServer(db)
+	gs_port := config.PortToAddress(conf.Server.GSPort)
 	wa := webapi.NewServer(db)
+	wa_port := config.PortToAddress(conf.Server.WAPort)
 
 	errs := make(chan (error), 1)
 
 	go func() {
-		errs <- http.ListenAndServe(":8080", gs)
+		errs <- http.ListenAndServe(gs_port, gs)
 	}()
 	go func() {
-		errs <- http.ListenAndServe(":8000", wa)
+		errs <- http.ListenAndServe(wa_port, wa)
 	}()
 
 	slog.Info("started servers")
@@ -46,22 +46,16 @@ func main() {
 	slog.Error("got an error", "err", err)
 }
 
-func initialiseDatabase(inMemDb *bool, postgresDb *bool) (database.Database, error) {
+func initialiseDatabase(conf config.Database) (database.Database, error) {
 	switch {
-	case *inMemDb && *postgresDb:
-		return nil, fmt.Errorf("cannot have both '-inmemdb' and '-postgres'")
-	case *inMemDb:
+	case conf.InMemory && conf.Postgres:
+		return nil, fmt.Errorf("cannot have both 'inmemory' and 'postgres' set")
+	case conf.InMemory:
 		return database.InMemory(), nil
-	case *postgresDb:
-		dbUrl, pres := os.LookupEnv("GPU_DB_URL")
-
-		if !pres {
-			return nil, fmt.Errorf("failed to read enviroment variable GPU_DB_URL")
-		}
-
-		return postgres.New(dbUrl)
+	case conf.Postgres:
+		return postgres.New(conf.PostgresUrl)
 	default:
-		return nil, fmt.Errorf("must pass in one of '-inmemdb' and '-postgres'")
+		return nil, fmt.Errorf("must set one of 'inmemory' or 'postgres'")
 	}
 }
 
