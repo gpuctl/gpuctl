@@ -55,7 +55,7 @@ test("retrieves data from API server and displays correctly", async () => {
 
         screen
           .getAllByText(gpu.gpu_temp + " °C", { exact: false })
-          .forEach((temp) => expect(temp).toBeInTheDocument());
+          .forEach((gpu_temp) => expect(gpu_temp).toBeInTheDocument());
       });
     });
   });
@@ -73,7 +73,12 @@ test("data is fetched again after refresh interval", async () => {
   (await screen.findAllByText("31 °C", { exact: false })).forEach((temp) =>
     expect(temp).toBeInTheDocument(),
   );
-  data[0].workStations[0].gpus[0].gpu_temp = 100;
+
+  const group = data[0];
+  const workStation = group.workStations[0];
+  const gpu = workStation.gpus[0];
+  gpu.gpu_temp = 100;
+
   jest.advanceTimersByTime(REFRESH_INTERVAL + 1);
 
   await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
@@ -82,8 +87,8 @@ test("data is fetched again after refresh interval", async () => {
   // to rerender after every fetch (just in case)
   view.rerender(<App />);
 
-  const new_temp = await screen.findByText("100 °C", { exact: false });
-  expect(new_temp).toBeInTheDocument();
+  const new_gpu_temp = await screen.findByText("100 °C", { exact: false });
+  expect(new_gpu_temp).toBeInTheDocument();
 });
 
 const mockFetch = (s: WorkStationGroup[]) => {
