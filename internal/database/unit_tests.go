@@ -29,13 +29,31 @@ var UnitTests = [...]unitTest{
 
 // fake data for adding during tests
 // TODO: update with processes when they're implemented
-var fakeDataInfo = uplink.GPUInfo{Uuid: "GPU-7d86d61f-acb4-a007-7535-203264c18e6a", Name: "GT 1030", Brand: "NVidia",
-	DriverVersion: "v1.4.5", MemoryTotal: 4}
-var fakeDataSample = uplink.GPUStatSample{Uuid: "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
-	MemoryUtilisation: 25.4, GPUUtilisation: 63.5, MemoryUsed: 1.24,
-	FanSpeed: 35.2, Temp: 54.3, MemoryTemp: 45.3, GraphicsVoltage: 150.0,
-	PowerDraw: 143.5, GraphicsClock: 50, MaxGraphicsClock: 134.4,
-	MemoryClock: 650.3, MaxMemoryClock: 750, RunningProcesses: nil}
+var fakeDataInfo = uplink.GPUInfo{
+	Uuid:          "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	Name:          "GT 1030",
+	Brand:         "NVidia",
+	DriverVersion: "v1.4.5",
+	MemoryTotal:   4,
+}
+
+// Two fake data samples for THE SAME gpu
+var fakeDataSample = uplink.GPUStatSample{
+	Uuid:              "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	MemoryUtilisation: 25.4,
+	GPUUtilisation:    63.5,
+	MemoryUsed:        1.24,
+	FanSpeed:          35.2,
+	Temp:              54.3,
+	MemoryTemp:        45.3,
+	GraphicsVoltage:   150.0,
+	PowerDraw:         143.5,
+	GraphicsClock:     50,
+	MaxGraphicsClock:  134.4,
+	MemoryClock:       650.3,
+	MaxMemoryClock:    750,
+	RunningProcesses:  nil,
+}
 
 // functions for approximately comparing floats and data structs
 const margin float64 = 0.01
