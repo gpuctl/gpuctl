@@ -8,7 +8,7 @@ import (
 
 var (
 	NotAuthenticatedError = errors.New("User does not have a valid authentication token")
-	InvalidCredientalsError = errors.New("Invalid credientals for authentication")
+	InvalidCredientalsError = errors.New("Invalid credientals for creating an authentication token")
 )
 
 const (
@@ -31,7 +31,7 @@ func AuthWrapGet[A any, T any](auth Authenticator[A], handle GetFunc[T]) GetFunc
 			return zero, err
 		}
 
-		res := auth.CheckToken(cookie.String())
+		res := auth.CheckToken(cookie.Value)
 		if !res {
 			return zero, NotAuthenticatedError
 		}

@@ -48,6 +48,12 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 
 	data, err := handle(r, log)
 	if err != nil {
+		// Handle authentication related errors
+		if err == NotAuthenticatedError {
+			log.Info("Invalid attempt at authentication")
+			http.Error(w, "Not authenticated", http.StatusUnauthorized)
+			return
+		}
 		ise("application error", err)
 		return
 	}
@@ -93,6 +99,12 @@ func doPost[T any, R any](f *Femto, w http.ResponseWriter, r *http.Request, hand
 	data, userErr := handle(reqData, r, log)
 
 	if userErr != nil {
+		// Handle authentication related errors
+		if userErr == NotAuthenticatedError {
+			log.Info("Invalid attempt at authentication")
+			http.Error(w, "Not authenticated", http.StatusUnauthorized)
+			return
+		}
 		// TODO: Nicer error
 		log.Info("Error", "err", userErr)
 		http.Error(w, userErr.Error(), http.StatusInternalServerError)
