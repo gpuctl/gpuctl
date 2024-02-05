@@ -49,8 +49,16 @@ func (s SatelliteConfiguration) Merge(config Mergable) Mergable {
 
 func DefaultSatelliteConfiguration() SatelliteConfiguration {
 	return SatelliteConfiguration{
-		Groundstation: Groundstation{"localhost", 8080},
-		Satellite:     Satellite{"/tmp/satellite", 60, 2, false},
+		Groundstation: Groundstation{
+			Hostname: "localhost",
+			Port:     8080,
+		},
+		Satellite: Satellite{
+			Cache:             "/tmp/satellite",
+			DataInterval:      60,
+			HeartbeatInterval: 2,
+			FakeGPU:           false,
+		},
 	}
 }
 
