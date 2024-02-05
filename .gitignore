@@ -1,3 +1,8 @@
 /control
+/satellite
+/satellite-amd64-linux
+
 secrets/
-/satellite*
+
+control.toml
+satellite.toml

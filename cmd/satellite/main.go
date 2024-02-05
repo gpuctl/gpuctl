@@ -26,7 +26,7 @@ func main() {
 
 	log.Info("got hostname", "hostname", host)
 
-	satellite_configuration, err := config.GetClientConfiguration("satellite.conf")
+	satellite_configuration, err := config.GetClientConfiguration("satellite.toml")
 
 	log.Info("got config", "config", satellite_configuration)
 

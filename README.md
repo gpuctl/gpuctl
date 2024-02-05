@@ -2,7 +2,7 @@
 
 ## Deploying
 
-Needs a Postgres database. URL is passed in in the `control.yaml` file. For
+Needs a Postgres database. URL is passed in in the `control.toml` file. For
 _reasons_, don't use `postgres://postgres@localhost/postgres`.
 
 ## Running tests

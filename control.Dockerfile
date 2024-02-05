@@ -9,6 +9,6 @@ COPY internal ./internal
 
 RUN go build -v ./cmd/control
 
-COPY control.conf ./
+COPY control.toml.default ./control.toml
 
 ENTRYPOINT ["./control"]
