@@ -7,8 +7,12 @@ import (
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
-func (gs *groundstation) heartbeat(data uplink.HeartbeatReq, req *http.Request, log *slog.Logger) error {
+const (
+	HeartbeatOKResponse = "OK"
+)
+
+func (gs *groundstation) heartbeat(data uplink.HeartbeatReq, req *http.Request, log *slog.Logger) (string, error) {
 	log.Info("Received a heartbeat", "satellite", data.Hostname)
 
-	return gs.db.UpdateLastSeen(data.Hostname)
+	return HeartbeatOKResponse, gs.db.UpdateLastSeen(data.Hostname)
 }

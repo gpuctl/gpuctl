@@ -34,8 +34,8 @@ func TestWrongMethod(t *testing.T) {
 
 	mux := new(femto.Femto)
 
-	femto.OnPost[struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) error {
-		return nil
+	femto.OnPost[struct{}, struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (struct{}, error) {
+		return struct{}{}, nil
 	})
 
 	req := httptest.NewRequest("GET", "/postme", nil)
@@ -55,8 +55,8 @@ func TestNotJson(t *testing.T) {
 
 	mux := new(femto.Femto)
 
-	femto.OnPost[struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) error {
-		return nil
+	femto.OnPost[struct{}, struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (struct{}, error) {
+		return struct{}{}, nil
 	})
 
 	req := httptest.NewRequest("POST", "/postme", bytes.NewBufferString("not json at all"))
@@ -75,8 +75,8 @@ func TestUserError(t *testing.T) {
 	t.Parallel()
 
 	mux := new(femto.Femto)
-	femto.OnPost[struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) error {
-		return errors.New("their is no spoon")
+	femto.OnPost[struct{}, struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (struct{}, error) {
+		return struct{}{}, errors.New("their is no spoon")
 	})
 
 	req := httptest.NewRequest("POST", "/postme", bytes.NewBufferString("{}"))

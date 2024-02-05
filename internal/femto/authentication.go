@@ -8,25 +8,30 @@ import (
 
 var (
 	NotAuthenticatedError = errors.New("User does not have a valid authentication token")
+	InvalidCredientalsError = errors.New("Invalid credientals for authentication")
+)
+
+const (
+	AuthCookieField = "auth_cookie"
 )
 
 type AuthToken = string
 
-type Authenticator interface {
-	Authenticate(username string, password string) (AuthToken, error)
-	Unauthenticate(token AuthToken) error
-	CheckAuth(token AuthToken) bool
+type Authenticator[T any] interface {
+	CreateToken(T) (AuthToken, error)
+	RevokeToken(token AuthToken) error
+	CheckToken(token AuthToken) bool
 }
 
-func AuthWrapGet[T any](auth Authenticator, handle GetFunc[T]) GetFunc[T] {
+func AuthWrapGet[A any, T any](auth Authenticator[A], handle GetFunc[T]) GetFunc[T] {
 	return func(r *http.Request, l *slog.Logger) (T, error) {
 		var zero T
-		cookie, err := r.Cookie("auth_cookie")
+		cookie, err := r.Cookie(AuthCookieField)
 		if err != nil {
 			return zero, err
 		}
 
-		res := auth.CheckAuth(cookie.String())
+		res := auth.CheckToken(cookie.String())
 		if !res {
 			return zero, NotAuthenticatedError
 		}
@@ -34,16 +39,17 @@ func AuthWrapGet[T any](auth Authenticator, handle GetFunc[T]) GetFunc[T] {
 	}
 }
 
-func AuthWrapPost[T any](auth Authenticator, handle PostFunc[T]) PostFunc[T] {
-	return func(data T, r *http.Request, l *slog.Logger) error {
-		cookie, err := r.Cookie("auth_cookie")
+func AuthWrapPost[A any, T any, R any](auth Authenticator[A], handle PostFunc[T, R]) PostFunc[T, R] {
+	return func(data T, r *http.Request, l *slog.Logger) (R, error) {
+		var zero R
+		cookie, err := r.Cookie(AuthCookieField)
 		if err != nil {
-			return err
+			return zero, err
 		}
 
-		res := auth.CheckAuth(cookie.String())
+		res := auth.CheckToken(cookie.Value)
 		if !res {
-			return NotAuthenticatedError
+			return zero, NotAuthenticatedError
 		}
 		return handle(data, r, l)
 	}

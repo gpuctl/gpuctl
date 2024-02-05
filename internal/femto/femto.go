@@ -17,7 +17,7 @@ func (f *Femto) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f.mux.ServeHTTP(w, r)
 }
 
-func OnPost[T any](f *Femto, pattern string, handle PostFunc[T]) {
+func OnPost[T any, R any](f *Femto, pattern string, handle PostFunc[T, R]) {
 	f.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		doPost(f, w, r, handle)
 	})
@@ -64,7 +64,7 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 	}
 }
 
-func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle PostFunc[T]) {
+func doPost[T any, R any](f *Femto, w http.ResponseWriter, r *http.Request, handle PostFunc[T, R]) {
 	reqNo := f.nextReqNo()
 	log := f.logger().With(slog.Uint64("req_no", reqNo))
 
@@ -85,7 +85,13 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 		return
 	}
 
-	userErr := handle(reqData, r, log)
+	ise := func(ctx string, e error) {
+		log.Error(ctx, "err", e)
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+
+	data, userErr := handle(reqData, r, log)
+
 	if userErr != nil {
 		// TODO: Nicer error
 		log.Info("Error", "err", userErr)
@@ -93,7 +99,16 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 		return
 	}
 
-	w.Write([]byte("OK"))
+	jsonb, err := json.Marshal(data)
+	if err != nil {
+		ise("marshaling to json failed", err)
+		return
+	}
+
+	_, err = w.Write(jsonb)
+	if err != nil {
+		ise("writing failed", err)
+	}
 }
 
 func (f *Femto) nextReqNo() uint64 {
@@ -105,5 +120,5 @@ func (f *Femto) logger() *slog.Logger {
 	return slog.Default()
 }
 
-type PostFunc[T any] func(T, *http.Request, *slog.Logger) error
+type PostFunc[T any, R any] func(T, *http.Request, *slog.Logger) (R, error)
 type GetFunc[T any] func(*http.Request, *slog.Logger) (T, error)
