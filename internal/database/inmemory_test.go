@@ -34,7 +34,7 @@ func TestInMemory(t *testing.T) {
 func TestInMemoryUnit(t *testing.T) {
 	t.Parallel()
 
-	for _, unit := range database.UnitTests {
+	for _, unit := range UnitTests {
 		t.Run(unit.Name, func(t *testing.T) {
 			db := database.InMemory()
 

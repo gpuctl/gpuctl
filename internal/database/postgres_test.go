@@ -1,4 +1,4 @@
-package postgres
+package database_test
 
 import (
 	"os"
@@ -19,23 +19,16 @@ func TestPostgres(t *testing.T) {
 		url = "postgres://postgres@localhost/postgres"
 	}
 
-	for _, test := range database.UnitTests {
+	for _, test := range UnitTests {
 		t.Run(test.Name, func(t *testing.T) {
-			db, err := New(url)
+			db, err := database.Postgres(url)
 			if err != nil {
 				t.Fatalf("Failed to open database: %v", err)
 			}
 
 			// when the test completes, drop all tables and close db
 			t.Cleanup(func() {
-				conn := db.(postgresConn)
-				_, err = conn.db.Exec(`DROP TABLE stats;
-					DROP TABLE gpus;
-					DROP TABLE machines`)
-				if err != nil {
-					t.Logf("Got error on cleanup: %v", err)
-				}
-				err = conn.db.Close()
+				err = db.Drop()
 				if err != nil {
 					t.Logf("Got error on cleanup: %v", err)
 				}

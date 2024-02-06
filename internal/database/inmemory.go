@@ -119,3 +119,10 @@ func (m *inMemory) UpdateLastSeen(host string) error {
 
 	return nil
 }
+
+func (m *inMemory) Drop() error {
+	m.mu.Lock()
+
+	m = nil
+	return nil
+}

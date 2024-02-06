@@ -3,18 +3,19 @@
 // TODO: this whole test suite could be a lot more terse if we had functions
 // that did ExpectFail, Try, ExpectEqual, etc.
 
-package database
+package database_test
 
 import (
 	"math"
 	"testing"
 
+	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 type unitTest struct {
 	Name string
-	F    func(t *testing.T, db Database)
+	F    func(t *testing.T, db database.Database)
 }
 
 // a list of tests that implementations of the Database interface should pass
@@ -50,7 +51,7 @@ func statsNear(a uplink.GPUStatSample, b uplink.GPUStatSample) bool {
 		floatsNear(a.Temp, b.Temp)
 }
 
-func databaseStartsEmpty(t *testing.T, db Database) {
+func databaseStartsEmpty(t *testing.T, db database.Database) {
 	data, err := db.LatestData()
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
@@ -62,7 +63,7 @@ func databaseStartsEmpty(t *testing.T, db Database) {
 	}
 }
 
-func appendingFailsIfMachineMissing(t *testing.T, db Database) {
+func appendingFailsIfMachineMissing(t *testing.T, db database.Database) {
 	err := db.AppendDataPoint(fakeDataSample)
 	if err == nil {
 		t.Fatalf("Error expected but none occurred")
@@ -80,7 +81,7 @@ func appendingFailsIfMachineMissing(t *testing.T, db Database) {
 	}
 }
 
-func appendingFailsIfContextMissing(t *testing.T, db Database) {
+func appendingFailsIfContextMissing(t *testing.T, db database.Database) {
 	fakeHost := "rabbit"
 
 	err := db.UpdateLastSeen(fakeHost)
@@ -94,7 +95,7 @@ func appendingFailsIfContextMissing(t *testing.T, db Database) {
 	}
 }
 
-func appendedDataPointsAreSaved(t *testing.T, db Database) {
+func appendedDataPointsAreSaved(t *testing.T, db database.Database) {
 	fakeHost := "elk"
 
 	err := db.UpdateLastSeen(fakeHost)
@@ -143,7 +144,7 @@ func appendedDataPointsAreSaved(t *testing.T, db Database) {
 }
 
 // TODO: verify datastamp changed in the database
-func multipleHeartbeats(t *testing.T, db Database) {
+func multipleHeartbeats(t *testing.T, db database.Database) {
 	err := db.UpdateLastSeen("otter")
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)

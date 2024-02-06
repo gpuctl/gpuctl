@@ -8,7 +8,6 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
-	"github.com/gpuctl/gpuctl/internal/database/postgres"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 )
@@ -54,7 +53,7 @@ func initialiseDatabase(conf config.Database) (database.Database, error) {
 	case conf.InMemory:
 		return database.InMemory(), nil
 	case conf.Postgres:
-		return postgres.New(conf.PostgresUrl)
+		return database.Postgres(conf.PostgresUrl)
 	default:
 		return nil, fmt.Errorf("must set one of 'inmemory' or 'postgres'")
 	}
