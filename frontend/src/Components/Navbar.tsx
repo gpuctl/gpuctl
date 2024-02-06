@@ -9,15 +9,37 @@ import {
   Tabs,
 } from "@chakra-ui/react";
 import { ReactNode } from "react";
+import { useNavigate } from "react-router-dom";
+import { STATS_PATH } from "../Config/Paths";
+import { VIEW_PAGE_INDEX, ViewPage } from "../App";
 
-export const Navbar = ({ children }: { children: ReactNode[] }) => {
+const URLS = [
+  `${STATS_PATH}/card_view`,
+  `${STATS_PATH}/table_view`,
+  "/admin_panel",
+];
+
+export const Navbar = ({
+  children,
+  initial,
+}: {
+  children: ReactNode[];
+  initial: ViewPage;
+}) => {
+  const nav = useNavigate();
+
   return (
-    <Tabs variant="soft-rounded">
+    <Tabs
+      variant="soft-rounded"
+      onChange={(i) => nav(URLS[i])}
+      defaultIndex={VIEW_PAGE_INDEX[initial]}
+    >
       <TabList>
         <Tab>Card View</Tab>
         <Tab>Table View</Tab>
+        <Tab isDisabled>Admin Panel</Tab>
         <Spacer />
-        <Button mr={5}> Admin Sign In </Button>
+        <Button> Admin Sign In </Button>
       </TabList>
       <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
       <TabPanels>
