@@ -23,10 +23,6 @@ type APIAuthCredientals struct {
 	Password string
 }
 
-const (
-	APISuccessString = "OK"
-)
-
 func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals]) *Server {
 	mux := new(femto.Femto)
 	api := &api{db}
@@ -39,8 +35,8 @@ func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals
 	})
 
 	// Authenticated API endpoints
-	femto.OnPost(mux, "/api/machines/move", femto.AuthWrapPost(auth, api.moveMachineGroup))
-	femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, api.addMachineInfo))
+	femto.OnPost(mux, "/api/machines/move", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.moveMachineGroup)))
+	femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addMachineInfo)))
 
 	return &Server{mux, api}
 }
@@ -90,15 +86,15 @@ func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet 
 }
 
 // TODO
-func (a *api) moveMachineGroup(move MachineMove, r *http.Request, l *slog.Logger) (string, error) {
+func (a *api) moveMachineGroup(move MachineMove, r *http.Request, l *slog.Logger) error {
 	l.Info("Accessed moveMachineGroup")
-	return APISuccessString, nil
+	return nil
 }
 
 // TODO
-func (a *api) addMachineInfo(info MachineAddInfo, r *http.Request, l *slog.Logger) (string, error) {
+func (a *api) addMachineInfo(info MachineAddInfo, r *http.Request, l *slog.Logger) error {
 	l.Info("Accessed addMachineInfo")
-	return APISuccessString, nil
+	return nil
 }
 
 // Bodge together stats and contextual data to make OldGpuStats

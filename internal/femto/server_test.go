@@ -35,9 +35,9 @@ func TestWrongMethod(t *testing.T) {
 
 	mux := new(femto.Femto)
 
-	femto.OnPost[struct{}, struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (struct{}, error) {
-		return struct{}{}, nil
-	})
+	femto.OnPost(mux, "/postme", femto.WrapPostFunc(func(s struct{}, r *http.Request, l *slog.Logger) error {
+		return nil
+	}))
 
 	req := httptest.NewRequest("GET", "/postme", nil)
 	w := httptest.NewRecorder()
@@ -56,9 +56,9 @@ func TestNotJson(t *testing.T) {
 
 	mux := new(femto.Femto)
 
-	femto.OnPost[struct{}, struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (struct{}, error) {
-		return struct{}{}, nil
-	})
+	femto.OnPost(mux, "/postme", femto.WrapPostFunc(func(s struct{}, r *http.Request, l *slog.Logger) error {
+		return nil
+	}))
 
 	req := httptest.NewRequest("POST", "/postme", bytes.NewBufferString("not json at all"))
 	w := httptest.NewRecorder()

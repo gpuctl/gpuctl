@@ -33,7 +33,7 @@ func AuthWrapGet[A any, T any](auth Authenticator[A], handle GetFunc[T]) GetFunc
 	}
 }
 
-func AuthWrapPost[A any, T any, R any](auth Authenticator[A], handle PostFunc[T, R]) PostFunc[T, R] {
+func AuthWrapPost[A any, T any, R any](auth Authenticator[A], handle PostFuncPure[T, R]) PostFuncPure[T, R] {
 	return func(data T, r *http.Request, l *slog.Logger) (R, error) {
 		var zero R
 		cookie, err := r.Cookie(AuthCookieField)
