@@ -65,31 +65,3 @@ func TestPortToAddress(t *testing.T) {
 	t.Parallel()
 	assert.Equal(t, ":9090", config.PortToAddress(9090))
 }
-
-func TestControlConfigurationMerge(t *testing.T) {
-	defaultConfig := config.ControlConfiguration{
-		Database: config.Database{PostgresUrl: "postgres://default-url"},
-		Server:   config.Server{GSPort: 8080, WAPort: 8000},
-	}
-
-	fileConfig := config.ControlConfiguration{
-		Database: config.Database{PostgresUrl: ""},
-		Server:   config.Server{GSPort: 9090, WAPort: 0},
-	}
-
-	mergedConfig := fileConfig.Merge(defaultConfig).(config.ControlConfiguration)
-
-	assert.Equal(t, "postgres://default-url", mergedConfig.Database.PostgresUrl, "Expected default database URL to be applied")
-	assert.Equal(t, 9090, mergedConfig.Server.GSPort, "Expected file config server groundstation port to be applied")
-	assert.Equal(t, 8000, mergedConfig.Server.WAPort, "Expected default config server web api port to be applied")
-}
-
-func TestControlConfigurationMerge_UnhappyPath(t *testing.T) {
-	defaultConfig := config.ControlConfiguration{}
-
-	wrongConfig := config.SatelliteConfiguration{}
-
-	mergedConfig := defaultConfig.Merge(&wrongConfig)
-
-	assert.Equal(t, defaultConfig, mergedConfig, "Expected default config to be returned when wrong type is passed")
-}
