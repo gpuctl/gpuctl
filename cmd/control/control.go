@@ -6,20 +6,13 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/google/uuid"
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/database/postgres"
-	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 )
 
-type configFileAuthenticator struct {
-	username      string
-	password      string
-	currentTokens map[femto.AuthToken]bool
-}
 
 func main() {
 	log := slog.Default()
@@ -37,7 +30,7 @@ func main() {
 
 	gs := groundstation.NewServer(db)
 	gs_port := config.PortToAddress(conf.Server.GSPort)
-	authenticator := AuthenticatorFromConfig(conf)
+	authenticator := webapi.AuthenticatorFromConfig(conf)
 	wa := webapi.NewServer(db, authenticator)
 	wa_port := config.PortToAddress(conf.Server.WAPort)
 
@@ -67,39 +60,6 @@ func initialiseDatabase(conf config.Database) (database.Database, error) {
 		return nil, fmt.Errorf("must set one of 'inmemory' or 'postgres'")
 	}
 }
-
-func AuthenticatorFromConfig(config config.ControlConfiguration) configFileAuthenticator {
-	return configFileAuthenticator{
-		username:      config.Auth.Username,
-		password:      config.Auth.Password,
-		currentTokens: make(map[femto.AuthToken]bool),
-	}
-}
-
-func (auth configFileAuthenticator) CreateToken(packet webapi.APIAuthPacket) (femto.AuthToken, error) {
-	username := packet.Username
-	password := packet.Password
-
-	// TODO write a proper authentication thingy
-	if username != auth.username || password != auth.password {
-		return "", femto.InvalidCredientalsError
-	}
-	token := uuid.New().String()
-	auth.currentTokens[token] = true
-	return token, nil
-}
-
-func (auth configFileAuthenticator) RevokeToken(token femto.AuthToken) error {
-	// TODO
-	auth.currentTokens[token] = false
-	return nil
-}
-
-func (auth configFileAuthenticator) CheckToken(token femto.AuthToken) bool {
-	// TODO
-	return auth.currentTokens[token]
-}
-
 func fatal(s string) {
 	slog.Error(s)
 	os.Exit(1)
