@@ -23,7 +23,7 @@ func AuthenticatorFromConfig(config config.ControlConfiguration) ConfigFileAuthe
 	}
 }
 
-func (auth *ConfigFileAuthenticator) CreateToken(packet APIAuthPacket) (femto.AuthToken, error) {
+func (auth *ConfigFileAuthenticator) CreateToken(packet APIAuthCredientals) (femto.AuthToken, error) {
 	username := packet.Username
 	password := packet.Password
 

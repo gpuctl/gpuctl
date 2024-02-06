@@ -18,7 +18,7 @@ type api struct {
 	db database.Database
 }
 
-type APIAuthPacket struct {
+type APIAuthCredientals struct {
 	Username string
 	Password string
 }
@@ -27,14 +27,14 @@ const (
 	APISuccessString = "OK"
 )
 
-func NewServer(db database.Database, auth femto.Authenticator[APIAuthPacket]) *Server {
+func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals]) *Server {
 	mux := new(femto.Femto)
 	api := &api{db}
 
 	femto.OnGet(mux, "/api/stats/all", api.allstats)
 
 	// Set up authentication endpoint
-	femto.OnPost(mux, "/api/auth", func(packet APIAuthPacket, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
+	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
 		return api.authenticate(auth, packet, r, l)
 	})
 
@@ -84,7 +84,7 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 	return result, nil
 }
 
-func (a *api) authenticate(auth femto.Authenticator[APIAuthPacket], packet APIAuthPacket, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
+func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
 	// Check if credientals are correct
 	return auth.CreateToken(packet)
 }

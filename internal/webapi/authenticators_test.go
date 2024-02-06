@@ -24,7 +24,7 @@ func TestConfigFileAuthenticatorRace(t *testing.T) {
 
 	for i := 0; i < toSpawn; i++ {
 		go func() {
-			token, e := auth.CreateToken(webapi.APIAuthPacket{Username: "joe", Password: "mama"})
+			token, e := auth.CreateToken(webapi.APIAuthCredientals{Username: "joe", Password: "mama"})
 			if e != nil {
 				failed = false
 				return

@@ -13,7 +13,6 @@ import (
 	"github.com/gpuctl/gpuctl/internal/webapi"
 )
 
-
 func main() {
 	log := slog.Default()
 	log.Info("Starting control server")
@@ -31,7 +30,7 @@ func main() {
 	gs := groundstation.NewServer(db)
 	gs_port := config.PortToAddress(conf.Server.GSPort)
 	authenticator := webapi.AuthenticatorFromConfig(conf)
-	wa := webapi.NewServer(db, authenticator)
+	wa := webapi.NewServer(db, &authenticator)
 	wa_port := config.PortToAddress(conf.Server.WAPort)
 
 	errs := make(chan (error), 1)

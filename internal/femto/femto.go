@@ -3,6 +3,7 @@ package femto
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"sync/atomic"
@@ -49,7 +50,7 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 	data, err := handle(r, log)
 	if err != nil {
 		// Handle authentication related errors
-		if err == NotAuthenticatedError {
+		if errors.Is(err, NotAuthenticatedError) {
 			log.Info("Invalid attempt at authentication")
 			http.Error(w, "Not authenticated", http.StatusUnauthorized)
 			return
@@ -100,7 +101,7 @@ func doPost[T any, R any](f *Femto, w http.ResponseWriter, r *http.Request, hand
 
 	if userErr != nil {
 		// Handle authentication related errors
-		if userErr == NotAuthenticatedError {
+		if errors.Is(userErr, NotAuthenticatedError) {
 			log.Info("Invalid attempt at authentication")
 			http.Error(w, "Not authenticated", http.StatusUnauthorized)
 			return
