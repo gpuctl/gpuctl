@@ -6,3 +6,6 @@ secrets/
 
 control.toml
 satellite.toml
+
+
+.DS_Store
