@@ -1,0 +1,45 @@
+import { useState } from "react";
+import { API_URL } from "../App";
+import { Validated, failure, success } from "../Utils/Utils";
+
+const ADMIN_AUTH_PATH = "admin/auth";
+const AUTH_TOKEN_ITEM = "authToken";
+
+type AuthToken = {
+  token: string;
+};
+
+const requestSignIn = async (
+  username: string,
+  password: string,
+): Promise<Validated<AuthToken>> => {
+  const resp = await fetch(API_URL + ADMIN_AUTH_PATH, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ username, password }),
+  });
+
+  if (resp.ok) {
+    const tok: AuthToken = await resp.json();
+    return success(tok);
+  }
+  if (resp.status === 401) return failure(Error("Unauthorised!"));
+  return failure(Error("Authentication Failed for an Unknown Reason!"));
+};
+
+const tryGetAuthToken = (): Validated<AuthToken> => {
+  const token = localStorage.getItem(AUTH_TOKEN_ITEM);
+  return token == null ? failure(Error("No token :(")) : success({ token });
+};
+
+export const SignIn = () => {
+  const [authToken, setAuth] =
+    useState<Validated<AuthToken>>(tryGetAuthToken());
+
+  const updateAuth = (tok: AuthToken) => {
+    localStorage.setItem(AUTH_TOKEN_ITEM, tok.token);
+    setAuth(success(tok));
+  };
+
+  return <></>;
+};
