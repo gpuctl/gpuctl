@@ -7,6 +7,7 @@ package database_test
 
 import (
 	"math"
+	"reflect"
 	"testing"
 
 	"github.com/gpuctl/gpuctl/internal/database"
@@ -29,13 +30,31 @@ var UnitTests = [...]unitTest{
 
 // fake data for adding during tests
 // TODO: update with processes when they're implemented
-var fakeDataInfo = uplink.GPUInfo{Uuid: "GPU-7d86d61f-acb4-a007-7535-203264c18e6a", Name: "GT 1030", Brand: "NVidia",
-	DriverVersion: "v1.4.5", MemoryTotal: 4}
-var fakeDataSample = uplink.GPUStatSample{Uuid: "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
-	MemoryUtilisation: 25.4, GPUUtilisation: 63.5, MemoryUsed: 1.24,
-	FanSpeed: 35.2, Temp: 54.3, MemoryTemp: 45.3, GraphicsVoltage: 150.0,
-	PowerDraw: 143.5, GraphicsClock: 50, MaxGraphicsClock: 134.4,
-	MemoryClock: 650.3, MaxMemoryClock: 750, RunningProcesses: nil}
+var fakeDataInfo = uplink.GPUInfo{
+	Uuid:          "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	Name:          "GT 1030",
+	Brand:         "NVidia",
+	DriverVersion: "v1.4.5",
+	MemoryTotal:   4,
+}
+
+// Two fake data samples for THE SAME gpu
+var fakeDataSample = uplink.GPUStatSample{
+	Uuid:              "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	MemoryUtilisation: 25.4,
+	GPUUtilisation:    63.5,
+	MemoryUsed:        1.24,
+	FanSpeed:          35.2,
+	Temp:              54.3,
+	MemoryTemp:        45.3,
+	GraphicsVoltage:   150.0,
+	PowerDraw:         143.5,
+	GraphicsClock:     50,
+	MaxGraphicsClock:  134.4,
+	MemoryClock:       650.3,
+	MaxMemoryClock:    750,
+	RunningProcesses:  nil,
+}
 
 // functions for approximately comparing floats and data structs
 const margin float64 = 0.01
@@ -44,11 +63,22 @@ func floatsNear(a float64, b float64) bool {
 	return math.Abs(a-b) < margin
 }
 func statsNear(a uplink.GPUStatSample, b uplink.GPUStatSample) bool {
-	return floatsNear(a.MemoryUtilisation, b.MemoryUtilisation) &&
-		floatsNear(a.GPUUtilisation, b.GPUUtilisation) &&
-		floatsNear(a.MemoryUsed, b.MemoryUsed) &&
-		floatsNear(a.FanSpeed, b.FanSpeed) &&
-		floatsNear(a.Temp, b.Temp)
+	aType := reflect.ValueOf(a)
+	bType := reflect.ValueOf(b)
+
+	for i := 0; i < aType.NumField(); i++ {
+		aVal := aType.Field(i)
+
+		if !aVal.CanFloat() {
+			continue
+		}
+
+		if !floatsNear(aVal.Float(), bType.Field(i).Float()) {
+			return false
+		}
+	}
+
+	return true
 }
 
 func databaseStartsEmpty(t *testing.T, db database.Database) {

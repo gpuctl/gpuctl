@@ -187,10 +187,15 @@ func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) er
 	return err
 }
 
+// TODO: consider returning workstationGroup
 func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
-	rows, err := conn.db.Query(`SELECT g.Machine, g.Name, g.Brand,
-			g.DriverVersion, g.MemoryTotal, s.MemoryUtilisation,
-			s.GpuUtilisation, s.MemoryUsed, s.FanSpeed, s.Temp
+	// we pull Uuid twice so we can put one into Stat sample and the other into Info
+	rows, err := conn.db.Query(`SELECT g.Machine, g.Uuid, g.Uuid, g.Name,
+			g.Brand, g.DriverVersion, g.MemoryTotal,
+			s.MemoryUtilisation, s.GpuUtilisation, s.MemoryUsed,
+			s.FanSpeed, s.Temp, s.MemoryTemp, s.GraphicsVoltage,
+			s.PowerDraw, s.GraphicsClock, s.MaxGraphicsClock,
+			s.MemoryClock, s.MaxMemoryClock
 		FROM GPUs g INNER JOIN Stats s ON g.Uuid = s.Gpu
 		INNER JOIN (
 			SELECT Gpu, Max(Received) Received
@@ -216,10 +221,16 @@ func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 		var info uplink.GPUInfo
 		var stat uplink.GPUStatSample
 
-		err = rows.Scan(&host, &info.Name, &info.Brand,
-			&info.DriverVersion, &info.MemoryTotal,
+		err = rows.Scan(&host, &info.Uuid, &stat.Uuid,
+			&info.Name, &info.Brand, &info.DriverVersion,
+			&info.MemoryTotal,
 			&stat.MemoryUtilisation, &stat.GPUUtilisation,
-			&stat.MemoryUsed, &stat.FanSpeed, &stat.Temp)
+			&stat.MemoryUsed, &stat.FanSpeed, &stat.Temp,
+			&stat.MemoryTemp, &stat.GraphicsVoltage,
+			&stat.PowerDraw, &stat.GraphicsClock,
+			&stat.MaxGraphicsClock, &stat.MemoryClock,
+			&stat.MaxMemoryClock,
+		)
 
 		if err != nil {
 			return nil, err
