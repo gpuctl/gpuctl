@@ -4,11 +4,11 @@ import { STATS_PATH } from "../Config/Paths";
 export const ADMIN_PATH = "/admin";
 const ADD_MACHINE_URL = "/add_workstation";
 
-const addMachine = (hostname: string) => {
+const addMachine = (hostname: string, group: string) => {
   fetch(API_URL + ADMIN_PATH + ADD_MACHINE_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ hostname }),
+    body: JSON.stringify({ hostname, group }),
   });
   // We should probably await the response to give feedback on whether adding
   // the machine was successful...
@@ -28,4 +28,6 @@ const modifyInfo = (hostname: string, column: string, data: string) => {
   });
 };
 
-export const AdminPanel = () => {};
+export const AdminPanel = () => {
+  // TODO
+};
