@@ -87,16 +87,16 @@ func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet 
 }
 
 // TODO
-func (a *api) moveMachineGroup(move MachineMove, r *http.Request, l *slog.Logger) error {
-	l.Info("Accessed moveMachineGroup")
-	return nil
-}
+// func (a *api) moveMachineGroup(move MachineMove, r *http.Request, l *slog.Logger) error {
+// 	l.Info("Accessed moveMachineGroup")
+// 	return nil
+// }
 
-// TODO
-func (a *api) addMachineInfo(info MachineAddInfo, r *http.Request, l *slog.Logger) error {
-	l.Info("Accessed addMachineInfo")
-	return nil
-}
+// // TODO
+// func (a *api) addMachineInfo(info MachineAddInfo, r *http.Request, l *slog.Logger) error {
+// 	l.Info("Accessed addMachineInfo")
+// 	return nil
+// }
 
 // Bodge together stats and contextual data to make OldGpuStats
 func zipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) OldGPUStatSample {
