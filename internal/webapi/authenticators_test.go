@@ -4,6 +4,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 	"github.com/stretchr/testify/assert"
@@ -45,4 +46,17 @@ func TestConfigFileAuthenticatorRace(t *testing.T) {
 	wg.Wait()
 
 	assert.False(t, failed)
+}
+
+func TestAuthenticatorFromConfig(t *testing.T) {
+	// A very dumb test...
+	conf := config.ControlConfiguration{
+		Auth: config.AuthConfig{
+			Username: "user",
+			Password: "password",
+		},
+	}
+	auth := webapi.AuthenticatorFromConfig(conf)
+	assert.Equal(t, conf.Auth.Username, auth.Username)
+	assert.Equal(t, conf.Auth.Password, auth.Password)
 }
