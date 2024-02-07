@@ -3,7 +3,7 @@ https://gpuctl.perial.co.uk {
 	# Based on Mozilla suggestions: https://infosec.mozilla.org/guidelines/web_security
 	header {
 		Strict-Transport-Security "max-age=15768000" # max age of 6 months
-		Content-Security-Policy "default-src 'none'; img-src 'self'; script-src 'self'; style-src 'self'"
+		Content-Security-Policy "default-src 'none'; img-src 'self'; connect-src 'self'; style-src 'self'; script-src 'self'; require-trusted-types-for 'script'"
 		Referrer-Policy "no-referrer"
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "DENY"
