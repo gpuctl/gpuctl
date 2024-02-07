@@ -21,8 +21,8 @@ type HTTPResponseContent[T any] struct {
 	Status  int
 }
 
-type PostFunc[T any] func(T, *http.Request, *slog.Logger) (HTTPResponseContent[types.Unit], error)
-type GetFunc[T any] func(*http.Request, *slog.Logger) (HTTPResponseContent[T], error)
+type PostFunc[T any] func(T, *http.Request, *slog.Logger) (*HTTPResponseContent[types.Unit], error)
+type GetFunc[T any] func(*http.Request, *slog.Logger) (*HTTPResponseContent[T], error)
 
 func (femto *Femto) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	femto.mux.ServeHTTP(w, r)
@@ -38,10 +38,6 @@ func OnGet[T any](femto *Femto, pattern string, handle GetFunc[T]) {
 	femto.mux.HandleFunc(pattern, func(writer http.ResponseWriter, request *http.Request) {
 		doGet(femto, writer, request, handle)
 	})
-}
-
-func FailHandler[T any](e error) (HTTPResponseContent[T], error) {
-	return HTTPResponseContent[T]{}, e
 }
 
 func generateErrorLogger(log *slog.Logger, writer http.ResponseWriter) func(ctx string, status int, e error) {
@@ -64,6 +60,10 @@ func doGet[T any](femto *Femto, writer http.ResponseWriter, request *http.Reques
 	}
 
 	data, err := handle(request, log)
+
+	if data == nil {
+		data = &HTTPResponseContent[T]{}
+	}
 
 	if data.Status == 0 {
 		data.Status = http.StatusInternalServerError
@@ -118,6 +118,10 @@ func doPost[T any](f *Femto, writer http.ResponseWriter, reader *http.Request, h
 	ise := generateErrorLogger(log, writer)
 
 	data, userErr := handle(reqData, reader, log)
+
+	if data == nil {
+		data = &HTTPResponseContent[types.Unit]{}
+	}
 
 	if data.Status == 0 {
 		data.Status = http.StatusInternalServerError

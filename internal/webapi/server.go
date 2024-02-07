@@ -37,7 +37,7 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
 
 	// Set up authentication endpoint
-	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.HTTPResponseContent[types.Unit], error) {
+	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.HTTPResponseContent[types.Unit], error) {
 		return api.Authenticate(auth, packet, r, l)
 	})
 
@@ -55,11 +55,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // This function involves a lot of weird unwrapping
 // TODO: See if we can get the database layer to do it for us
-func (a *Api) allstats(r *http.Request, l *slog.Logger) (femto.HTTPResponseContent[workstations], error) {
+func (a *Api) allstats(r *http.Request, l *slog.Logger) (*femto.HTTPResponseContent[workstations], error) {
 	data, err := a.DB.LatestData()
 
 	if err != nil {
-		return femto.FailHandler[workstations](err)
+		return nil, err
 	}
 
 	var ws []workStationData
@@ -84,20 +84,20 @@ func (a *Api) allstats(r *http.Request, l *slog.Logger) (femto.HTTPResponseConte
 	}
 
 	result := []workstationGroup{{Name: "Shared", WorkStations: ws}}
-	return femto.HTTPResponseContent[workstations]{Body: result}, nil
+	return &femto.HTTPResponseContent[workstations]{Body: result}, nil
 }
 
-func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.HTTPResponseContent[types.Unit], error) {
+func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.HTTPResponseContent[types.Unit], error) {
 	// Check if credientals are correct
 	token, err := auth.CreateToken(packet)
 
 	if err != nil {
-		return femto.FailHandler[types.Unit](err)
+		return nil, err
 	}
 
 	headers := make(map[string]string)
 	headers["Set-Cookie"] = fmt.Sprintf(cookieFormat, token)
-	return femto.HTTPResponseContent[types.Unit]{Headers: headers}, nil
+	return &femto.HTTPResponseContent[types.Unit]{Headers: headers}, nil
 }
 
 // TODO

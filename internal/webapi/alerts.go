@@ -7,11 +7,11 @@ import (
 	"github.com/gpuctl/gpuctl/internal/femto"
 )
 
-func (wa *Api) HandleOfflineMachineRequest(req *http.Request, log *slog.Logger) (femto.HTTPResponseContent[[]string], error) {
+func (wa *Api) HandleOfflineMachineRequest(req *http.Request, log *slog.Logger) (*femto.HTTPResponseContent[[]string], error) {
 	machine_data, err := wa.DB.LastSeen()
 
 	if err != nil {
-		return femto.FailHandler[[]string](err)
+		return nil, err
 	}
 
 	var names []string
@@ -20,5 +20,5 @@ func (wa *Api) HandleOfflineMachineRequest(req *http.Request, log *slog.Logger) 
 		names = append(names, machine_data[idx].Hostname)
 	}
 
-	return femto.HTTPResponseContent[[]string]{Body: names}, nil
+	return &femto.HTTPResponseContent[[]string]{Body: names}, nil
 }
