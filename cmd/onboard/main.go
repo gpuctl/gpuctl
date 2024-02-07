@@ -2,12 +2,13 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"log/slog"
 	"os"
 
 	"golang.org/x/crypto/ssh"
+
+	"github.com/gpuctl/gpuctl/internal/onboard"
 )
 
 func main() {
@@ -39,29 +40,9 @@ func main() {
 		log.Fatalf("Unable to parse key file %s: %v", *keypath, err)
 	}
 
-	config := &ssh.ClientConfig{
-		User: *user,
-		Auth: []ssh.AuthMethod{ssh.PublicKeys(signer)},
-		// FIXME: Maybe be more secure??
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
-	}
+	err = onboard.Onboard(*user, *remote, signer, ssh.InsecureIgnoreHostKey())
 
-	client, err := ssh.Dial("tcp", *remote+":22", config)
 	if err != nil {
-		log.Fatalf("Failed to connect to %s: %v", *remote, err)
+		log.Fatal(err)
 	}
-	defer client.Close()
-
-	sess, err := client.NewSession()
-	if err != nil {
-		log.Fatalf("Failed to create session: %v", err)
-	}
-	defer sess.Close()
-
-	out, err := sess.Output("nvidia-smi")
-	if err != nil {
-		log.Fatalf("Failed to run command on remote: %s", err)
-	}
-
-	fmt.Println(string(out))
 }
