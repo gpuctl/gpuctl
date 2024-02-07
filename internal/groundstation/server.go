@@ -22,8 +22,8 @@ func NewServer(db database.Database) *Server {
 	gs := &groundstation{db}
 
 	/// Register routes.
-	femto.OnPost(mux, uplink.HeartbeatUrl, femto.WrapPostFunc(gs.heartbeat))
-	femto.OnPost(mux, uplink.GPUStatsUrl, femto.WrapPostFunc(gs.gpustats))
+	femto.OnPost(mux, uplink.HeartbeatUrl, gs.heartbeat)
+	femto.OnPost(mux, uplink.GPUStatsUrl, gs.gpustats)
 
 	return &Server{mux, gs}
 }

@@ -1,21 +1,24 @@
 package webapi
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 
+	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
+	"github.com/gpuctl/gpuctl/internal/types"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 type Server struct {
 	mux *femto.Femto
-	api *api
+	api *Api
 }
 
-type api struct {
-	db database.Database
+type Api struct {
+	DB database.Database
 }
 
 type APIAuthCredientals struct {
@@ -23,21 +26,24 @@ type APIAuthCredientals struct {
 	Password string
 }
 
-func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals]) *Server {
+// ! Key change
+const cookieFormat = "token=%s; Path=/; HttpOnly; Secure; SameSite=Strict"
+
+func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals]) *Server {
 	mux := new(femto.Femto)
-	api := &api{db}
+	api := &Api{db}
 
 	femto.OnGet(mux, "/api/stats/all", api.allstats)
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
 
 	// Set up authentication endpoint
-	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
-		return api.authenticate(auth, packet, r, l)
+	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.HTTPResponseContent[types.Unit], error) {
+		return api.Authenticate(auth, packet, r, l)
 	})
 
 	// Authenticated API endpoints
-	femto.OnPost(mux, "/api/machines/move", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.moveMachineGroup)))
-	femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addMachineInfo)))
+	// femto.OnPost(mux, "/api/machines/move", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.moveMachineGroup)))
+	// femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addMachineInfo)))
 
 	return &Server{mux, api}
 }
@@ -49,11 +55,11 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // This function involves a lot of weird unwrapping
 // TODO: See if we can get the database layer to do it for us
-func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
-	data, err := a.db.LatestData()
+func (a *Api) allstats(r *http.Request, l *slog.Logger) (femto.HTTPResponseContent[workstations], error) {
+	data, err := a.DB.LatestData()
 
 	if err != nil {
-		return nil, err
+		return femto.FailHandler[workstations](err)
 	}
 
 	var ws []workStationData
@@ -64,7 +70,7 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 
 		gpus := make([]OldGPUStatSample, 0)
 		for i := range machine.Stats {
-			gpus = append(gpus, zipStats(
+			gpus = append(gpus, ZipStats(
 				machine.Hostname,
 				machine.GPUInfos[i],
 				machine.Stats[i],
@@ -78,12 +84,20 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 	}
 
 	result := []workstationGroup{{Name: "Shared", WorkStations: ws}}
-	return result, nil
+	return femto.HTTPResponseContent[workstations]{Body: result}, nil
 }
 
-func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
+func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.HTTPResponseContent[types.Unit], error) {
 	// Check if credientals are correct
-	return auth.CreateToken(packet)
+	token, err := auth.CreateToken(packet)
+
+	if err != nil {
+		return femto.FailHandler[types.Unit](err)
+	}
+
+	headers := make(map[string]string)
+	headers["Set-Cookie"] = fmt.Sprintf(cookieFormat, token)
+	return femto.HTTPResponseContent[types.Unit]{Headers: headers}, nil
 }
 
 // TODO
@@ -99,7 +113,7 @@ func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet 
 // }
 
 // Bodge together stats and contextual data to make OldGpuStats
-func zipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) OldGPUStatSample {
+func ZipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) OldGPUStatSample {
 	return OldGPUStatSample{
 		Hostname: host,
 		// info from GPUInfo

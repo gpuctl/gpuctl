@@ -26,13 +26,22 @@ func TestPostgres(t *testing.T) {
 				t.Fatalf("Failed to open database: %v", err)
 			}
 
-			// when the test completes, drop all tables and close db
-			// t.Cleanup(func() {
-			// 	err = db.Drop()
-			// 	if err != nil {
-			// 		t.Logf("Got error on cleanup: %v", err)
-			// 	}
-			// })
+			// TODO: This is a really bad way of doing things, fix this
+
+			/*
+			 * What needs to be fixed here:
+			 * 	- The tests must test the db.Drop() functionality
+			 * 	- Therefore the database must be dropped
+			 * 	- The test cleanup infrastructure must not rely on tested code
+			 * 	- Must find a way to clean-up without using db.Drop() directly
+			 */
+
+			t.Cleanup(func() {
+				err = db.Drop()
+				if err != nil {
+					t.Logf("Got error on cleanup: %v", err)
+				}
+			})
 
 			test.F(t, db)
 		})
