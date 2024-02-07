@@ -2,9 +2,9 @@ package femto
 
 import (
 	"errors"
-	"fmt"
 	"log/slog"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -36,12 +36,14 @@ func AuthWrapGet[A any, T any](auth Authenticator[A], handle GetFunc[T]) GetFunc
 func AuthWrapPost[A any, T any, R any](auth Authenticator[A], handle PostFuncPure[T, R]) PostFuncPure[T, R] {
 	return func(data T, r *http.Request, l *slog.Logger) (R, error) {
 		var zero R
-		cookie, err := r.Cookie(AuthCookieField)
-		if err != nil {
-			return zero, fmt.Errorf("Could not find cookie `%s`: %w", AuthCookieField, err)
+		authorisation := r.Header.Get("Authorization")
+		split := strings.Split(authorisation, "Bearer ")
+
+		res := false
+		if len(split) > 1 {
+			res = auth.CheckToken(split[1])
 		}
 
-		res := auth.CheckToken(cookie.Value)
 		if !res {
 			return zero, NotAuthenticatedError
 		}

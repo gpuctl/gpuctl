@@ -185,17 +185,13 @@ func TestValidAuthentication(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	//http.SetCookie(w, &http.Cookie{Name: femto.AuthCookieField, Value: "token"})
-
-	// Set up requests
-	authCookie := http.Cookie{Name: femto.AuthCookieField, Value: "token"}
-
+	// Set up authorisation
 	reqGet := httptest.NewRequest("GET", "/auth", strings.NewReader("{}"))
-	reqGet.AddCookie(&authCookie)
 	defer reqGet.Body.Close()
 	reqPost := httptest.NewRequest("POST", "/auth-post", strings.NewReader("{}"))
-	reqPost.AddCookie(&authCookie)
 	defer reqPost.Body.Close()
+	reqGet.Header.Set("Authorization", "Bearer token")
+	reqPost.Header.Set("Authorization", "Bearer token")
 
 	mux.ServeHTTP(w, reqGet)
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -224,17 +220,13 @@ func TestInvalidAuthentication(t *testing.T) {
 
 	w := httptest.NewRecorder()
 
-	//http.SetCookie(w, &http.Cookie{Name: femto.AuthCookieField, Value: "token"})
-
 	// Set up requests
-	authCookie := http.Cookie{Name: femto.AuthCookieField, Value: "chicken"}
-
 	reqGet := httptest.NewRequest("GET", "/auth", strings.NewReader("{}"))
-	reqGet.AddCookie(&authCookie)
 	defer reqGet.Body.Close()
 	reqPost := httptest.NewRequest("POST", "/auth-post", strings.NewReader("{}"))
-	reqPost.AddCookie(&authCookie)
 	defer reqPost.Body.Close()
+	reqGet.Header.Set("Authorization", "Bearer wrong")
+	reqPost.Header.Set("Authorization", "Bearer wrong")
 
 	mux.ServeHTTP(w, reqGet)
 	assert.Equal(t, http.StatusUnauthorized, w.Code)
