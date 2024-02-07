@@ -11,9 +11,15 @@ type Database struct {
 	PostgresUrl string `toml:"url"`
 }
 
+type AuthConfig struct {
+	Username string `toml:"username"`
+	Password string `toml:"password"`
+}
+
 type ControlConfiguration struct {
-	Server   Server   `toml:"server"`
-	Database Database `toml:"database"`
+	Server   Server     `toml:"server"`
+	Database Database   `toml:"database"`
+	Auth     AuthConfig `toml:"auth"`
 }
 
 func DefaultControlConfiguration() ControlConfiguration {
@@ -26,6 +32,10 @@ func DefaultControlConfiguration() ControlConfiguration {
 			InMemory:    false,
 			Postgres:    false,
 			PostgresUrl: "postgres://postgres@postgres/postgres",
+		},
+		Auth: AuthConfig{
+			Username: "admin",
+			Password: "password",
 		},
 	}
 }

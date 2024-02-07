@@ -8,7 +8,6 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
-	"github.com/gpuctl/gpuctl/internal/database/postgres"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 )
@@ -29,7 +28,8 @@ func main() {
 
 	gs := groundstation.NewServer(db)
 	gs_port := config.PortToAddress(conf.Server.GSPort)
-	wa := webapi.NewServer(db)
+	authenticator := webapi.AuthenticatorFromConfig(conf)
+	wa := webapi.NewServer(db, &authenticator)
 	wa_port := config.PortToAddress(conf.Server.WAPort)
 
 	errs := make(chan (error), 1)
@@ -53,12 +53,11 @@ func initialiseDatabase(conf config.Database) (database.Database, error) {
 	case conf.InMemory:
 		return database.InMemory(), nil
 	case conf.Postgres:
-		return postgres.New(conf.PostgresUrl)
+		return database.Postgres(conf.PostgresUrl)
 	default:
 		return nil, fmt.Errorf("must set one of 'inmemory' or 'postgres'")
 	}
 }
-
 func fatal(s string) {
 	slog.Error(s)
 	os.Exit(1)

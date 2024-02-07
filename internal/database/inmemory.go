@@ -132,3 +132,10 @@ func (m *inMemory) LastSeen() ([]uplink.WorkstationSeen, error) {
 
 	return seen, nil
 }
+
+func (m *inMemory) Drop() error {
+	m.mu.Lock()
+
+	m = nil
+	return nil
+}
