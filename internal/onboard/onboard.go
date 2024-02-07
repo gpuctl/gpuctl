@@ -23,29 +23,23 @@ func Onboard(
 		HostKeyCallback: hostKeyCallback,
 	}
 
-	sshClient, err := ssh.Dial("tcp", remoteAddr+":22", config)
+	client, err := ssh.Dial("tcp", remoteAddr+":22", config)
 	if err != nil {
 		return err
 	}
-	defer sshClient.Close()
+	defer client.Close()
 
-	sess, err := sshClient.NewSession()
-	if err != nil {
-		return err
-	}
-	defer sess.Close()
-
-	err = sess.Run("mkdir -p " + remoteDataDir)
+	err = runCommand(client, "mkdir -p "+remoteDataDir)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir: %w", err)
 	}
 
-	scpCon, err := scp.NewClientFromExistingSSH(sshClient, &scp.ClientOption{})
+	scpClient, err := scp.NewClientFromExistingSSH(client, &scp.ClientOption{})
 	if err != nil {
 		return err
 	}
 
-	err = scpCon.CopyToRemote(
+	err = scpClient.CopyToRemote(
 		bytes.NewReader(assets.SatelliteAmd64Linux),
 		remoteDataDir+"/satellite",
 		&scp.FileTransferOption{Perm: 0o755},
@@ -54,5 +48,22 @@ func Onboard(
 		return err
 	}
 
+	err = runCommand(client,
+		fmt.Sprintf("nohup %s/satellite > %s/satellite.log 2> %s/satellite.err < /dev/null &",
+			remoteDataDir, remoteDataDir, remoteDataDir),
+	)
+	if err != nil {
+		return fmt.Errorf("failed to launch satellite on remote: %w", err)
+	}
+
 	return nil
+}
+
+func runCommand(client *ssh.Client, command string) error {
+	sess, err := client.NewSession()
+	if err != nil {
+		return err
+	}
+
+	return sess.Run(command)
 }
