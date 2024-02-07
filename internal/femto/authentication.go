@@ -37,11 +37,11 @@ func AuthWrapPost[A any, T any, R any](auth Authenticator[A], handle PostFuncPur
 	return func(data T, r *http.Request, l *slog.Logger) (R, error) {
 		var zero R
 		authorisation := r.Header.Get("Authorization")
-		split := strings.Split(authorisation, "Bearer ")
+		token, f := strings.CutPrefix(authorisation, "Bearer ")
 
 		res := false
-		if len(split) > 1 {
-			res = auth.CheckToken(split[1])
+		if f {
+			res = auth.CheckToken(token)
 		}
 
 		if !res {

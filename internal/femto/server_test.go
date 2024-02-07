@@ -202,6 +202,41 @@ func TestValidAuthentication(t *testing.T) {
 	assert.Contains(t, string(w.Body.Bytes()), "OKPOST")
 }
 
+func TestPostWrapping(t *testing.T) {
+	t.Parallel()
+	mux := new(femto.Femto)
+	// Set up authenticated endpoints
+	femto.OnPost(mux, "/post-parallel",
+		femto.ParallelCompose(
+			func(s struct{}, r *http.Request, l *slog.Logger) error {
+				return nil
+			},
+			femto.PurePost))
+	femto.OnPost(mux, "/post-wrap",
+		femto.WrapPostFunc(
+			func(s struct{}, r *http.Request, l *slog.Logger) error {
+				return nil
+			}))
+
+	w := httptest.NewRecorder()
+
+	// Set up authorisation
+	reqGet := httptest.NewRequest("POST", "/post-parallel", strings.NewReader("{}"))
+	defer reqGet.Body.Close()
+	reqPost := httptest.NewRequest("POST", "/post-wrap", strings.NewReader("{}"))
+	defer reqPost.Body.Close()
+	reqGet.Header.Set("Authorization", "Bearer token")
+	reqPost.Header.Set("Authorization", "Bearer token")
+
+	req1 := httptest.NewRequest("POST", "/post-parallel", strings.NewReader("{}"))
+	req2 := httptest.NewRequest("POST", "/post-wrap", strings.NewReader("{}"))
+	mux.ServeHTTP(w, req1)
+	assert.Equal(t, http.StatusOK, w.Code)
+	mux.ServeHTTP(w, req2)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+}
+
 func TestInvalidAuthentication(t *testing.T) {
 	t.Parallel()
 	mux := new(femto.Femto)
