@@ -1,4 +1,4 @@
-package postgres
+package database
 
 import (
 	"database/sql"
@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"time"
 
-	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -18,7 +17,7 @@ type postgresConn struct {
 	db *sql.DB
 }
 
-func New(databaseUrl string) (database.Database, error) {
+func Postgres(databaseUrl string) (Database, error) {
 	db, err := sql.Open("pgx", databaseUrl)
 	if err != nil {
 		return nil, err
@@ -249,4 +248,13 @@ func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 	}
 
 	return result, rows.Close()
+}
+
+// drop all tables we create in the database
+func (conn postgresConn) Drop() error {
+	_, err := conn.db.Exec(`DROP TABLE stats;
+		DROP TABLE gpus;
+		DROP TABLE machines`)
+
+	return errors.Join(err, conn.db.Close())
 }

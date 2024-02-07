@@ -18,4 +18,7 @@ type Database interface {
 
 	// get the latest metrics for all approved machines
 	LatestData() ([]uplink.GpuStatsUpload, error)
+
+	// Drop all tables and data in the db and close the connection
+	Drop() error
 }

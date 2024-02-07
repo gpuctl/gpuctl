@@ -3,6 +3,7 @@ package femto
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
 	"net/http"
 	"sync/atomic"
@@ -17,7 +18,7 @@ func (f *Femto) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f.mux.ServeHTTP(w, r)
 }
 
-func OnPost[T any](f *Femto, pattern string, handle PostFunc[T]) {
+func OnPost[T any, R any](f *Femto, pattern string, handle PostFuncPure[T, R]) {
 	f.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
 		doPost(f, w, r, handle)
 	})
@@ -48,6 +49,12 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 
 	data, err := handle(r, log)
 	if err != nil {
+		// Handle authentication related errors
+		if errors.Is(err, NotAuthenticatedError) {
+			log.Info("Invalid attempt at authentication")
+			http.Error(w, "Not authenticated", http.StatusUnauthorized)
+			return
+		}
 		ise("application error", err)
 		return
 	}
@@ -64,7 +71,7 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 	}
 }
 
-func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle PostFunc[T]) {
+func doPost[T any, R any](f *Femto, w http.ResponseWriter, r *http.Request, handle PostFuncPure[T, R]) {
 	reqNo := f.nextReqNo()
 	log := f.logger().With(slog.Uint64("req_no", reqNo))
 
@@ -85,15 +92,36 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 		return
 	}
 
-	userErr := handle(reqData, r, log)
+	ise := func(ctx string, e error) {
+		log.Error(ctx, "err", e)
+		http.Error(w, e.Error(), http.StatusInternalServerError)
+	}
+
+	data, userErr := handle(reqData, r, log)
+
 	if userErr != nil {
+		// Handle authentication related errors
+		if errors.Is(userErr, NotAuthenticatedError) {
+			log.Info("Invalid attempt at authentication")
+			http.Error(w, "Not authenticated", http.StatusUnauthorized)
+			return
+		}
 		// TODO: Nicer error
 		log.Info("Error", "err", userErr)
 		http.Error(w, userErr.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Write([]byte("OK"))
+	jsonb, err := json.Marshal(data)
+	if err != nil {
+		ise("marshaling to json failed", err)
+		return
+	}
+
+	_, err = w.Write(jsonb)
+	if err != nil {
+		ise("writing failed", err)
+	}
 }
 
 func (f *Femto) nextReqNo() uint64 {
@@ -105,5 +133,31 @@ func (f *Femto) logger() *slog.Logger {
 	return slog.Default()
 }
 
+func PurePost[T any](data T, r *http.Request, l *slog.Logger) (struct{}, error) {
+	return struct{}{}, nil
+}
+
+// go functional hackery
+func ParallelCompose[T any, R any](base PostFunc[T], pure PostFuncPure[T, R]) PostFuncPure[T, R] {
+	return func(data T, r *http.Request, l *slog.Logger) (R, error) {
+		err := base(data, r, l)
+
+		if pure != nil {
+			ret, e := pure(data, r, l)
+			return ret, errors.Join(err, e)
+		}
+
+		var zero R
+		return zero, err
+	}
+}
+
+func WrapPostFunc[T any](f PostFunc[T]) PostFuncPure[T, struct{}] {
+	return func(data T, r *http.Request, l *slog.Logger) (struct{}, error) {
+		return struct{}{}, f(data, r, l)
+	}
+}
+
+type PostFuncPure[T any, R any] func(T, *http.Request, *slog.Logger) (R, error)
 type PostFunc[T any] func(T, *http.Request, *slog.Logger) error
 type GetFunc[T any] func(*http.Request, *slog.Logger) (T, error)

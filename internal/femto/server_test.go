@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/gpuctl/gpuctl/internal/femto"
@@ -34,9 +35,9 @@ func TestWrongMethod(t *testing.T) {
 
 	mux := new(femto.Femto)
 
-	femto.OnPost[struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) error {
+	femto.OnPost(mux, "/postme", femto.WrapPostFunc(func(s struct{}, r *http.Request, l *slog.Logger) error {
 		return nil
-	})
+	}))
 
 	req := httptest.NewRequest("GET", "/postme", nil)
 	w := httptest.NewRecorder()
@@ -55,9 +56,9 @@ func TestNotJson(t *testing.T) {
 
 	mux := new(femto.Femto)
 
-	femto.OnPost[struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) error {
+	femto.OnPost(mux, "/postme", femto.WrapPostFunc(func(s struct{}, r *http.Request, l *slog.Logger) error {
 		return nil
-	})
+	}))
 
 	req := httptest.NewRequest("POST", "/postme", bytes.NewBufferString("not json at all"))
 	w := httptest.NewRecorder()
@@ -75,8 +76,8 @@ func TestUserError(t *testing.T) {
 	t.Parallel()
 
 	mux := new(femto.Femto)
-	femto.OnPost[struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) error {
-		return errors.New("their is no spoon")
+	femto.OnPost[struct{}, struct{}](mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (struct{}, error) {
+		return struct{}{}, errors.New("their is no spoon")
 	})
 
 	req := httptest.NewRequest("POST", "/postme", bytes.NewBufferString("{}"))
@@ -149,4 +150,124 @@ func TestGetApplicationErr(t *testing.T) {
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	assert.Contains(t, w.Body.String(), "Some application Error")
+}
+
+type TestAuthenticator struct{}
+
+func (auth TestAuthenticator) CreateToken(unit struct{}) (femto.AuthToken, error) {
+	return "token", nil
+}
+
+func (auth TestAuthenticator) RevokeToken(token femto.AuthToken) error {
+	return nil
+}
+
+func (auth TestAuthenticator) CheckToken(token femto.AuthToken) bool {
+	return token == "token"
+}
+
+func TestValidAuthentication(t *testing.T) {
+	t.Parallel()
+	mux := new(femto.Femto)
+
+	auth := TestAuthenticator{}
+
+	// Set up authenticated endpoints
+	femto.OnGet(mux, "/auth", femto.AuthWrapGet(auth,
+		func(r *http.Request, l *slog.Logger) (string, error) {
+			return "OKGET", nil
+		}))
+
+	femto.OnPost(mux, "/auth-post", femto.AuthWrapPost(auth,
+		func(s struct{}, r *http.Request, l *slog.Logger) (string, error) {
+			return "OKPOST", nil
+		}))
+
+	w := httptest.NewRecorder()
+
+	// Set up authorisation
+	reqGet := httptest.NewRequest("GET", "/auth", strings.NewReader("{}"))
+	defer reqGet.Body.Close()
+	reqPost := httptest.NewRequest("POST", "/auth-post", strings.NewReader("{}"))
+	defer reqPost.Body.Close()
+	reqGet.Header.Set("Authorization", "Bearer token")
+	reqPost.Header.Set("Authorization", "Bearer token")
+
+	mux.ServeHTTP(w, reqGet)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, string(w.Body.Bytes()), "OKGET")
+
+	mux.ServeHTTP(w, reqPost)
+	assert.Equal(t, http.StatusOK, w.Code)
+	assert.Contains(t, string(w.Body.Bytes()), "OKPOST")
+}
+
+func TestPostWrapping(t *testing.T) {
+	t.Parallel()
+	mux := new(femto.Femto)
+	// Set up authenticated endpoints
+	femto.OnPost(mux, "/post-parallel",
+		femto.ParallelCompose(
+			func(s struct{}, r *http.Request, l *slog.Logger) error {
+				return nil
+			},
+			femto.PurePost))
+	femto.OnPost(mux, "/post-wrap",
+		femto.WrapPostFunc(
+			func(s struct{}, r *http.Request, l *slog.Logger) error {
+				return nil
+			}))
+
+	w := httptest.NewRecorder()
+
+	// Set up authorisation
+	reqGet := httptest.NewRequest("POST", "/post-parallel", strings.NewReader("{}"))
+	defer reqGet.Body.Close()
+	reqPost := httptest.NewRequest("POST", "/post-wrap", strings.NewReader("{}"))
+	defer reqPost.Body.Close()
+	reqGet.Header.Set("Authorization", "Bearer token")
+	reqPost.Header.Set("Authorization", "Bearer token")
+
+	req1 := httptest.NewRequest("POST", "/post-parallel", strings.NewReader("{}"))
+	req2 := httptest.NewRequest("POST", "/post-wrap", strings.NewReader("{}"))
+	mux.ServeHTTP(w, req1)
+	assert.Equal(t, http.StatusOK, w.Code)
+	mux.ServeHTTP(w, req2)
+	assert.Equal(t, http.StatusOK, w.Code)
+
+}
+
+func TestInvalidAuthentication(t *testing.T) {
+	t.Parallel()
+	mux := new(femto.Femto)
+	auth := TestAuthenticator{}
+
+	// Set up authenticated endpoints
+	femto.OnGet(mux, "/auth", femto.AuthWrapGet(auth,
+		func(r *http.Request, l *slog.Logger) (string, error) {
+			return "OKGET", nil
+		}))
+
+	femto.OnPost(mux, "/auth-post", femto.AuthWrapPost(auth,
+		func(s struct{}, r *http.Request, l *slog.Logger) (string, error) {
+			return "OKPOST", nil
+		}))
+
+	w := httptest.NewRecorder()
+
+	// Set up requests
+	reqGet := httptest.NewRequest("GET", "/auth", strings.NewReader("{}"))
+	defer reqGet.Body.Close()
+	reqPost := httptest.NewRequest("POST", "/auth-post", strings.NewReader("{}"))
+	defer reqPost.Body.Close()
+	reqGet.Header.Set("Authorization", "Bearer wrong")
+	reqPost.Header.Set("Authorization", "Bearer wrong")
+
+	mux.ServeHTTP(w, reqGet)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.NotContains(t, string(w.Body.Bytes()), "OKGET")
+
+	mux.ServeHTTP(w, reqPost)
+	assert.Equal(t, http.StatusUnauthorized, w.Code)
+	assert.NotContains(t, string(w.Body.Bytes()), "OKPOST")
 }

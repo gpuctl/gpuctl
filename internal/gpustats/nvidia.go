@@ -383,22 +383,6 @@ func parseUIntWithUnit(input string, name string) (uint64, error) {
 	return val, err
 }
 
-// Helper function for extracting GPU data such as temp
-func parseIntWithUnit(input string, name string) (int64, error) {
-	part, _, _ := strings.Cut(input, " ")
-	// Interpret N/A as 0
-	if part == NvidiaNotApplicable {
-		return 0, nil
-	}
-
-	val, err := strconv.ParseInt(part, 10, 0)
-	if err != nil {
-		err = fmt.Errorf("parsing %s: %w", name, err)
-	}
-
-	return val, err
-}
-
 func parseFloatWithUnit(input string, name string) (float64, error) {
 	part, _, _ := strings.Cut(input, " ")
 	// Interpret N/A as 0

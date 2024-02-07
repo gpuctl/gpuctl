@@ -1,11 +1,10 @@
-// TODO: restore once the rest of webapi is tested
-
 package webapi
 
 import (
 	"encoding/json"
 	"testing"
 
+	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -61,4 +60,11 @@ func TestMarshal(t *testing.T) {
 				}}}),
 		data,
 	)
+}
+
+func TestToOldGPUStats(t *testing.T) {
+	s := uplink.GPUStatSample{Uuid: "stuff"}
+	a := ToOldGPUStats(s)
+	assert.Equal(t, s.Uuid, a.Hostname)
+	assert.Equal(t, uint64(1337), a.MemoryTotal)
 }

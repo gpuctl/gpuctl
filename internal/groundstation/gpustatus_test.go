@@ -65,7 +65,7 @@ func TestHandleStatusSubmission(t *testing.T) {
 
 	res := simulateSubmissionAndGetResponse(validJSON, "POST")
 
-	assertResponseHas(t, res, http.StatusOK, "OK")
+	assertResponseHas(t, res, http.StatusOK, "{}")
 }
 
 func TestHandleWrongMethodSubmission(t *testing.T) {
