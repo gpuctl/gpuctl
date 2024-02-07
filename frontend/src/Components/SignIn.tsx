@@ -1,8 +1,19 @@
 import { useState } from "react";
 import { API_URL } from "../App";
 import { Validated, failure, success } from "../Utils/Utils";
+import { ADMIN_PATH } from "../Pages/AdminPanel";
+import {
+  Box,
+  Button,
+  Editable,
+  EditableInput,
+  EditablePreview,
+  Heading,
+  Input,
+  VStack,
+} from "@chakra-ui/react";
 
-const ADMIN_AUTH_PATH = "admin/auth";
+const AUTH_PATH = "/auth";
 const AUTH_TOKEN_ITEM = "authToken";
 
 type AuthToken = {
@@ -13,7 +24,7 @@ const requestSignIn = async (
   username: string,
   password: string,
 ): Promise<Validated<AuthToken>> => {
-  const resp = await fetch(API_URL + ADMIN_AUTH_PATH, {
+  const resp = await fetch(API_URL + ADMIN_PATH + AUTH_PATH, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, password }),
@@ -41,5 +52,24 @@ export const SignIn = () => {
     setAuth(success(tok));
   };
 
-  return <></>;
+  return (
+    <Box padding={4} bgColor={"gray.100"}>
+      <VStack spacing={2}>
+        <Box w="100%">
+          <Heading textAlign={"left"} size="l">
+            Username
+          </Heading>
+        </Box>
+        <Input placeholder="" bgColor={"white"}></Input>
+
+        <Box w="100%">
+          <Heading textAlign={"left"} size="l">
+            Password
+          </Heading>
+        </Box>
+        <Input type="password" placeholder="" bgColor={"white"}></Input>
+        <Button bgColor={"white"}>Sign In</Button>
+      </VStack>
+    </Box>
+  );
 };

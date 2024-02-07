@@ -76,10 +76,7 @@ const displayPartial = (
     failure: (_) => <p>Something has gone wrong!</p>,
   });
 
-export const MainView = () => {
-  const { initialView } = useParams<{ initialView: ViewPage }>();
-  console.log(initialView);
-
+export const MainView = (props: { default: ViewPage }) => {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
 
   useOnce(() => {
@@ -87,7 +84,7 @@ export const MainView = () => {
   });
 
   return (
-    <Navbar initial={initialView ?? ViewPage.CARD}>
+    <Navbar initial={props.default}>
       {displayPartial(stats, cardView)}
       {displayPartial(stats, tableView)}
     </Navbar>
