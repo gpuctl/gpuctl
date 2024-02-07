@@ -33,7 +33,7 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	mux := new(femto.Femto)
 	api := &Api{db}
 
-	femto.OnGet(mux, "/api/stats/all", api.allstats)
+	femto.OnGet(mux, "/api/stats/all", api.AllStatistics)
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
 
 	// Set up authentication endpoint
@@ -55,7 +55,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // This function involves a lot of weird unwrapping
 // TODO: See if we can get the database layer to do it for us
-func (a *Api) allstats(r *http.Request, l *slog.Logger) (*femto.HTTPResponseContent[workstations], error) {
+func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.HTTPResponseContent[workstations], error) {
 	data, err := a.DB.LatestData()
 
 	if err != nil {
