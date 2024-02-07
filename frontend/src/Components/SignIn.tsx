@@ -1,6 +1,12 @@
 import { useState } from "react";
 import { API_URL } from "../App";
-import { Validated, failure, success } from "../Utils/Utils";
+import {
+  Validated,
+  failure,
+  success,
+  validatedElim,
+  validationElim,
+} from "../Utils/Utils";
 import { ADMIN_PATH } from "../Pages/AdminPanel";
 import {
   Box,
@@ -20,10 +26,21 @@ type AuthToken = {
   token: string;
 };
 
+const DEBUG_AUTH = true;
+const DEBUG_USER = "NathanielB";
+const DEBUG_PASSWORD = "drowssap";
+const DEBUG_TOKEN = "ABCDEFG";
+
 const requestSignIn = async (
   username: string,
   password: string,
 ): Promise<Validated<AuthToken>> => {
+  if (DEBUG_AUTH) {
+    if (username === DEBUG_USER && password === DEBUG_PASSWORD) {
+      return success({ token: DEBUG_TOKEN });
+    }
+  }
+
   const resp = await fetch(API_URL + ADMIN_PATH + AUTH_PATH, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -52,6 +69,9 @@ export const SignIn = () => {
     setAuth(success(tok));
   };
 
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
   return (
     <Box padding={4} bgColor={"gray.100"}>
       <VStack spacing={2}>
@@ -60,15 +80,38 @@ export const SignIn = () => {
             Username
           </Heading>
         </Box>
-        <Input placeholder="" bgColor={"white"}></Input>
+        <Input
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          bgColor={"white"}
+        ></Input>
 
         <Box w="100%">
           <Heading textAlign={"left"} size="l">
             Password
           </Heading>
         </Box>
-        <Input type="password" placeholder="" bgColor={"white"}></Input>
-        <Button bgColor={"white"}>Sign In</Button>
+        <Input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          bgColor={"white"}
+        ></Input>
+        <Button
+          bgColor={"white"}
+          onClick={async () => {
+            const tok = await requestSignIn(username, password);
+            validatedElim(tok, {
+              success: (t) => {
+                updateAuth(t);
+                window.location.reload();
+              },
+              failure: () => {},
+            });
+          }}
+        >
+          Sign In
+        </Button>
       </VStack>
     </Box>
   );
