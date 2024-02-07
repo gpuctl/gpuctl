@@ -5,9 +5,11 @@ import (
 	"log"
 	"log/slog"
 	"os"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 
+	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/onboard"
 )
 
@@ -40,7 +42,15 @@ func main() {
 		log.Fatalf("Unable to parse key file %s: %v", *keypath, err)
 	}
 
-	err = onboard.Onboard(*user, *remote, signer, ssh.InsecureIgnoreHostKey())
+	err = onboard.Onboard(*user, *remote, signer, ssh.InsecureIgnoreHostKey(), config.SatelliteConfiguration{
+		Groundstation: config.Groundstation{"gpuctl.perial.co.uk", 80},
+		Satellite: config.Satellite{
+			DataInterval:      int(10 * time.Second),
+			HeartbeatInterval: int(5 * time.Second),
+			FakeGPU:           true,
+			Cache:             "/data/gpuctl/cache",
+		},
+	})
 
 	if err != nil {
 		log.Fatal(err)

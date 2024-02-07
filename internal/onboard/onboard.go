@@ -3,8 +3,10 @@ package onboard
 import (
 	"bytes"
 	"fmt"
+	"strings"
 
 	"github.com/gpuctl/gpuctl/internal/assets"
+	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/povsister/scp"
 	"golang.org/x/crypto/ssh"
 )
@@ -16,24 +18,27 @@ func Onboard(
 	remoteAddr string,
 	signer ssh.Signer,
 	hostKeyCallback ssh.HostKeyCallback,
+	satConfig config.SatelliteConfiguration,
 ) error {
-	config := &ssh.ClientConfig{
+	// -- Connect to Remote --
+	sshConfig := &ssh.ClientConfig{
 		User:            remoteUser,
 		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
 		HostKeyCallback: hostKeyCallback,
 	}
-
-	client, err := ssh.Dial("tcp", remoteAddr+":22", config)
+	client, err := ssh.Dial("tcp", remoteAddr+":22", sshConfig)
 	if err != nil {
 		return err
 	}
 	defer client.Close()
 
+	// -- Make the data dir --
 	err = runCommand(client, "mkdir -p "+remoteDataDir)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir: %w", err)
 	}
 
+	// -- SCP over the satellite binary --
 	scpClient, err := scp.NewClientFromExistingSSH(client, &scp.ClientOption{})
 	if err != nil {
 		return err
@@ -48,8 +53,23 @@ func Onboard(
 		return err
 	}
 
+	// -- SCP over the config.toml --
+	configToml, err := config.ToToml(satConfig)
+	if err != nil {
+		return err
+	}
+	err = scpClient.CopyToRemote(
+		strings.NewReader(configToml),
+		remoteDataDir+"/satellite.toml",
+		&scp.FileTransferOption{},
+	)
+	if err != nil {
+		return err
+	}
+
+	// -- Start the satellite --
 	err = runCommand(client,
-		fmt.Sprintf("nohup %s/satellite > %s/satellite.log 2> %s/satellite.err < /dev/null &",
+		fmt.Sprintf("nohup %s/satellite >> %s/satellite.log 2>> %s/satellite.err < /dev/null &",
 			remoteDataDir, remoteDataDir, remoteDataDir),
 	)
 	if err != nil {
