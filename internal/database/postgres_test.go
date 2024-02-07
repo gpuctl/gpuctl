@@ -27,12 +27,12 @@ func TestPostgres(t *testing.T) {
 			}
 
 			// when the test completes, drop all tables and close db
-			t.Cleanup(func() {
-				err = db.Drop()
-				if err != nil {
-					t.Logf("Got error on cleanup: %v", err)
-				}
-			})
+			// t.Cleanup(func() {
+			// 	err = db.Drop()
+			// 	if err != nil {
+			// 		t.Logf("Got error on cleanup: %v", err)
+			// 	}
+			// })
 
 			test.F(t, db)
 		})
