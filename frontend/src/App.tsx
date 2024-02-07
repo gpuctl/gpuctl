@@ -17,22 +17,33 @@ export const API_URL = "http://localhost:8000";
 export const REFRESH_INTERVAL = 5000;
 
 export enum ViewPage {
-  CARD = "card_view",
-  TABLE = "table_view",
+  CARD = "/card_view",
+  TABLE = "/table_view",
 }
+const DEFAULT_VIEW = ViewPage.CARD;
 
 export const VIEW_PAGE_INDEX = { [ViewPage.CARD]: 0, [ViewPage.TABLE]: 1 };
 
 const App = () => {
-  const [viewPage, setViewPage] = useState(ViewPage.CARD);
-
   return (
     <ChakraProvider>
       <div className="App"></div>
       <BrowserRouter>
         <Routes>
           <Route index element={<Navigate to={STATS_PATH} replace />} />
-          <Route path={STATS_PATH + "/:viewPage"} element={<MainView />} />
+          <Route
+            path={STATS_PATH}
+            element={<Navigate to={STATS_PATH + DEFAULT_VIEW} replace />}
+          />
+
+          <Route
+            path={STATS_PATH + ViewPage.CARD}
+            element={<MainView default={ViewPage.CARD} />}
+          />
+          <Route
+            path={STATS_PATH + ViewPage.TABLE}
+            element={<MainView default={ViewPage.TABLE} />}
+          />
           <Route path={"/admin_sign_in"} element={<></>} />
           <Route path={"/admin_panel"} element={<></>} />
         </Routes>

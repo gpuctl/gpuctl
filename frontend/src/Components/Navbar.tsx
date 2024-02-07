@@ -1,6 +1,13 @@
 import {
   Button,
   Heading,
+  Popover,
+  PopoverArrow,
+  PopoverBody,
+  PopoverCloseButton,
+  PopoverContent,
+  PopoverHeader,
+  PopoverTrigger,
   Spacer,
   Tab,
   TabList,
@@ -8,10 +15,11 @@ import {
   TabPanels,
   Tabs,
 } from "@chakra-ui/react";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { STATS_PATH } from "../Config/Paths";
 import { VIEW_PAGE_INDEX, ViewPage } from "../App";
+import { SignIn } from "./SignIn";
 
 const URLS = [
   `${STATS_PATH}/card_view`,
@@ -28,6 +36,8 @@ export const Navbar = ({
 }) => {
   const nav = useNavigate();
 
+  const [signingIn, setSigningIn] = useState<boolean>(false);
+
   return (
     <Tabs
       variant="soft-rounded"
@@ -39,7 +49,16 @@ export const Navbar = ({
         <Tab>Table View</Tab>
         <Tab isDisabled>Admin Panel</Tab>
         <Spacer />
-        <Button> Admin Sign In </Button>
+        <Popover>
+          <PopoverTrigger>
+            <Button>Admin Sign In</Button>
+          </PopoverTrigger>
+          <PopoverContent w="100%">
+            <PopoverArrow />
+            <PopoverCloseButton />
+            <SignIn />
+          </PopoverContent>
+        </Popover>
       </TabList>
       <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
       <TabPanels>
