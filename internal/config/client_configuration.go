@@ -1,6 +1,7 @@
 package config
 
 type Groundstation struct {
+	Protocol string `toml:"protocol"`
 	Hostname string `toml:"hostname"`
 	Port     int    `toml:"port"`
 }
@@ -50,6 +51,7 @@ func (s SatelliteConfiguration) Merge(config Mergable) Mergable {
 func DefaultSatelliteConfiguration() SatelliteConfiguration {
 	return SatelliteConfiguration{
 		Groundstation: Groundstation{
+			Protocol: "http",
 			Hostname: "localhost",
 			Port:     8080,
 		},

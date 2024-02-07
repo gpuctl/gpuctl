@@ -36,7 +36,10 @@ func main() {
 	}
 
 	s := satellite{
-		gsAddr:   config.GenerateAddress(satellite_configuration.Groundstation.Hostname, satellite_configuration.Groundstation.Port),
+		gsAddr: config.GenerateAddress(
+			satellite_configuration.Groundstation.Protocol,
+			satellite_configuration.Groundstation.Hostname,
+			satellite_configuration.Groundstation.Port),
 		hostname: host,
 	}
 

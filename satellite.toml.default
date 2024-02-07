@@ -1,6 +1,7 @@
 [Groundstation]
+protocol = "https"
 hostname = "gpuctl.perial.co.uk"
-port = 80
+port = 443
 
 [Satellite]
 data_interval = 15000000000

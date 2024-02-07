@@ -16,8 +16,8 @@ func PortToAddress(port int) string {
 	return fmt.Sprintf(":%d", port)
 }
 
-func GenerateAddress(hostname string, port int) string {
-	return fmt.Sprintf("http://%s%s", hostname, PortToAddress(port))
+func GenerateAddress(protocol string, hostname string, port int) string {
+	return fmt.Sprintf("%s://%s%s", protocol, hostname, PortToAddress(port))
 }
 
 func IsFileEmpty(path string) (bool, error) {
