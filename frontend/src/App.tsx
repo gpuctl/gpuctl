@@ -42,8 +42,6 @@ enum Num {
   D = "C'",
 }
 
-type Wahh = ViewPage;
-
 const DEFAULT_VIEW = ViewPage.CARD;
 
 export const VIEW_PAGE_INDEX = {
@@ -67,12 +65,6 @@ const App = () => {
   const [authToken, setAuth] =
     useState<Validated<AuthToken>>(tryGetAuthToken());
 
-  const ooh = enumVals(ViewPage);
-  const ohBaby = enumVals(Num);
-
-  console.log(ooh);
-  console.log(ohBaby);
-
   return (
     <ChakraProvider>
       <div className="App"></div>
@@ -83,19 +75,13 @@ const App = () => {
             path={STATS_PATH}
             element={<Navigate to={STATS_PATH + DEFAULT_VIEW} replace />}
           />
-
-          <Route
-            path={STATS_PATH + ViewPage.CARD}
-            element={<MainView default={ViewPage.CARD} />}
-          />
-          <Route
-            path={STATS_PATH + ViewPage.TABLE}
-            element={<MainView default={ViewPage.TABLE} />}
-          />
-          <Route
-            path={STATS_PATH + ViewPage.ADMIN}
-            element={<MainView default={ViewPage.ADMIN} />}
-          />
+          {enumVals(ViewPage).map((page, i) => (
+            <Route
+              id={`${i}`}
+              path={STATS_PATH + page}
+              element={<MainView default={page} />}
+            />
+          ))}
         </Routes>
       </BrowserRouter>
     </ChakraProvider>
