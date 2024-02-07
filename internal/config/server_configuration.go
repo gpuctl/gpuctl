@@ -16,27 +16,6 @@ type ControlConfiguration struct {
 	Database Database `toml:"database"`
 }
 
-func (s ControlConfiguration) Merge(config Mergable) Mergable {
-	sat_config, ok := config.(ControlConfiguration)
-
-	if !ok {
-		return s
-	}
-
-	if s.Database.PostgresUrl == "" {
-		s.Database.PostgresUrl = sat_config.Database.PostgresUrl
-	}
-
-	if s.Server.GSPort == 0 {
-		s.Server.GSPort = sat_config.Server.GSPort
-	}
-	if s.Server.WAPort == 0 {
-		s.Server.WAPort = sat_config.Server.WAPort
-	}
-
-	return s
-}
-
 func DefaultControlConfiguration() ControlConfiguration {
 	return ControlConfiguration{
 		Server: Server{
