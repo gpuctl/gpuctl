@@ -99,7 +99,7 @@ func appendingFailsIfMachineMissing(t *testing.T, db Database) {
 	}
 
 	// even if a different machine is present
-	err = db.UpdateLastSeen("badger")
+	err = db.UpdateLastSeen("badger", 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -113,7 +113,7 @@ func appendingFailsIfMachineMissing(t *testing.T, db Database) {
 func appendingFailsIfContextMissing(t *testing.T, db Database) {
 	fakeHost := "rabbit"
 
-	err := db.UpdateLastSeen(fakeHost)
+	err := db.UpdateLastSeen(fakeHost, 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -127,7 +127,7 @@ func appendingFailsIfContextMissing(t *testing.T, db Database) {
 func appendedDataPointsAreSaved(t *testing.T, db Database) {
 	fakeHost := "elk"
 
-	err := db.UpdateLastSeen(fakeHost)
+	err := db.UpdateLastSeen(fakeHost, 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -174,11 +174,11 @@ func appendedDataPointsAreSaved(t *testing.T, db Database) {
 
 // TODO: verify datastamp changed in the database
 func multipleHeartbeats(t *testing.T, db Database) {
-	err := db.UpdateLastSeen("otter")
+	err := db.UpdateLastSeen("otter", 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	err = db.UpdateLastSeen("otter")
+	err = db.UpdateLastSeen("otter", 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}

@@ -23,6 +23,7 @@ func NewServer(db database.Database) *Server {
 	api := &api{db}
 
 	femto.OnGet(mux, "/api/stats/all", api.allstats)
+	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
 
 	return &Server{mux, api}
 }

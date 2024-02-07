@@ -17,7 +17,7 @@ func TestInMemory(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Empty(t, data)
 
-	err = db.UpdateLastSeen("foo")
+	err = db.UpdateLastSeen("foo", 0)
 	assert.NoError(t, err)
 
 	err = db.UpdateGPUContext("foo", uplink.GPUInfo{})

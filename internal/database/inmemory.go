@@ -24,7 +24,7 @@ type inMemory struct {
 	infos map[string]gpuInfo
 	stats map[string]uplink.GPUStatSample
 	// map from hostname to last seen time
-	lastSeen map[string]struct{}
+	lastSeen map[string]int64
 	mu       sync.Mutex
 }
 
@@ -36,7 +36,7 @@ func InMemory() Database {
 	return &inMemory{
 		infos:    make(map[string]gpuInfo),
 		stats:    make(map[string]uplink.GPUStatSample),
-		lastSeen: make(map[string]struct{}),
+		lastSeen: make(map[string]int64),
 	}
 }
 
@@ -109,13 +109,26 @@ func (m *inMemory) LatestData() ([]uplink.GpuStatsUpload, error) {
 	return result, nil
 }
 
-func (m *inMemory) UpdateLastSeen(host string) error {
+func (m *inMemory) UpdateLastSeen(host string, time int64) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	// The time can't be queried as of present, so we don't
 	// care. Also, this method should take the time as an arg.
-	m.lastSeen[host] = struct{}{}
+	m.lastSeen[host] = time
 
 	return nil
+}
+
+func (m *inMemory) LastSeen() ([]uplink.WorkstationSeen, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var seen []uplink.WorkstationSeen
+
+	for name, time := range m.lastSeen {
+		seen = append(seen, uplink.WorkstationSeen{Hostname: name, LastSeen: time})
+	}
+
+	return seen, nil
 }

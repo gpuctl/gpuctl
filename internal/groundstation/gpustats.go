@@ -3,6 +3,7 @@ package groundstation
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
@@ -11,7 +12,7 @@ func (gs *groundstation) gpustats(data uplink.GpuStatsUpload, req *http.Request,
 	log.Info("Got GPU stats", "stats", data.Stats)
 
 	// NOTE: just commented this during the big refactor -jyry
-	err := gs.db.UpdateLastSeen(data.Hostname)
+	err := gs.db.UpdateLastSeen(data.Hostname, time.Now().Unix())
 	if err != nil {
 		return err
 	}
