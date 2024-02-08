@@ -13,6 +13,9 @@ import (
 	"github.com/gpuctl/gpuctl/internal/onboard"
 )
 
+// This is right on DoC CSG machines.
+const dataDir = "/data/gpuctl"
+
 func main() {
 	user := flag.String("user", "", "The username to SSH as")
 	keypath := flag.String("key", "", "The path the the SSH private key to authenticate as")
@@ -42,15 +45,22 @@ func main() {
 		log.Fatalf("Unable to parse key file %s: %v", *keypath, err)
 	}
 
-	err = onboard.Onboard(*user, *remote, signer, ssh.InsecureIgnoreHostKey(), config.SatelliteConfiguration{
-		Groundstation: config.Groundstation{"gpuctl.perial.co.uk", 80},
-		Satellite: config.Satellite{
-			DataInterval:      int(10 * time.Second),
-			HeartbeatInterval: int(5 * time.Second),
-			FakeGPU:           true,
-			Cache:             "/data/gpuctl/cache",
+	err = onboard.Onboard(
+		*user,
+		*remote,
+		dataDir,
+		signer,
+		ssh.InsecureIgnoreHostKey(),
+		config.SatelliteConfiguration{
+			Groundstation: config.Groundstation{"gpuctl.perial.co.uk", 80},
+			Satellite: config.Satellite{
+				DataInterval:      int(10 * time.Second),
+				HeartbeatInterval: int(5 * time.Second),
+				FakeGPU:           true,
+				Cache:             "/data/gpuctl/cache",
+			},
 		},
-	})
+	)
 
 	if err != nil {
 		log.Fatal(err)

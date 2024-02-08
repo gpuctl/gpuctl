@@ -5,35 +5,43 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/crypto/ssh"
+
+	"github.com/povsister/scp"
+
 	"github.com/gpuctl/gpuctl/internal/assets"
 	"github.com/gpuctl/gpuctl/internal/config"
-	"github.com/povsister/scp"
-	"golang.org/x/crypto/ssh"
 )
 
-var remoteDataDir string = "/data/gpuctl"
-
+// Onboard with copy over and start the satellite on a remote machine, via SSH.
+//
+// - hostname must be an amd64 linux system
+// - user@hostname must have permissions to ssh, when signed in with signer
+// - user must have permissions to dataDir
+// - dataDir must be machine-local (IE not on NFS)
+// - hostKeyCallback will be used to verify the identity of the remote
 func Onboard(
-	remoteUser string,
-	remoteAddr string,
+	hostname string,
+	user string,
+	dataDir string,
 	signer ssh.Signer,
-	hostKeyCallback ssh.HostKeyCallback,
+	keyCallback ssh.HostKeyCallback,
 	satConfig config.SatelliteConfiguration,
 ) error {
 	// -- Connect to Remote --
 	sshConfig := &ssh.ClientConfig{
-		User:            remoteUser,
+		User:            user,
 		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
-		HostKeyCallback: hostKeyCallback,
+		HostKeyCallback: keyCallback,
 	}
-	client, err := ssh.Dial("tcp", remoteAddr+":22", sshConfig)
+	client, err := ssh.Dial("tcp", hostname+":22", sshConfig)
 	if err != nil {
 		return err
 	}
 	defer client.Close()
 
 	// -- Make the data dir --
-	err = runCommand(client, "mkdir -p "+remoteDataDir)
+	err = runCommand(client, "mkdir -p "+dataDir)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir: %w", err)
 	}
@@ -46,7 +54,7 @@ func Onboard(
 
 	err = scpClient.CopyToRemote(
 		bytes.NewReader(assets.SatelliteAmd64Linux),
-		remoteDataDir+"/satellite",
+		dataDir+"/satellite",
 		&scp.FileTransferOption{Perm: 0o755},
 	)
 	if err != nil {
@@ -60,7 +68,7 @@ func Onboard(
 	}
 	err = scpClient.CopyToRemote(
 		strings.NewReader(configToml),
-		remoteDataDir+"/satellite.toml",
+		dataDir+"/satellite.toml",
 		&scp.FileTransferOption{},
 	)
 	if err != nil {
@@ -70,7 +78,7 @@ func Onboard(
 	// -- Start the satellite --
 	err = runCommand(client,
 		fmt.Sprintf("nohup %s/satellite >> %s/satellite.log 2>> %s/satellite.err < /dev/null &",
-			remoteDataDir, remoteDataDir, remoteDataDir),
+			dataDir, dataDir, dataDir),
 	)
 	if err != nil {
 		return fmt.Errorf("failed to launch satellite on remote: %w", err)
