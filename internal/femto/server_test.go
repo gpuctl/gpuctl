@@ -123,7 +123,7 @@ func TestGetWrongMethod(t *testing.T) {
 	t.Parallel()
 
 	mux := new(femto.Femto)
-	femto.OnGet[types.Unit](mux, "/api", func(r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+	femto.OnGet(mux, "/api", func(r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 		return &femto.EmptyBodyResponse{}, nil
 	})
 
