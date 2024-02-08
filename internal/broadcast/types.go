@@ -1,4 +1,5 @@
-package webapi
+// types for webapi<->frontend communication
+package broadcast
 
 import (
 	"github.com/gpuctl/gpuctl/internal/uplink"
@@ -6,15 +7,28 @@ import (
 
 // These types need to be kept in sync with `frontend/src/Data.tsx`
 
-type workstations []workstationGroup
+type NewMachine struct {
+	Hostname string `json:"hostname"`
+	Group    string `json:"group"`
+}
 
-type workstationGroup struct {
+type ModifyMachine struct {
+	Hostname    string `json:"hostname"`
+	CPU         string `json:"cpu"`         // nullable - means no change
+	Motherboard string `json:"motherboard"` // nullable - means no change
+	Notes       string `json:"notes"`       // nullable - means no change
+	Group       string `json:"group"`       // nullable - means no change
+}
+
+type Workstations []WorkstationGroup
+
+type WorkstationGroup struct {
 	Name         string            `json:"name"`
-	WorkStations []workStationData `json:"workStations"`
+	WorkStations []WorkstationData `json:"workStations"`
 }
 
 // TODO: HACK: this just uses our old GPU stat packet
-type workStationData struct {
+type WorkstationData struct {
 	Name string             `json:"name"`
 	Gpus []OldGPUStatSample `json:"gpus"`
 }
@@ -63,7 +77,3 @@ type OldGPUStatSample struct {
 	MemoryClock       float64 `json:"memory_clock"`       // Mhz
 	MaxMemoryClock    float64 `json:"max_memory_clock"`   // Mhz
 }
-
-type MachineMove struct{}
-
-type MachineAddInfo struct{}
