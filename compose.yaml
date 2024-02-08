@@ -18,6 +18,9 @@ services:
       postgres:
         condition: service_healthy
   frontend:
+    # secrets/key file needs to contain hetzner dns api key. eg:
+    # HETZNER_DNS_API_TOKEN=key_value
+    env_file: ./secrets/keys
     build:
       dockerfile: ./frontend.Dockerfile
     ports:
