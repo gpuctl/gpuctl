@@ -1,6 +1,7 @@
 package webapi_test
 
 import (
+	"bytes"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -164,5 +165,58 @@ func TestZipStats(t *testing.T) {
 
 	if !reflect.DeepEqual(result, expected) {
 		t.Errorf("ZipStats() = %v, want %v", result, expected)
+	}
+}
+
+func TestServerEndpoints(t *testing.T) {
+	mockDB := database.InMemory()
+
+	auth := webapi.ConfigFileAuthenticator{
+		Username:      "joe",
+		Password:      "mama",
+		CurrentTokens: make(map[authentication.AuthToken]bool),
+	}
+
+	server := webapi.NewServer(mockDB, &auth)
+
+	tests := []struct {
+		name           string
+		method         string
+		endpoint       string
+		body           []byte
+		expectedStatus int
+	}{
+		{
+			name:           "Test Stats All",
+			method:         http.MethodGet,
+			endpoint:       "/api/stats/all",
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Test Offline Machines",
+			method:         http.MethodGet,
+			endpoint:       "/api/stats/offline",
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:           "Test Authentication",
+			method:         http.MethodPost,
+			endpoint:       "/api/auth",
+			body:           []byte(`{"username":"joe","password":"mama"}`),
+			expectedStatus: http.StatusOK,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			request := httptest.NewRequest(tc.method, tc.endpoint, bytes.NewBuffer(tc.body))
+			recorder := httptest.NewRecorder()
+
+			server.ServeHTTP(recorder, request)
+
+			if status := recorder.Code; status != tc.expectedStatus {
+				t.Errorf("%s: expected status code %d, got %d", tc.name, tc.expectedStatus, status)
+			}
+		})
 	}
 }
