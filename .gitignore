@@ -2,8 +2,6 @@
 /satellite
 /onboard
 
-secrets/
-
 control.toml
 satellite.toml
 
