@@ -1,10 +1,12 @@
 package config
 
 type Server struct {
-	GSPort          int `toml:"groundstation_port"`
-	WAPort          int `toml:"webapi_port"`
-	DeathTimeout    int `toml:"death_timeout"`
-	MonitorInterval int `toml:"monitor_interval"`
+	GSPort          int    `toml:"groundstation_port"`
+	WAPort          int    `toml:"webapi_port"`
+	DeathTimeout    int    `toml:"death_timeout"`
+	MonitorInterval int    `toml:"monitor_interval"`
+	User            string `toml:"ssh_user"`
+	Keypath         string `toml:"ssh_keypath"`
 }
 
 type Database struct {

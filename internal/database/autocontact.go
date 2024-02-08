@@ -6,15 +6,21 @@ import (
 	"os"
 	"time"
 
+	"golang.org/x/crypto/ssh"
 	"golang.org/x/net/icmp"
 	"golang.org/x/net/ipv4"
 )
 
-func MonitorForDeadMachines(interval int, database Database, timespanForDeath int, l *slog.Logger) error {
+type SSHConfig struct {
+	User    string
+	Keypath string
+}
+
+func MonitorForDeadMachines(interval int, database Database, timespanForDeath int, l *slog.Logger, s SSHConfig) error {
 	downsampleTicker := time.NewTicker(time.Duration(interval))
 
 	for t := range downsampleTicker.C {
-		err := monitor(database, t, timespanForDeath, l)
+		err := monitor(database, t, timespanForDeath, l, s)
 
 		if err != nil {
 			return err
@@ -24,7 +30,7 @@ func MonitorForDeadMachines(interval int, database Database, timespanForDeath in
 	return nil
 }
 
-func monitor(database Database, t time.Time, timespanForDeath int, l *slog.Logger) error {
+func monitor(database Database, t time.Time, timespanForDeath int, l *slog.Logger, s SSHConfig) error {
 	last_seens, err := database.LastSeen()
 
 	if err != nil {
@@ -36,7 +42,7 @@ func monitor(database Database, t time.Time, timespanForDeath int, l *slog.Logge
 
 		if seen.LastSeen < t.Add(-1*time.Duration(timespanForDeath)*time.Second).Unix() {
 			if ping(seen.Hostname, l) {
-				err := sshRestart(seen.Hostname, l)
+				err := sshRestart(seen.Hostname, l, s)
 
 				if err != nil {
 					return err
@@ -48,7 +54,50 @@ func monitor(database Database, t time.Time, timespanForDeath int, l *slog.Logge
 	return nil
 }
 
-func sshRestart(hostname string, l *slog.Logger) error {
+func sshRestart(remote string, l *slog.Logger, s SSHConfig) error {
+	user := s.user
+	keypath := s.keypath
+
+	key, err := os.ReadFile(keypath)
+	if err != nil {
+		l.Error("Unable to read key: %v", err)
+		return err
+	}
+
+	signer, err := ssh.ParsePrivateKey(key)
+	if err != nil {
+		l.Error("Unable to parse key file %s: %v", keypath, err)
+		return err
+	}
+
+	config := &ssh.ClientConfig{
+		User: user,
+		Auth: []ssh.AuthMethod{ssh.PublicKeys(signer)},
+		// FIXME: Maybe be more secure??
+		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+	}
+
+	client, err := ssh.Dial("tcp", remote+":22", config)
+	if err != nil {
+		l.Error("Failed to connect to %s: %v", remote, err)
+		return err
+	}
+	defer client.Close()
+
+	sess, err := client.NewSession()
+	if err != nil {
+		l.Error("Failed to create session: %v", err)
+		return err
+	}
+	defer sess.Close()
+
+	_, err = sess.Output("nohup ./data/gpuctl/satellite")
+
+	if err != nil {
+		l.Error("Failed to run command on remote: %s", err)
+		return err
+	}
+
 	return nil
 }
 
