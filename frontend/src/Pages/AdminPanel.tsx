@@ -14,17 +14,18 @@ const addMachine = (hostname: string, group: string) => {
   // the machine was successful...
 };
 
-enum ModCol {
-  MOTHERBOARD = "motherboard",
-  CPU = "cpu",
-  NOTES = "notes",
-}
+type ModifyData = {
+  group: string | null;
+  motherboard: string | null;
+  cpu: string | null;
+  notes: string | null;
+};
 
-const modifyInfo = (hostname: string, column: string, data: string) => {
+const modifyInfo = (hostname: string, mod: ModifyData) => {
   fetch(API_URL + ADMIN_PATH + STATS_PATH + "/modify", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ hostname, column, data }),
+    body: JSON.stringify({ hostname, ...mod }),
   });
 };
 
