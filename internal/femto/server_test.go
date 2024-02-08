@@ -51,6 +51,26 @@ func TestWrongMethod(t *testing.T) {
 	assert.Equal(t, w.Code, http.StatusMethodNotAllowed)
 }
 
+func TestOptions(t *testing.T) {
+	t.Parallel()
+
+	mux := new(femto.Femto)
+
+	femto.OnGet(mux, "/api", func(r *http.Request, l *slog.Logger) (struct{}, error) {
+		return struct{}{}, nil
+	})
+
+	req := httptest.NewRequest(http.MethodOptions, "/api", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+	defer req.Body.Close()
+
+	assert.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, http.MethodGet, w.Result().Header.Get("Allow"))
+	assert.Equal(t, http.MethodGet, w.Result().Header.Get("Access-Control-Allow-Methods"))
+
+}
+
 func TestNotJson(t *testing.T) {
 	t.Parallel()
 
