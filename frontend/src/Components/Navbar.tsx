@@ -18,9 +18,9 @@ import {
 import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { STATS_PATH } from "../Config/Paths";
-import { AuthToken, VIEW_PAGE_INDEX, ViewPage } from "../App";
+import { AUTH_TOKEN_ITEM, AuthToken, VIEW_PAGE_INDEX, ViewPage } from "../App";
 import { SignIn } from "./SignIn";
-import { Validated, isSuccess } from "../Utils/Utils";
+import { Validated, failure, isSuccess } from "../Utils/Utils";
 
 const URLS = [
   `${STATS_PATH}/card_view`,
@@ -41,8 +41,6 @@ export const Navbar = ({
 }) => {
   const nav = useNavigate();
 
-  const [signingIn, setSigningIn] = useState<boolean>(false);
-
   return (
     <Tabs
       variant="soft-rounded"
@@ -54,16 +52,28 @@ export const Navbar = ({
         <Tab>Table View</Tab>
         <Tab isDisabled={!isSuccess(authToken)}>Admin Panel</Tab>
         <Spacer />
-        <Popover>
-          <PopoverTrigger>
-            <Button>Admin Sign In</Button>
-          </PopoverTrigger>
-          <PopoverContent w="100%">
-            <PopoverArrow />
-            <PopoverCloseButton />
-            <SignIn setAuth={setAuth} />
-          </PopoverContent>
-        </Popover>
+        {isSuccess(authToken) ? (
+          <Button
+            onClick={() => {
+              setAuth(failure(Error("Signed Out")));
+              localStorage.removeItem(AUTH_TOKEN_ITEM);
+              window.location.reload();
+            }}
+          >
+            Sign Out
+          </Button>
+        ) : (
+          <Popover>
+            <PopoverTrigger>
+              <Button>Admin Sign In</Button>
+            </PopoverTrigger>
+            <PopoverContent w="100%">
+              <PopoverArrow />
+              <PopoverCloseButton />
+              <SignIn setAuth={setAuth} />
+            </PopoverContent>
+          </Popover>
+        )}
       </TabList>
       <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
       <TabPanels>
