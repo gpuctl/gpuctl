@@ -7,6 +7,7 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestFileEmpty_EmptyCase(t *testing.T) {
@@ -121,4 +122,29 @@ func CreateTempConfigFile(content string, t *testing.T) (string, func()) {
 	return tmpfile.Name(), func() {
 		os.Remove(tmpfile.Name())
 	}
+}
+
+func TestToToml(t *testing.T) {
+	t.Parallel()
+
+	c := config.SatelliteConfiguration{
+		Groundstation: config.Groundstation{"https://", "foo.bar", 80},
+		Satellite:     config.Satellite{"/tmp/sat", 1, 1, false},
+	}
+
+	cToml, err := config.ToToml(c)
+	require.NoError(t, err)
+
+	assert.Equal(t,
+		`[groundstation]
+  protocol = "https://"
+  hostname = "foo.bar"
+  port = 80
+
+[satellite]
+  cache = "/tmp/sat"
+  data_interval = 1
+  heartbeat_interval = 1
+  fake_gpu = false
+`, cToml)
 }

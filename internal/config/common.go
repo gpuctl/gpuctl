@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -56,4 +57,15 @@ func getConfiguration[T any](filename string, defaultGenerator func() T) (T, err
 		return zero, err
 	}
 	return config, nil
+}
+
+func ToToml(v any) (string, error) {
+	var buf bytes.Buffer
+	enc := toml.NewEncoder(&buf)
+
+	if err := enc.Encode(v); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }
