@@ -8,6 +8,8 @@ import {
   success,
   validationElim,
   enumVals,
+  enumIndex,
+  EnumType,
 } from "./Utils/Utils";
 import { WorkstationCardMin } from "./Components/WorkstationCardMinimal";
 import { Box, ChakraProvider, Heading, VStack } from "@chakra-ui/react";
@@ -29,26 +31,9 @@ export enum ViewPage {
   ADMIN = "/admin_view",
 }
 
-enum Tricky {
-  CARD = "/card_view",
-  TABLE = "/table_viewadsdas",
-  ADMIN = "/admin_view",
-}
-
-enum Num {
-  C = "D'",
-  A = 0,
-  B = 1,
-  D = "C'",
-}
-
 const DEFAULT_VIEW = ViewPage.CARD;
 
-export const VIEW_PAGE_INDEX = {
-  [ViewPage.CARD]: 0,
-  [ViewPage.TABLE]: 1,
-  [ViewPage.ADMIN]: 2,
-};
+export const VIEW_PAGE_INDEX = enumIndex(ViewPage);
 
 export type AuthToken = {
   token: string;
@@ -77,9 +62,9 @@ const App = () => {
           />
           {enumVals(ViewPage).map((page, i) => (
             <Route
-              id={`${i}`}
+              key={i}
               path={STATS_PATH + page}
-              element={<MainView default={page} />}
+              element={<MainView setAuth={setAuth} default={page} />}
             />
           ))}
         </Routes>

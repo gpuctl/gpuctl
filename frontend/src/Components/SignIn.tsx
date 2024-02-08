@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { API_URL } from "../App";
+import { API_URL, AUTH_TOKEN_ITEM, AuthToken } from "../App";
 import {
   Validated,
   failure,
@@ -20,11 +20,6 @@ import {
 } from "@chakra-ui/react";
 
 const AUTH_PATH = "/auth";
-const AUTH_TOKEN_ITEM = "authToken";
-
-type AuthToken = {
-  token: string;
-};
 
 const DEBUG_AUTH = true;
 const DEBUG_USER = "NathanielB";
@@ -55,15 +50,11 @@ const requestSignIn = async (
   return failure(Error("Authentication Failed for an Unknown Reason!"));
 };
 
-const tryGetAuthToken = (): Validated<AuthToken> => {
-  const token = localStorage.getItem(AUTH_TOKEN_ITEM);
-  return token == null ? failure(Error("No token :(")) : success({ token });
-};
-
-export const SignIn = () => {
-  const [authToken, setAuth] =
-    useState<Validated<AuthToken>>(tryGetAuthToken());
-
+export const SignIn = ({
+  setAuth,
+}: {
+  setAuth: (tok: Validated<AuthToken>) => void;
+}) => {
   const updateAuth = (tok: AuthToken) => {
     localStorage.setItem(AUTH_TOKEN_ITEM, tok.token);
     setAuth(success(tok));

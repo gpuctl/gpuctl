@@ -1,4 +1,3 @@
-import { EnumType } from "typescript";
 import { GPUStats } from "../Data";
 
 /** Create an array of numbers that span between a given minimum and maximum */
@@ -29,12 +28,20 @@ export const inlineLog = <T,>(x: T): T => {
 export const mapNullable = <T, U>(x: T | null, f: (x: T) => U): U | null =>
   x == null ? null : f(x);
 
-export const enumVals = <E extends { [key: string]: string | number }>(dict: {
-  [T in keyof E]: E[T];
-}): E[keyof E][] =>
+export type EnumDict = { [key: string]: string | number };
+export type EnumType<E extends EnumDict> = E[Exclude<keyof E, number>];
+
+export const enumVals = <E extends EnumDict>(dict: E): EnumType<E>[] =>
   Object.values(dict).filter(
     (val) => typeof val === "number" || typeof dict[val] !== "number",
-  );
+  ) as EnumType<E>[];
+
+export const enumIndex = <E extends EnumDict>(
+  dict: E,
+): { [K in EnumType<E>]: number } =>
+  Object.fromEntries(enumVals(dict).map((val, i) => [val, i])) as {
+    [K in EnumType<E>]: number;
+  };
 
 enum VTag {
   Success = "Success",
