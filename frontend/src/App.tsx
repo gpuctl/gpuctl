@@ -10,6 +10,7 @@ import {
   enumVals,
   enumIndex,
   EnumType,
+  isSuccess,
 } from "./Utils/Utils";
 import { WorkstationCardMin } from "./Components/WorkstationCardMinimal";
 import { Box, ChakraProvider, Heading, VStack } from "@chakra-ui/react";
@@ -65,11 +66,15 @@ const App = () => {
               key={i}
               path={STATS_PATH + page}
               element={
-                <MainView
-                  authToken={authToken}
-                  setAuth={setAuth}
-                  default={page}
-                />
+                page === ViewPage.ADMIN && !isSuccess(authToken) ? (
+                  <Navigate to={STATS_PATH + DEFAULT_VIEW} replace />
+                ) : (
+                  <MainView
+                    authToken={authToken}
+                    setAuth={setAuth}
+                    default={page}
+                  />
+                )
               }
             />
           ))}
