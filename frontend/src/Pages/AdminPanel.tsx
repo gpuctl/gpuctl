@@ -87,8 +87,13 @@ export const AdminPanel = ({
         <Input
           w="50%"
           placeholder="Hostname (e.g. mira05.doc.ic.ac.uk)"
+          onChange={(e) => setHostname(e.target.value)}
         ></Input>
-        <Input w="45%" placeholder="Group Name (e.g. shared)"></Input>
+        <Input
+          w="45%"
+          placeholder="Group Name (e.g. shared)"
+          onChange={(e) => setGroup(e.target.value)}
+        ></Input>
         <Button
           w="5%"
           onClick={() => {

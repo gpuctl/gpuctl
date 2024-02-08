@@ -64,10 +64,19 @@ type OldGPUStatSample struct {
 	MaxMemoryClock    float64 `json:"max_memory_clock"`   // Mhz
 }
 
-type MachineMove struct{}
-
-type MachineAddInfo struct{}
-
 type OnboardReq struct {
 	Hostname string `json:"hostname"`
+}
+
+type AddMachineInfo struct {
+	Hostname string `json:"hostname"`
+	Group    string `json:"group"`
+}
+
+type ModifyInfo struct {
+	Hostname    string  `json:"hostname"`
+	Cpu         *string `json:"cpu"`
+	Motherboard *string `json:"motherboard"`
+	Notes       *string `json:"notes"`
+	Group       *string `json:"group"`
 }

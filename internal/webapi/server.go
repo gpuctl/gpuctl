@@ -51,9 +51,8 @@ func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals
 	})
 
 	// Authenticated API endpoints
-	femto.OnPost(mux, "/api/admin/add_workstation", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.moveMachineGroup)))
-	femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addMachineInfo)))
-	femto.OnPost(mux, "/api/onboard", femto.AuthWrapPost(auth, femto.WrapPostFunc[OnboardReq](api.onboard)))
+	femto.OnPost(mux, "/api/admin/add_workstation", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addMachine)))
+	femto.OnPost(mux, "/api/admin/stats/modify", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.modifyMachineInfo)))
 
 	return &Server{mux, api}
 }
@@ -108,14 +107,14 @@ func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet 
 }
 
 // TODO
-func (a *api) moveMachineGroup(move MachineMove, r *http.Request, l *slog.Logger) error {
-	l.Info("Accessed moveMachineGroup")
-	return nil
+func (a *api) addMachine(add AddMachineInfo, r *http.Request, l *slog.Logger) error {
+	return a.onboard(OnboardReq{add.Hostname}, r, l)
 }
 
 // TODO
-func (a *api) addMachineInfo(info MachineAddInfo, r *http.Request, l *slog.Logger) error {
-	l.Info("Accessed addMachineInfo")
+func (a *api) modifyMachineInfo(info ModifyInfo, r *http.Request, l *slog.Logger) error {
+	l.Info("Accessed modify machine info")
+	l.Info("Modification: ", "Hostname: ", *&info.Hostname)
 	return nil
 }
 
