@@ -8,6 +8,7 @@ import { WorkstationCardMin } from "../Components/WorkstationCardMinimal";
 import { Navbar } from "../Components/Navbar";
 import { useJarJar, useOnce } from "../Utils/Hooks";
 import { useParams } from "react-router-dom";
+import { AdminPanel } from "./AdminPanel";
 
 const API_ALL_STATS_PATH = "/api/stats/all";
 
@@ -66,6 +67,9 @@ const cardView = (stats: WorkStationGroup[]) => (
 const tableView = (stats: WorkStationGroup[]) => (
   <TableTab groups={stats}></TableTab>
 );
+
+const adminView = (stats: WorkStationGroup[]) => <AdminPanel></AdminPanel>;
+
 const displayPartial = (
   stats: Validation<WorkStationGroup[]>,
   cont: (gs: WorkStationGroup[]) => JSX.Element,
@@ -78,6 +82,7 @@ const displayPartial = (
 
 export const MainView = (props: {
   default: ViewPage;
+  authToken: Validated<AuthToken>;
   setAuth: (tok: Validated<AuthToken>) => void;
 }) => {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
@@ -87,9 +92,14 @@ export const MainView = (props: {
   });
 
   return (
-    <Navbar initial={props.default} setAuth={props.setAuth}>
+    <Navbar
+      initial={props.default}
+      authToken={props.authToken}
+      setAuth={props.setAuth}
+    >
       {displayPartial(stats, cardView)}
       {displayPartial(stats, tableView)}
+      {displayPartial(stats, adminView)}
     </Navbar>
   );
 };

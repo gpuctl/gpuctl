@@ -20,21 +20,23 @@ import { useNavigate } from "react-router-dom";
 import { STATS_PATH } from "../Config/Paths";
 import { AuthToken, VIEW_PAGE_INDEX, ViewPage } from "../App";
 import { SignIn } from "./SignIn";
-import { Validated } from "../Utils/Utils";
+import { Validated, isSuccess } from "../Utils/Utils";
 
 const URLS = [
   `${STATS_PATH}/card_view`,
   `${STATS_PATH}/table_view`,
-  "/admin_panel",
+  `${STATS_PATH}/admin_view`,
 ];
 
 export const Navbar = ({
   children,
   setAuth,
+  authToken,
   initial,
 }: {
   children: ReactNode[];
   setAuth: (tok: Validated<AuthToken>) => void;
+  authToken: Validated<AuthToken>;
   initial: ViewPage;
 }) => {
   const nav = useNavigate();
@@ -50,7 +52,7 @@ export const Navbar = ({
       <TabList>
         <Tab>Card View</Tab>
         <Tab>Table View</Tab>
-        <Tab isDisabled>Admin Panel</Tab>
+        <Tab isDisabled={!isSuccess(authToken)}>Admin Panel</Tab>
         <Spacer />
         <Popover>
           <PopoverTrigger>

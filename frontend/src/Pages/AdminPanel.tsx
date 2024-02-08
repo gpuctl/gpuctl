@@ -30,4 +30,5 @@ const modifyInfo = (hostname: string, column: string, data: string) => {
 
 export const AdminPanel = () => {
   // TODO
+  return <></>;
 };
