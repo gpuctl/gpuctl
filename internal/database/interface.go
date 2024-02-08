@@ -1,6 +1,7 @@
 package database
 
 import (
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
@@ -18,6 +19,10 @@ type Database interface {
 
 	// get the latest metrics for all approved machines
 	LatestData() ([]uplink.GpuStatsUpload, error)
+
+	// create and modify machines in the database
+	NewMachine(machine broadcast.NewMachine) error
+	UpdateMachine(changes broadcast.ModifyMachine) error
 
 	// Drop all tables and data in the db and close the connection
 	Drop() error
