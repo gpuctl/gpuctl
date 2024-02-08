@@ -8,6 +8,9 @@ export type WorkStationGroup = {
 
 export type WorkStationData = {
   name: string;
+  cpu : string;
+  motherboard: string;
+  notes: string;
   gpus: GPUStats[];
 };
 
@@ -31,6 +34,9 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
     workStations: [
       {
         name: "Workstation 1",
+        cpu: "i7-7700k",
+        motherboard: "ASUS ROG STRIX Z790-A",
+        notes: "noisy fan",
         gpus: [
           {
             gpu_name: "NVIDIA GeForce GT 1030",
@@ -47,6 +53,9 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
       },
       {
         name: "Workstation 2",
+        cpu: "Ryzen 5800X",
+        motherboard: "Z790 AORUS XTREME X",
+        notes: "",
         gpus: [
           {
             gpu_name: "NVIDIA TITAN Xp",
@@ -74,6 +83,9 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
       },
       {
         name: "Workstation 3",
+        cpu: "Intel Pentium 2",
+        motherboard: "Acer Veriton M4630G MT",
+        notes: "scheduled for replacement 2024",
         gpus: [
           {
             gpu_name: "NVIDIA GeForce GT 730",
@@ -90,6 +102,9 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
       },
       {
         name: "Workstation 5",
+        cpu: "Tesla DOJO",
+        motherboard: "",
+        notes: "We don't particularly like this one, but it always works and we can't really bin it",
         gpus: [
           {
             gpu_name: "NVIDIA TITAN Xp",
@@ -117,6 +132,9 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
       },
       {
         name: "Workstation 4",
+        cpu: "AMD Z1 Extreme",
+        motherboard: "Ticket to Ride: Europe",
+        notes: "Please don't use this unless you absolutely have to",
         gpus: [
           {
             gpu_name: "NVIDIA GeForce GT 1030",
@@ -134,6 +152,9 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
 
       {
         name: "Workstation 6",
+        cpu: "AMD 4800S",
+        motherboard: "AMD 4800S Desktop Kit",
+        notes: "",
         gpus: [
           {
             gpu_name: "NVIDIA GeForce GT 730",
