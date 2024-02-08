@@ -10,7 +10,7 @@ import (
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
-func (gs *groundstation) gpustats(data uplink.GpuStatsUpload, req *http.Request, log *slog.Logger) (*femto.HTTPResponseContent[types.Unit], error) {
+func (gs *groundstation) gpustats(data uplink.GpuStatsUpload, req *http.Request, log *slog.Logger) (*femto.Response[types.Unit], error) {
 	log.Info("Got GPU stats", "stats", data.Stats)
 
 	err := gs.db.UpdateLastSeen(data.Hostname, time.Now().Unix())
@@ -32,7 +32,9 @@ func (gs *groundstation) gpustats(data uplink.GpuStatsUpload, req *http.Request,
 		}
 	}
 
-	return &femto.HTTPResponseContent[types.Unit]{}, nil
+	response := femto.Ok[types.Unit](types.Unit{})
+
+	return &response, nil
 }
 
 func (gs *groundstation) handleGPUInfo(host string, infos []uplink.GPUInfo) error {

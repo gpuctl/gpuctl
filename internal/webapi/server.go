@@ -27,7 +27,10 @@ type APIAuthCredientals struct {
 }
 
 // ! Key change
-const cookieFormat = "token=%s; Path=/; HttpOnly; Secure; SameSite=Strict"
+
+func makeAuthCookie(token string) string {
+	return fmt.Sprintf("token=%s; Path=/; HttpOnly; Secure; SameSite=Strict", token)
+}
 
 func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals]) *Server {
 	mux := new(femto.Femto)
@@ -37,7 +40,7 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
 
 	// Set up authentication endpoint
-	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.HTTPResponseContent[types.Unit], error) {
+	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.Response[types.Unit], error) {
 		return api.Authenticate(auth, packet, r, l)
 	})
 
@@ -55,7 +58,7 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // This function involves a lot of weird unwrapping
 // TODO: See if we can get the database layer to do it for us
-func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.HTTPResponseContent[workstations], error) {
+func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.Response[workstations], error) {
 	data, err := a.DB.LatestData()
 
 	if err != nil {
@@ -84,10 +87,11 @@ func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.HTTPRespons
 	}
 
 	result := []workstationGroup{{Name: "Shared", WorkStations: ws}}
-	return &femto.HTTPResponseContent[workstations]{Body: result}, nil
+	response := femto.Ok[workstations](result)
+	return &response, nil
 }
 
-func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.HTTPResponseContent[types.Unit], error) {
+func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.Response[types.Unit], error) {
 	// Check if credientals are correct
 	token, err := auth.CreateToken(packet)
 
@@ -96,8 +100,8 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 	}
 
 	headers := make(map[string]string)
-	headers["Set-Cookie"] = fmt.Sprintf(cookieFormat, token)
-	return &femto.HTTPResponseContent[types.Unit]{Headers: headers}, nil
+	headers["Set-Cookie"] = makeAuthCookie(token)
+	return &femto.Response[types.Unit]{Headers: headers, Status: http.StatusAccepted}, nil
 }
 
 // TODO
