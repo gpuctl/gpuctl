@@ -18,8 +18,9 @@ import {
 import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { STATS_PATH } from "../Config/Paths";
-import { VIEW_PAGE_INDEX, ViewPage } from "../App";
+import { AuthToken, VIEW_PAGE_INDEX, ViewPage } from "../App";
 import { SignIn } from "./SignIn";
+import { Validated } from "../Utils/Utils";
 
 const URLS = [
   `${STATS_PATH}/card_view`,
@@ -29,9 +30,11 @@ const URLS = [
 
 export const Navbar = ({
   children,
+  setAuth,
   initial,
 }: {
   children: ReactNode[];
+  setAuth: (tok: Validated<AuthToken>) => void;
   initial: ViewPage;
 }) => {
   const nav = useNavigate();
@@ -56,7 +59,7 @@ export const Navbar = ({
           <PopoverContent w="100%">
             <PopoverArrow />
             <PopoverCloseButton />
-            <SignIn />
+            <SignIn setAuth={setAuth} />
           </PopoverContent>
         </Popover>
       </TabList>

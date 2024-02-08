@@ -1,5 +1,5 @@
 import { Box, Heading, VStack } from "@chakra-ui/react";
-import { API_URL, REFRESH_INTERVAL, ViewPage } from "../App";
+import { API_URL, AuthToken, REFRESH_INTERVAL, ViewPage } from "../App";
 import { WorkStationGroup } from "../Data";
 import { Validated, Validation, success, validationElim } from "../Utils/Utils";
 import { ColumnGrid } from "../Components/ColumnGrid";
@@ -76,7 +76,10 @@ const displayPartial = (
     failure: (_) => <p>Something has gone wrong!</p>,
   });
 
-export const MainView = (props: { default: ViewPage }) => {
+export const MainView = (props: {
+  default: ViewPage;
+  setAuth: (tok: Validated<AuthToken>) => void;
+}) => {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
 
   useOnce(() => {
@@ -84,7 +87,7 @@ export const MainView = (props: { default: ViewPage }) => {
   });
 
   return (
-    <Navbar initial={props.default}>
+    <Navbar initial={props.default} setAuth={props.setAuth}>
       {displayPartial(stats, cardView)}
       {displayPartial(stats, tableView)}
     </Navbar>
