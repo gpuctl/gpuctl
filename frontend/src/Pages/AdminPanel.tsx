@@ -1,9 +1,19 @@
 import { Input } from "@chakra-ui/input";
 import { API_URL, AuthToken } from "../App";
+import {
+  Table,
+  TableContainer,
+  Tbody,
+  Td,
+  Th,
+  Thead,
+  Tr,
+} from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
 import { Box, Center, HStack, Heading, VStack } from "@chakra-ui/layout";
 import { Button } from "@chakra-ui/button";
 import { useState } from "react";
+import { WorkStationGroup } from "../Data";
 
 export const ADMIN_PATH = "/admin";
 const ADD_MACHINE_URL = "/add_workstation";
@@ -47,7 +57,13 @@ const modifyInfo = (hostname: string, mod: ModifyData) => {
   });
 };
 
-export const AdminPanel = ({ token }: { token: AuthToken }) => {
+export const AdminPanel = ({
+  token,
+  stats,
+}: {
+  token: AuthToken;
+  stats: WorkStationGroup[];
+}) => {
   const [hostname, setHostname] = useState("");
   const [group, setGroup] = useState("");
 
@@ -72,6 +88,14 @@ export const AdminPanel = ({ token }: { token: AuthToken }) => {
           Add
         </Button>
       </HStack>
+      <TableContainer>
+        <Table variant="striped">
+          <Thead>
+            <Tr></Tr>
+          </Thead>
+          <Tbody key={1}></Tbody>
+        </Table>
+      </TableContainer>
     </VStack>
   );
 };

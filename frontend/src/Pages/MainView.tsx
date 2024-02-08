@@ -75,7 +75,7 @@ const tableView = (stats: WorkStationGroup[]) => (
 );
 
 const adminView = (stats: WorkStationGroup[], token: AuthToken) => (
-  <AdminPanel token={token}></AdminPanel>
+  <AdminPanel stats={stats} token={token}></AdminPanel>
 );
 
 const displayPartial = (
