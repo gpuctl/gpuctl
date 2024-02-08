@@ -101,5 +101,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: cp ./secrets/keys.example ./secrets/keys
-      - run: docker compose build
+      - run: cp ./deploy/.env.example ./deploy/.env
+      - run: docker compose -f ./deploy/compose.yaml build --parallel

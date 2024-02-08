@@ -1,4 +1,4 @@
-FROM golang:1.21
+FROM docker.io/golang:1.21
 
 WORKDIR /gpuctl
 COPY go.mod go.sum ./
@@ -10,6 +10,6 @@ COPY Makefile Makefile
 
 RUN make control
 
-COPY control.toml.default ./control.toml
+COPY ./deploy/control.prod.toml ./control.toml
 
 ENTRYPOINT ["./control"]
