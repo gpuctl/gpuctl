@@ -40,6 +40,9 @@ func main() {
 	go func() {
 		errs <- http.ListenAndServe(wa_port, wa)
 	}()
+	go func() {
+		errs <- database.DownsampleOverTime(conf.Database.DownsampleInterval, db)
+	}()
 
 	slog.Info("started servers")
 	err = <-errs

@@ -22,6 +22,9 @@ type Database interface {
 	// get last seen online metric for all machines
 	LastSeen() ([]uplink.WorkstationSeen, error)
 
+	// downsample since certain unix time
+	Downsample(time int64) error
+
 	// Drop all tables and data in the db and close the connection
 	Drop() error
 }

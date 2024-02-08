@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
@@ -131,6 +132,95 @@ func (m *inMemory) LastSeen() ([]uplink.WorkstationSeen, error) {
 	}
 
 	return seen, nil
+}
+
+func (m *inMemory) Downsample(given_time int64) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	now := time.Now()
+	sixMonthsAgo := now.AddDate(0, -6, 0).Unix()
+
+	var tempSamples []uplink.GPUStatSample
+
+	for uuid, sample := range m.stats {
+		if sample.Time < sixMonthsAgo {
+			tempSamples = append(tempSamples, sample)
+
+			if len(tempSamples) == 100 {
+				averagedSample := calculateAverage(tempSamples)
+
+				for s := range tempSamples {
+					delete(m.stats, tempSamples[s].Uuid)
+				}
+				m.stats[uuid] = averagedSample
+
+				tempSamples = []uplink.GPUStatSample{}
+			}
+		}
+
+	}
+
+	return nil
+}
+
+func calculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
+	if len(samples) == 0 {
+		return uplink.GPUStatSample{}
+	}
+
+	var sumMemoryUtil, sumGPUUtil, sumMemoryUsed, sumFanSpeed, sumTemp, sumMemoryTemp, sumGraphicsVoltage, sumPowerDraw, sumGraphicsClock, sumMaxGraphicsClock, sumMemoryClock, sumMaxMemoryClock float64
+	minTime := samples[0].Time
+	processesMap := make(map[uint64]uplink.GPUProcInfo)
+
+	for _, sample := range samples {
+		sumMemoryUtil += sample.MemoryUtilisation
+		sumGPUUtil += sample.GPUUtilisation
+		sumMemoryUsed += sample.MemoryUsed
+		sumFanSpeed += sample.FanSpeed
+		sumTemp += sample.Temp
+		sumMemoryTemp += sample.MemoryTemp
+		sumGraphicsVoltage += sample.GraphicsVoltage
+		sumPowerDraw += sample.PowerDraw
+		sumGraphicsClock += sample.GraphicsClock
+		sumMaxGraphicsClock += sample.MaxGraphicsClock
+		sumMemoryClock += sample.MemoryClock
+		sumMaxMemoryClock += sample.MaxMemoryClock
+
+		// Check for minimum time
+		if sample.Time < minTime {
+			minTime = sample.Time
+		}
+
+		// Aggregate processes
+		for _, proc := range sample.RunningProcesses {
+			processesMap[proc.Pid] = proc
+		}
+	}
+
+	n := float64(len(samples))
+	aggregatedProcesses := make([]uplink.GPUProcInfo, 0, len(processesMap))
+	for _, proc := range processesMap {
+		aggregatedProcesses = append(aggregatedProcesses, proc)
+	}
+
+	return uplink.GPUStatSample{
+		Uuid:              samples[0].Uuid,
+		MemoryUtilisation: sumMemoryUtil / n,
+		GPUUtilisation:    sumGPUUtil / n,
+		MemoryUsed:        sumMemoryUsed / n,
+		FanSpeed:          sumFanSpeed / n,
+		Temp:              sumTemp / n,
+		MemoryTemp:        sumMemoryTemp / n,
+		GraphicsVoltage:   sumGraphicsVoltage / n,
+		PowerDraw:         sumPowerDraw / n,
+		GraphicsClock:     sumGraphicsClock / n,
+		MaxGraphicsClock:  sumMaxGraphicsClock / n,
+		MemoryClock:       sumMemoryClock / n,
+		MaxMemoryClock:    sumMaxMemoryClock / n,
+		Time:              minTime,
+		RunningProcesses:  aggregatedProcesses,
+	}
 }
 
 func (m *inMemory) Drop() error {
