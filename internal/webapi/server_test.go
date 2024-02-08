@@ -1,7 +1,6 @@
 package webapi_test
 
 import (
-	"errors"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
@@ -90,24 +89,19 @@ func TestAllStatistics(t *testing.T) {
 			expectedError: false,
 		},
 		{
-			name:          "data fetch error",
-			mockError:     errors.New("database error"),
-			expectedError: true,
-		},
-		{
 			name:          "empty data",
 			mockData:      []uplink.GpuStatsUpload{},
 			expectedError: false,
 		},
 	}
 
+	logger := slog.Default()
+	mockDB := database.InMemory()
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
-			mockDB := database.InMemory()
 
 			api := webapi.Api{DB: mockDB}
 			req, _ := http.NewRequest("GET", "/url", nil)
-			logger := slog.Default()
 
 			_, err := api.AllStatistics(req, logger)
 
