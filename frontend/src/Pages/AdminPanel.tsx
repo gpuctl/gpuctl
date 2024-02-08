@@ -1,6 +1,10 @@
 import { Input } from "@chakra-ui/input";
 import { API_URL, AuthToken } from "../App";
 import {
+  Editable,
+  EditableInput,
+  EditableTextarea,
+  EditablePreview,
   Table,
   TableContainer,
   Tbody,
@@ -59,10 +63,10 @@ const modifyInfo = (hostname: string, mod: ModifyData) => {
 
 export const AdminPanel = ({
   token,
-  stats,
+  groups,
 }: {
   token: AuthToken;
-  stats: WorkStationGroup[];
+  groups: WorkStationGroup[];
 }) => {
   const [hostname, setHostname] = useState("");
   const [group, setGroup] = useState("");
@@ -91,9 +95,30 @@ export const AdminPanel = ({
       <TableContainer>
         <Table variant="striped">
           <Thead>
-            <Tr></Tr>
+            <Tr>
+              <Th key={0}> Hostname </Th>
+              <Th key={1}> Group </Th>
+              <Th key={2}> CPU </Th>
+              <Th key={3}> Motherboard </Th>
+              <Th key={4}> Notes </Th>
+            </Tr>
           </Thead>
-          <Tbody key={1}></Tbody>
+          <Tbody>
+            {groups.map(({ name, workStations }, i) => {
+              return workStations.map((workStation, j) => {
+                const id = (i * j + j) * 5;
+                return (
+                  <Tr key={id}>
+                    <Th key={id}> {workStation.name} </Th>
+                    <Th key={id + 1}> {name} </Th>
+                    <Th key={id + 2}> {workStation.cpu} </Th>
+                    <Th key={id + 3}> {workStation.motherboard} </Th>
+                    <Th key={id + 4}> {workStation.notes} </Th>
+                  </Tr>
+                );
+              });
+            })}
+          </Tbody>
         </Table>
       </TableContainer>
     </VStack>
