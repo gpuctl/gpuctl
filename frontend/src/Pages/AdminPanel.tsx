@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import { Input } from "@chakra-ui/input";
 import { API_URL, AuthToken } from "../App";
 import {
@@ -5,6 +6,9 @@ import {
   EditableInput,
   EditableTextarea,
   EditablePreview,
+=======
+import {
+>>>>>>> 52da1cd (Add cpu, motherboard, and notes to WorkstationStats)
   Table,
   TableContainer,
   Tbody,
@@ -14,6 +18,10 @@ import {
   Tr,
 } from "@chakra-ui/react";
 import { WorkStationGroup } from "../Data";
+<<<<<<< HEAD
+=======
+import { API_URL } from "../App";
+>>>>>>> 52da1cd (Add cpu, motherboard, and notes to WorkstationStats)
 import { STATS_PATH } from "../Config/Paths";
 import { Box, Center, HStack, Heading, VStack } from "@chakra-ui/layout";
 import { Button } from "@chakra-ui/button";
