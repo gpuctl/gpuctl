@@ -14,10 +14,10 @@ type NewMachine struct {
 
 type ModifyMachine struct {
 	Hostname    string `json:"hostname"`
-	CPU         string `json:"cpu"`         // nullable - means no change
-	Motherboard string `json:"motherboard"` // nullable - means no change
-	Notes       string `json:"notes"`       // nullable - means no change
-	Group       string `json:"group"`       // nullable - means no change
+	CPU         *string `json:"cpu"`         // nullable - means no change
+	Motherboard *string `json:"motherboard"` // nullable - means no change
+	Notes       *string `json:"notes"`       // nullable - means no change
+	Group       *string `json:"group"`       // nullable - means no change
 }
 
 type Workstations []WorkstationGroup
