@@ -12,6 +12,7 @@ func TestGetClientConfiguration_ValidConfig(t *testing.T) {
 	t.Parallel()
 	content := `
 [groundstation]
+protocol = "http"
 hostname = "local.groundstation"
 port = 8081
 
@@ -26,6 +27,7 @@ heartbeat_interval = 5`
 
 	config, err := config.GetClientConfiguration(filename)
 	assert.NoError(t, err)
+	assert.Equal(t, "http", config.Groundstation.Protocol)
 	assert.Equal(t, "local.groundstation", config.Groundstation.Hostname)
 	assert.Equal(t, 8081, config.Groundstation.Port)
 	assert.Equal(t, "/tmp/satellite", config.Satellite.Cache)
@@ -44,6 +46,7 @@ func TestGetClientConfiguration_DefaultConfig(t *testing.T) {
 
 	config, err := config.GetClientConfiguration(filename)
 	assert.NoError(t, err)
+	assert.Equal(t, "http", config.Groundstation.Protocol)
 	assert.Equal(t, "localhost", config.Groundstation.Hostname)
 	assert.Equal(t, 8080, config.Groundstation.Port)
 

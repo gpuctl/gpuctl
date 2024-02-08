@@ -1,6 +1,7 @@
 package config
 
 type Groundstation struct {
+	Protocol string `toml:"protocol"`
 	Hostname string `toml:"hostname"`
 	Port     int    `toml:"port"`
 }
@@ -20,6 +21,7 @@ type SatelliteConfiguration struct {
 func DefaultSatelliteConfiguration() SatelliteConfiguration {
 	return SatelliteConfiguration{
 		Groundstation: Groundstation{
+			Protocol: "http",
 			Hostname: "localhost",
 			Port:     8080,
 		},
