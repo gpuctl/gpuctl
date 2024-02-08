@@ -48,6 +48,7 @@ func correctMethod(method string, req *http.Request, w http.ResponseWriter, log 
 
 		w.Header().Set("Allow", method)
 		w.Header().Set("Access-Control-Allow-Methods", method)
+		w.Header().Set("Access-Control-Request-Headers", "Authorization, Content-Type")
 		w.WriteHeader(http.StatusNoContent)
 		return false
 	default:
