@@ -11,9 +11,16 @@ https://gpuctl.perial.co.uk {
 
 		X-Clacks-Overhead "GNU Terry Pratchett"
 
-		# TODO: allow the API to be accessed from other endpoints
-		# This will need CSRF protection
+		# When serving under the webapi, we only want API requests
+		# from our own origin. So remove the CORS headers that are
+		# to allow cross-origin for local-dev
+
+		# If we want to allow cross-origin api requests, we need
+		# to think carefully about CSRF, but we don't need that for
+		# non-browser stuff, so it's fine.
 		-Access-Control-Allow-Origin
+		-Access-Control-Allow-Methods
+		-Access-Control-Request-Headers
 	}
 
 	# For api routes, we can lock down the CSP even further
