@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -32,20 +33,30 @@ func main() {
 	gsPort := config.PortToAddress(conf.Server.GSPort)
 
 	var signer ssh.Signer
-	// We want to allow the server to run even without an SSH key,
-	// for local development.
-	if conf.Onboard.KeyPath != "" {
-		key, err := os.ReadFile(conf.Onboard.KeyPath)
+	var key []byte
+
+	if conf.Onboard.KeyPath == "" {
+		key64 := os.Getenv("GPU_SSH_KEY")
+		key, err = base64.StdEncoding.DecodeString(key64)
+		if err != nil {
+			fatal("failed to decode base64 key: " + err.Error())
+		}
+	} else {
+		key, err = os.ReadFile(conf.Onboard.KeyPath)
 		if err != nil {
 			fatal("failed to read key file: " + err.Error())
 		}
+	}
 
+	if len(key) != 0 {
 		signer, err = ssh.ParsePrivateKey(key)
 		if err != nil {
-			fatal(fmt.Sprintf("Unable to parse key file %s: %v", conf.Onboard.KeyPath, err))
+			fatal(fmt.Sprintf("Unable to parse key: %v", err))
 		}
 	} else {
-		log.Warn("No key path given, will not be able to handle onboard requests")
+		// We want to allow the server to run even without an SSH key,
+		// for local development.
+		log.Warn("No SSH key given, will not be able to handle onboard requests")
 	}
 
 	authenticator := webapi.AuthenticatorFromConfig(conf)

@@ -7,7 +7,6 @@ postgres = true
 url = "postgres://postgres@postgres/postgres"
 
 [Onboard]
-keyfile = "/root/.ssh/id_ed25519"
 datadir = "/data/gpuctl"
 username = "dcg20"
 
