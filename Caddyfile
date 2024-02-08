@@ -19,7 +19,7 @@ https://gpuctl.perial.co.uk {
 	# For api routes, we can lock down the CSP even further
 	# https://infosec.mozilla.org/guidelines/web_security#content-security-policy
 	header /gs-api/* Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
-	header /api/*    Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+	header /api/* Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
 
 	# forward groundstation and web-api requests to control
 	# should match ports set in ./control.toml.default
