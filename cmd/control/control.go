@@ -43,6 +43,9 @@ func main() {
 	go func() {
 		errs <- database.DownsampleOverTime(conf.Database.DownsampleInterval, db)
 	}()
+	go func() {
+		errs <- database.MonitorForDeadMachines(conf.Server.MonitorInterval, db, conf.Server.DeathTimeout, log)
+	}()
 
 	slog.Info("started servers")
 	err = <-errs

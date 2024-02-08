@@ -1,15 +1,17 @@
 package config
 
 type Server struct {
-	GSPort int `toml:"groundstation_port"`
-	WAPort int `toml:"webapi_port"`
+	GSPort          int `toml:"groundstation_port"`
+	WAPort          int `toml:"webapi_port"`
+	DeathTimeout    int `toml:"death_timeout"`
+	MonitorInterval int `toml:"monitor_interval"`
 }
 
 type Database struct {
 	InMemory           bool   `toml:"inmemory"`
 	Postgres           bool   `toml:"postgres"`
 	PostgresUrl        string `toml:"url"`
-	DownsampleInterval int    `toml:"downsample_interval`
+	DownsampleInterval int    `toml:"downsample_interval"`
 }
 
 type AuthConfig struct {
