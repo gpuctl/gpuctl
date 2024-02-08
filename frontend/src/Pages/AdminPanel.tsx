@@ -8,8 +8,12 @@ import { useState } from "react";
 export const ADMIN_PATH = "/admin";
 const ADD_MACHINE_URL = "/add_workstation";
 
-const addMachine = (hostname: string, group: string, token: AuthToken) => {
-  fetch(API_URL + ADMIN_PATH + ADD_MACHINE_URL, {
+const addMachine = async (
+  hostname: string,
+  group: string,
+  token: AuthToken,
+) => {
+  const resp = await fetch(API_URL + ADMIN_PATH + ADD_MACHINE_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -17,6 +21,13 @@ const addMachine = (hostname: string, group: string, token: AuthToken) => {
     },
     body: JSON.stringify({ hostname, group }),
   });
+  if (resp.ok) {
+    console.log("Success!");
+  } else if (resp.status === 401) {
+    console.log("Auth Error!");
+  } else {
+    console.log("Unknown Error!");
+  }
   // We should probably await the response to give feedback on whether adding
   // the machine was successful...
 };

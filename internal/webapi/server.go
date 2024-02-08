@@ -81,7 +81,7 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 }
 
 type authResponse struct {
-	token string
+	Token string `json:"token"`
 }
 
 func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (authResponse, error) {
