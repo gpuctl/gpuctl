@@ -119,9 +119,6 @@ func TestGetHappyPath(t *testing.T) {
 	assert.JSONEq(t, `{"X": 101}`, string(j))
 }
 
-type unit = struct{}
-type other_unit = struct{}
-
 func TestGetWrongMethod(t *testing.T) {
 	t.Parallel()
 
