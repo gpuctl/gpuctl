@@ -4,8 +4,8 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/config"
-	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 	"github.com/stretchr/testify/assert"
 )
@@ -20,7 +20,7 @@ func TestConfigFileAuthenticatorRace(t *testing.T) {
 	auth := webapi.ConfigFileAuthenticator{
 		Username:      "joe",
 		Password:      "mama",
-		CurrentTokens: make(map[femto.AuthToken]bool),
+		CurrentTokens: make(map[authentication.AuthToken]bool),
 	}
 
 	for i := 0; i < toSpawn; i++ {

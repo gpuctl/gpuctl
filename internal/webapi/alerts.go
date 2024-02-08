@@ -3,10 +3,12 @@ package webapi
 import (
 	"log/slog"
 	"net/http"
+
+	"github.com/gpuctl/gpuctl/internal/femto"
 )
 
-func (wa *api) HandleOfflineMachineRequest(req *http.Request, log *slog.Logger) ([]string, error) {
-	machine_data, err := wa.db.LastSeen()
+func (wa *Api) HandleOfflineMachineRequest(req *http.Request, log *slog.Logger) (*femto.Response[[]string], error) {
+	machine_data, err := wa.DB.LastSeen()
 
 	if err != nil {
 		return nil, err
@@ -18,5 +20,6 @@ func (wa *api) HandleOfflineMachineRequest(req *http.Request, log *slog.Logger) 
 		names = append(names, machine_data[idx].Hostname)
 	}
 
-	return names, nil
+	response := femto.Ok(names)
+	return &response, nil
 }

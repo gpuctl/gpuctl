@@ -4,14 +4,14 @@ import (
 	"sync"
 
 	"github.com/google/uuid"
+	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/config"
-	"github.com/gpuctl/gpuctl/internal/femto"
 )
 
 type ConfigFileAuthenticator struct {
 	Username      string
 	Password      string
-	CurrentTokens map[femto.AuthToken]bool
+	CurrentTokens map[authentication.AuthToken]bool
 	mu            sync.Mutex
 }
 
@@ -19,11 +19,11 @@ func AuthenticatorFromConfig(config config.ControlConfiguration) ConfigFileAuthe
 	return ConfigFileAuthenticator{
 		Username:      config.Auth.Username,
 		Password:      config.Auth.Password,
-		CurrentTokens: make(map[femto.AuthToken]bool),
+		CurrentTokens: make(map[authentication.AuthToken]bool),
 	}
 }
 
-func (auth *ConfigFileAuthenticator) CreateToken(packet APIAuthCredientals) (femto.AuthToken, error) {
+func (auth *ConfigFileAuthenticator) CreateToken(packet APIAuthCredientals) (authentication.AuthToken, error) {
 	username := packet.Username
 	password := packet.Password
 
@@ -32,14 +32,14 @@ func (auth *ConfigFileAuthenticator) CreateToken(packet APIAuthCredientals) (fem
 
 	// TODO write a proper authentication thingy
 	if username != auth.Username || password != auth.Password {
-		return "", femto.InvalidCredientalsError
+		return "", authentication.InvalidCredientalsError
 	}
 	token := uuid.New().String()
 	auth.CurrentTokens[token] = true
 	return token, nil
 }
 
-func (auth *ConfigFileAuthenticator) RevokeToken(token femto.AuthToken) error {
+func (auth *ConfigFileAuthenticator) RevokeToken(token authentication.AuthToken) error {
 	auth.mu.Lock()
 	defer auth.mu.Unlock()
 
@@ -47,7 +47,7 @@ func (auth *ConfigFileAuthenticator) RevokeToken(token femto.AuthToken) error {
 	return nil
 }
 
-func (auth *ConfigFileAuthenticator) CheckToken(token femto.AuthToken) bool {
+func (auth *ConfigFileAuthenticator) CheckToken(token authentication.AuthToken) bool {
 	auth.mu.Lock()
 	defer auth.mu.Unlock()
 
