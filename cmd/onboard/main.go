@@ -52,7 +52,7 @@ func main() {
 		signer,
 		ssh.InsecureIgnoreHostKey(),
 		config.SatelliteConfiguration{
-			Groundstation: config.Groundstation{"gpuctl.perial.co.uk", 80},
+			Groundstation: config.Groundstation{"https://", "gpuctl.perial.co.uk", 80},
 			Satellite: config.Satellite{
 				DataInterval:      int(10 * time.Second),
 				HeartbeatInterval: int(5 * time.Second),

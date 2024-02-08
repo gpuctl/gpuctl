@@ -128,7 +128,7 @@ func TestToToml(t *testing.T) {
 	t.Parallel()
 
 	c := config.SatelliteConfiguration{
-		Groundstation: config.Groundstation{"foo.bar", 80},
+		Groundstation: config.Groundstation{"https://", "foo.bar", 80},
 		Satellite:     config.Satellite{"/tmp/sat", 1, 1, false},
 	}
 
@@ -137,6 +137,7 @@ func TestToToml(t *testing.T) {
 
 	assert.Equal(t,
 		`[groundstation]
+  protocol = "https://"
   hostname = "foo.bar"
   port = 80
 
