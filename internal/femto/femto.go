@@ -21,9 +21,9 @@ type Response[T any] struct {
 	Status  int
 }
 
-type EmptyBodyResponse Response[types.Unit]
+type EmptyBodyResponse = Response[types.Unit]
 
-type PostFunc[T any] func(T, *http.Request, *slog.Logger) (*Response[types.Unit], error)
+type PostFunc[T any] func(T, *http.Request, *slog.Logger) (*EmptyBodyResponse, error)
 type GetFunc[T any] func(*http.Request, *slog.Logger) (*Response[T], error)
 
 func (femto *Femto) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -126,7 +126,7 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 	data, userErr := handle(reqData, r, log)
 
 	if data == nil {
-		data = &Response[types.Unit]{}
+		data = &EmptyBodyResponse{}
 	}
 
 	if data.Status == 0 {

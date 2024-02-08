@@ -38,8 +38,8 @@ func TestWrongMethod(t *testing.T) {
 
 	mux := new(femto.Femto)
 
-	femto.OnPost(mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (*femto.Response[types.Unit], error) {
-		return &femto.Response[types.Unit]{}, nil
+	femto.OnPost(mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+		return &femto.EmptyBodyResponse{}, nil
 	})
 
 	req := httptest.NewRequest("GET", "/postme", nil)
@@ -59,8 +59,8 @@ func TestNotJson(t *testing.T) {
 
 	mux := new(femto.Femto)
 
-	femto.OnPost(mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (*femto.Response[types.Unit], error) {
-		return &femto.Response[types.Unit]{}, nil
+	femto.OnPost(mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+		return &femto.EmptyBodyResponse{}, nil
 	})
 
 	req := httptest.NewRequest("POST", "/postme", bytes.NewBufferString("not json at all"))
@@ -79,7 +79,7 @@ func TestUserError(t *testing.T) {
 	t.Parallel()
 
 	mux := new(femto.Femto)
-	femto.OnPost(mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (*femto.Response[types.Unit], error) {
+	femto.OnPost(mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 		return nil, errors.New("their is no spoon")
 	})
 
@@ -119,14 +119,15 @@ func TestGetHappyPath(t *testing.T) {
 	assert.JSONEq(t, `{"X": 101}`, string(j))
 }
 
-type unit struct{}
+type unit = struct{}
+type other_unit = struct{}
 
 func TestGetWrongMethod(t *testing.T) {
 	t.Parallel()
 
 	mux := new(femto.Femto)
-	femto.OnGet(mux, "/api", func(r *http.Request, l *slog.Logger) (*femto.Response[types.Unit], error) {
-		return &femto.Response[types.Unit]{}, nil
+	femto.OnGet[types.Unit](mux, "/api", func(r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+		return &femto.EmptyBodyResponse{}, nil
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api", nil)
@@ -142,8 +143,8 @@ func TestGetApplicationErr(t *testing.T) {
 	t.Parallel()
 
 	mux := new(femto.Femto)
-	femto.OnGet(mux, "/api", func(r *http.Request, l *slog.Logger) (*femto.Response[types.Unit], error) {
-		return &femto.Response[types.Unit]{}, fmt.Errorf("Some application error")
+	femto.OnGet(mux, "/api", func(r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+		return &femto.EmptyBodyResponse{}, fmt.Errorf("Some application error")
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/api", nil)
@@ -190,8 +191,8 @@ func TestValidAuthentication(t *testing.T) {
 
 	/* ------- Post Handler ------- */
 
-	postHandler := func(incoming types.Unit, request *http.Request, logger *slog.Logger) (*femto.Response[types.Unit], error) {
-		return &femto.Response[types.Unit]{}, nil
+	postHandler := func(incoming types.Unit, request *http.Request, logger *slog.Logger) (*femto.EmptyBodyResponse, error) {
+		return &femto.EmptyBodyResponse{}, nil
 	}
 
 	authenticatedPostHandler := authentication.AuthWrapPost[types.Unit, types.Unit](auth, postHandler)
@@ -238,8 +239,8 @@ func TestInvalidAuthentication(t *testing.T) {
 
 	/* ------- Post Handler ------- */
 
-	postHandler := func(incoming types.Unit, request *http.Request, logger *slog.Logger) (*femto.Response[types.Unit], error) {
-		return &femto.Response[types.Unit]{}, nil
+	postHandler := func(incoming types.Unit, request *http.Request, logger *slog.Logger) (*femto.EmptyBodyResponse, error) {
+		return &femto.EmptyBodyResponse{}, nil
 	}
 
 	authenticatedPostHandler := authentication.AuthWrapPost[types.Unit, types.Unit](auth, postHandler)

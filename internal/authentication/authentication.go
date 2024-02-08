@@ -7,7 +7,6 @@ import (
 	"strings"
 
 	"github.com/gpuctl/gpuctl/internal/femto"
-	"github.com/gpuctl/gpuctl/internal/types"
 )
 
 var (
@@ -42,17 +41,17 @@ func AuthWrapGet[A any, T any](auth Authenticator[A], handle femto.GetFunc[T]) f
 }
 
 func AuthWrapPost[A any, T any](auth Authenticator[A], handle femto.PostFunc[T]) femto.PostFunc[T] {
-	return func(data T, request *http.Request, logger *slog.Logger) (*femto.Response[types.Unit], error) {
+	return func(data T, request *http.Request, logger *slog.Logger) (*femto.EmptyBodyResponse, error) {
 		authorisation := request.Header.Get("Authorization")
 
 		token, bearerPresent := strings.CutPrefix(authorisation, "Bearer ")
 
 		if !bearerPresent {
-			return &femto.Response[types.Unit]{Status: http.StatusUnauthorized}, NotAuthenticatedError
+			return &femto.EmptyBodyResponse{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
 
 		if !auth.CheckToken(token) {
-			return &femto.Response[types.Unit]{Status: http.StatusUnauthorized}, NotAuthenticatedError
+			return &femto.EmptyBodyResponse{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
 		return handle(data, request, logger)
 	}

@@ -8,7 +8,6 @@ import (
 	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
-	"github.com/gpuctl/gpuctl/internal/types"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
@@ -40,7 +39,7 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
 
 	// Set up authentication endpoint
-	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.Response[types.Unit], error) {
+	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 		return api.Authenticate(auth, packet, r, l)
 	})
 
@@ -91,7 +90,7 @@ func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.Response[wo
 	return &response, nil
 }
 
-func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.Response[types.Unit], error) {
+func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	// Check if credientals are correct
 	token, err := auth.CreateToken(packet)
 
@@ -101,7 +100,7 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 
 	headers := make(map[string]string)
 	headers["Set-Cookie"] = makeAuthCookie(token)
-	return &femto.Response[types.Unit]{Headers: headers, Status: http.StatusAccepted}, nil
+	return &femto.EmptyBodyResponse{Headers: headers, Status: http.StatusAccepted}, nil
 }
 
 // TODO
