@@ -74,13 +74,9 @@ const tableView = (stats: WorkStationGroup[]) => (
   <TableTab groups={stats}></TableTab>
 );
 
-<<<<<<< HEAD
 const adminView = (stats: WorkStationGroup[], token: AuthToken) => (
   <AdminPanel groups={stats} token={token}></AdminPanel>
 );
-=======
-const adminView = (stats: WorkStationGroup[]) => <AdminPanel groups={stats}></AdminPanel>;
->>>>>>> 75b8294 (Add basic table to admin panel)
 
 const displayPartial = (
   stats: Validation<WorkStationGroup[]>,
