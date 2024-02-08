@@ -20,7 +20,7 @@ https://gpuctl.perial.co.uk {
 		# non-browser stuff, so it's fine.
 		-Access-Control-Allow-Origin
 		-Access-Control-Allow-Methods
-		-Access-Control-Request-Headers
+		-Access-Control-Allow-Headers
 	}
 
 	# For api routes, we can lock down the CSP even further
