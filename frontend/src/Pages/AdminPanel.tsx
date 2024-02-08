@@ -2,6 +2,7 @@
 import { Input } from "@chakra-ui/input";
 import { API_URL, AuthToken } from "../App";
 import {
+<<<<<<< HEAD
   Editable,
   EditableInput,
   EditableTextarea,
@@ -9,6 +10,12 @@ import {
 =======
 import {
 >>>>>>> 52da1cd (Add cpu, motherboard, and notes to WorkstationStats)
+=======
+    Editable,
+  EditableInput,
+  EditableTextarea,
+  EditablePreview,
+>>>>>>> 75b8294 (Add basic table to admin panel)
   Table,
   TableContainer,
   Tbody,
