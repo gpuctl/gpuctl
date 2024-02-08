@@ -55,8 +55,8 @@ func monitor(database Database, t time.Time, timespanForDeath int, l *slog.Logge
 }
 
 func sshRestart(remote string, l *slog.Logger, s SSHConfig) error {
-	user := s.user
-	keypath := s.keypath
+	user := s.User
+	keypath := s.Keypath
 
 	key, err := os.ReadFile(keypath)
 	if err != nil {
