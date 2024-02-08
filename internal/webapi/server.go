@@ -46,7 +46,7 @@ func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals
 	femto.OnGet(mux, "/api/stats/all", api.allstats)
 
 	// Set up authentication endpoint
-	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
+	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
 		return api.authenticate(auth, packet, r, l)
 	})
 

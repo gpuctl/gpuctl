@@ -10,7 +10,7 @@ import { useJarJar, useOnce } from "../Utils/Hooks";
 import { useParams } from "react-router-dom";
 import { AdminPanel } from "./AdminPanel";
 
-const API_ALL_STATS_PATH = "/api/stats/all";
+const API_ALL_STATS_PATH = "/stats/all";
 
 // Currently does not attempt to do any validation of the returned GPU stats,
 // or indeed handle errors that might be thrown by the Promises
