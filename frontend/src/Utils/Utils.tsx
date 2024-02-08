@@ -98,6 +98,9 @@ export const loading = (): Loading => ({
   tag: VTag.Loading,
 });
 
+export const isSuccess = <T,>(x: Validation<T>): boolean =>
+  x.tag === VTag.Success;
+
 type ValidatedMotive<T, U> = {
   success: (x: T) => U;
   failure: (e: Error) => U;

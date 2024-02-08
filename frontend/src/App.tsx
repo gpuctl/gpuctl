@@ -64,7 +64,13 @@ const App = () => {
             <Route
               key={i}
               path={STATS_PATH + page}
-              element={<MainView setAuth={setAuth} default={page} />}
+              element={
+                <MainView
+                  authToken={authToken}
+                  setAuth={setAuth}
+                  default={page}
+                />
+              }
             />
           ))}
         </Routes>
