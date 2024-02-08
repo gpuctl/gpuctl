@@ -30,12 +30,12 @@ func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals
 	femto.OnGet(mux, "/api/stats/all", api.allstats)
 
 	// Set up authentication endpoint
-	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
+	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (authResponse, error) {
 		return api.authenticate(auth, packet, r, l)
 	})
 
 	// Authenticated API endpoints
-	femto.OnPost(mux, "/api/machines/move", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.moveMachineGroup)))
+	femto.OnPost(mux, "/api/admin/add_workstation", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.moveMachineGroup)))
 	femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addMachineInfo)))
 
 	return &Server{mux, api}
@@ -80,9 +80,14 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 	return result, nil
 }
 
-func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
+type authResponse struct {
+	token string
+}
+
+func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (authResponse, error) {
 	// Check if credientals are correct
-	return auth.CreateToken(packet)
+	tok, err := auth.CreateToken(packet)
+	return authResponse{tok}, err
 }
 
 // TODO

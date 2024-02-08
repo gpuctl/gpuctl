@@ -1,7 +1,13 @@
 import { Box, Heading, VStack } from "@chakra-ui/react";
 import { API_URL, AuthToken, REFRESH_INTERVAL, ViewPage } from "../App";
 import { WorkStationGroup } from "../Data";
-import { Validated, Validation, success, validationElim } from "../Utils/Utils";
+import {
+  Validated,
+  Validation,
+  success,
+  validatedElim,
+  validationElim,
+} from "../Utils/Utils";
 import { ColumnGrid } from "../Components/ColumnGrid";
 import { TableTab } from "../Components/DataTable";
 import { WorkstationCardMin } from "../Components/WorkstationCardMinimal";
@@ -68,7 +74,9 @@ const tableView = (stats: WorkStationGroup[]) => (
   <TableTab groups={stats}></TableTab>
 );
 
-const adminView = (stats: WorkStationGroup[]) => <AdminPanel></AdminPanel>;
+const adminView = (stats: WorkStationGroup[], token: AuthToken) => (
+  <AdminPanel token={token}></AdminPanel>
+);
 
 const displayPartial = (
   stats: Validation<WorkStationGroup[]>,
@@ -99,7 +107,10 @@ export const MainView = (props: {
     >
       {displayPartial(stats, cardView)}
       {displayPartial(stats, tableView)}
-      {displayPartial(stats, adminView)}
+      {validatedElim(props.authToken, {
+        success: (tok) => displayPartial(stats, (s) => adminView(s, tok)),
+        failure: () => <></>,
+      })}
     </Navbar>
   );
 };
