@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"os"
 
+	"golang.org/x/crypto/ssh"
+
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
@@ -27,18 +29,42 @@ func main() {
 	}
 
 	gs := groundstation.NewServer(db)
-	gs_port := config.PortToAddress(conf.Server.GSPort)
+	gsPort := config.PortToAddress(conf.Server.GSPort)
+
+	var signer ssh.Signer
+	// We want to allow the server to run even without an SSH key,
+	// for local development.
+	if conf.Onboard.KeyPath != "" {
+		key, err := os.ReadFile(conf.Onboard.KeyPath)
+		if err != nil {
+			fatal("failed to read key file: " + err.Error())
+		}
+
+		signer, err = ssh.ParsePrivateKey(key)
+		if err != nil {
+			fatal(fmt.Sprintf("Unable to parse key file %s: %v", conf.Onboard.KeyPath, err))
+		}
+	} else {
+		log.Warn("No key path given, will not be able to handle onboard requests")
+	}
+
 	authenticator := webapi.AuthenticatorFromConfig(conf)
-	wa := webapi.NewServer(db, &authenticator)
-	wa_port := config.PortToAddress(conf.Server.WAPort)
+	wa := webapi.NewServer(db, &authenticator, webapi.OnboardConf{
+		Username:    conf.Onboard.Username,
+		DataDir:     conf.Onboard.DataDir,
+		RemoteConf:  conf.Onboard.RemoteConf,
+		Signer:      signer,
+		KeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: Be secure here.
+	})
+	waPort := config.PortToAddress(conf.Server.WAPort)
 
 	errs := make(chan (error), 1)
 
 	go func() {
-		errs <- http.ListenAndServe(gs_port, gs)
+		errs <- http.ListenAndServe(gsPort, gs)
 	}()
 	go func() {
-		errs <- http.ListenAndServe(wa_port, wa)
+		errs <- http.ListenAndServe(waPort, wa)
 	}()
 
 	slog.Info("started servers")

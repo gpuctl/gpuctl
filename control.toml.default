@@ -5,3 +5,19 @@ webapi_port = 8000
 [Database]
 postgres = true
 url = "postgres://postgres@postgres/postgres"
+
+[Onboard]
+keyfile = "/root/.ssh/id_ed25519"
+datadir = "/data/gpuctl"
+username = "dcg20"
+
+[Onboard.Remote.Groundstation]
+protocol = "https"
+hostname = "gpuctl.perial.co.uk"
+port = 443
+
+[Onboard.Remote.Satellite]
+data_interval = 15000000000
+heartbeat_interval = 5000000000
+fake_gpu = true
+
