@@ -13,11 +13,11 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
+import { WorkStationGroup } from "../Data";
 import { STATS_PATH } from "../Config/Paths";
 import { Box, Center, HStack, Heading, VStack } from "@chakra-ui/layout";
 import { Button } from "@chakra-ui/button";
 import { useState } from "react";
-import { WorkStationGroup } from "../Data";
 
 export const ADMIN_PATH = "/admin";
 const ADD_MACHINE_URL = "/add_workstation";
@@ -59,6 +59,11 @@ const modifyInfo = (hostname: string, mod: ModifyData) => {
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ hostname, ...mod }),
   });
+};
+
+const nonEmpty = (value: string): string => {
+  if (value) return value;
+  else return "-";
 };
 
 export const AdminPanel = ({
@@ -108,12 +113,79 @@ export const AdminPanel = ({
               return workStations.map((workStation, j) => {
                 const id = (i * j + j) * 5;
                 return (
-                  <Tr key={id}>
+                  <Tr>
                     <Th key={id}> {workStation.name} </Th>
-                    <Th key={id + 1}> {name} </Th>
-                    <Th key={id + 2}> {workStation.cpu} </Th>
-                    <Th key={id + 3}> {workStation.motherboard} </Th>
-                    <Th key={id + 4}> {workStation.notes} </Th>
+                    <Th key={id + 1}>
+                      <Editable
+                        placeholder="Group"
+                        defaultValue={name}
+                        onSubmit={(s) =>
+                          modifyInfo(workStation.name, {
+                            group: s,
+                            cpu: null,
+                            motherboard: null,
+                            notes: null,
+                          })
+                        }
+                      >
+                        <EditablePreview />
+                        <EditableInput />
+                      </Editable>{" "}
+                    </Th>
+                    <Th key={id + 2}>
+                      {" "}
+                      <Editable
+                        placeholder="CPU"
+                        defaultValue={workStation.cpu}
+                        onSubmit={(s) =>
+                          modifyInfo(workStation.name, {
+                            group: null,
+                            cpu: s,
+                            motherboard: null,
+                            notes: null,
+                          })
+                        }
+                      >
+                        <EditablePreview />
+                        <EditableInput />
+                      </Editable>{" "}
+                    </Th>
+                    <Th key={id + 3}>
+                      {" "}
+                      <Editable
+                        placeholder="motherboard"
+                        defaultValue={workStation.motherboard}
+                        onSubmit={(s) =>
+                          modifyInfo(workStation.name, {
+                            group: null,
+                            cpu: null,
+                            motherboard: s,
+                            notes: null,
+                          })
+                        }
+                      >
+                        <EditablePreview />
+                        <EditableInput />
+                      </Editable>{" "}
+                    </Th>
+                    <Th key={id + 4}>
+                      {" "}
+                      <Editable
+                        placeholder="notes"
+                        defaultValue={workStation.notes}
+                        onSubmit={(s) =>
+                          modifyInfo(workStation.name, {
+                            group: null,
+                            cpu: null,
+                            motherboard: null,
+                            notes: s,
+                          })
+                        }
+                      >
+                        <EditablePreview />
+                        <EditableInput />
+                      </Editable>
+                    </Th>
                   </Tr>
                 );
               });
