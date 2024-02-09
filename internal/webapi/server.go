@@ -56,7 +56,7 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 
 	// Authenticated API endpoints
 
-	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
+	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 		return api.Authenticate(auth, packet, r, l)
 	})
 	femto.OnPost(mux, "/api/admin/add_workstation", authentication.AuthWrapPost(auth, api.newMachine))
