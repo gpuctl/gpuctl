@@ -82,13 +82,11 @@ func TestCalculateAverage(t *testing.T) {
 func TestDownsample(t *testing.T) {
 	db := InMemory().(*inMemory)
 
-	// Define cutoffTime as six months ago from now
 	cutoffTime := time.Now().AddDate(0, -6, 0).Unix()
 
-	// Populate db with 250 samples for a single GPU, with timestamps spread across the last year
 	gpuUUID := "gpu-test-1"
 	hostName := "test-host"
-	// Ensuring the GPU and host are known to avoid errors related to unknown GPU or host
+
 	db.infos[gpuUUID] = gpuInfo{host: hostName, context: uplink.GPUInfo{Uuid: gpuUUID}}
 	db.UpdateLastSeen(hostName, time.Now().Unix())
 
@@ -109,7 +107,7 @@ func TestDownsample(t *testing.T) {
 			MemoryClock:       500 + float64(i%250),      // Variation
 			MaxMemoryClock:    750 + float64(i%250),      // Variation
 			Time:              sampleTime,
-			RunningProcesses: []uplink.GPUProcInfo{ // Simplified, assuming constant
+			RunningProcesses: []uplink.GPUProcInfo{
 				{Pid: 1234, Name: "ProcessA", MemUsed: 250.0},
 				{Pid: 1235, Name: "ProcessB", MemUsed: 300.0},
 			},
@@ -118,16 +116,11 @@ func TestDownsample(t *testing.T) {
 
 	expectedNumSamples := 94
 
-	// Perform downsampling
 	if err := db.Downsample(cutoffTime); err != nil {
 		t.Fatalf("Downsample failed: %v", err)
 	}
-
-	// Check the number of samples for gpuUUID after downsampling
 	if gotNumSamples := len(db.stats[gpuUUID]); gotNumSamples != expectedNumSamples {
 		t.Errorf("Downsample() resulted in %d samples for %s; want %d", gotNumSamples, gpuUUID, expectedNumSamples)
 	}
 
-	// Additional checks can verify the details of the downsampled data, such as averages, but those would depend
-	// on the specific implementation of CalculateAverage and how it handles the varying fields.
 }
