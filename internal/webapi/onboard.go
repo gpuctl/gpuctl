@@ -5,8 +5,8 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/gpuctl/gpuctl/internal/onboard"
 	"github.com/gpuctl/gpuctl/internal/broadcast"
+	"github.com/gpuctl/gpuctl/internal/onboard"
 )
 
 func (a *api) onboard(data broadcast.OnboardReq, _ *http.Request, log *slog.Logger) error {
