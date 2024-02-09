@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sync"
 
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
@@ -138,4 +139,14 @@ func (m *inMemory) Drop() error {
 
 	m = nil
 	return nil
+}
+
+func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {
+	// TODO: add actual functionality. This was just to make the code compile
+	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
+}
+
+func (m *inMemory) UpdateMachine(changes broadcast.ModifyMachine) error {
+	// TODO: add actual functionality. This was just to make the code compile
+	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
 }

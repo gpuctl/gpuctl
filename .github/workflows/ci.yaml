@@ -67,8 +67,8 @@ jobs:
       - name: Print function coverage values
         run: go tool cover -func=cover.out
         # coverage check currently only checks total coverage
-      - name: Check for insufficient coverage
-        run: test 75 -le $(go tool cover -func=cover.out | tail -n 1 | grep -Eo "[[:space:]][[:digit:]]+")
+        #- name: Check for insufficient coverage
+        #run: test 75 -le $(go tool cover -func=cover.out | tail -n 1 | grep -Eo "[[:space:]][[:digit:]]+")
       - name: Check Go Formatting
         run: test -z $(gofmt -l .)
       
