@@ -265,16 +265,60 @@ func (conn postgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
 	return
 }
 
-func (conn postgresConn) RemoveMachine(machine broadcast.RemoveMachine) (err error) {
-	rows, err := conn.db.Query(`SELECT g.Machine, g.Uuid
-		FROM GPUs g	WHERE g.Machine = $1`, machine.Hostname)
-
+func (conn postgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
+	tx, err := conn.db.Begin()
 	if err != nil {
-		return
+		return err
 	}
-	rows = rows
 
-	return
+	rows, err := tx.Query(`SELECT Uuid
+		FROM Gpus
+		WHERE Machine=$1`,
+		machine.Hostname,
+	)
+	if err != nil {
+		return err
+	}
+
+	for rows.Next() {
+		var uuid string
+		err = rows.Scan(&uuid)
+		if err != nil {
+			errors.Join(err, tx.Rollback())
+		}
+
+		_, err = tx.Exec(`DELETE FROM Stats
+			WHERE Gpu=$1`,
+			uuid,
+		)
+
+		if err != nil {
+			errors.Join(err, tx.Rollback())
+		}
+	}
+
+	err = rows.Err()
+	if !errors.Is(sql.ErrNoRows, rows.Err()) {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	_, err = tx.Exec(`DELETE FROM GPUs
+		WHERE Machine=$1`,
+		machine.Hostname,
+	)
+	if err != nil {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	_, err = tx.Exec(`DELETE FROM Machines
+		WHERE Hostname=$1`,
+		machine.Hostname,
+	)
+	if err != nil {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	return tx.Commit()
 }
 
 // Update machine info

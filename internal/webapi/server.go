@@ -122,7 +122,11 @@ func (a *api) addMachine(add broadcast.AddMachineInfo, r *http.Request, l *slog.
 }
 
 func (a *api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *slog.Logger) error {
-	return a.deboard(rm, r, l)
+	err := a.deboard(rm, r, l)
+	if err != nil {
+		return err
+	}
+	return a.db.RemoveMachine(broadcast.RemoveMachine{Hostname: rm.Hostname})
 }
 
 func (a *api) confirmAdmin(r *http.Request, l *slog.Logger) error {
