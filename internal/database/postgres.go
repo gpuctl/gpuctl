@@ -328,19 +328,67 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 		return err
 	}
 
-	v := reflect.ValueOf(machine)
-	for _, field := range reflect.VisibleFields(reflect.TypeOf(machine)) {
-		value := v.FieldByIndex(field.Index)
-		if v.Kind() == reflect.Pointer && !value.IsNil() {
-			_, err = tx.Exec(`UPDATE Machines
-				SET $1=$2
-				WHERE Hostname=$3`,
-				field.Name, reflect.Indirect(value), machine.Hostname,
-			)
+//	v := reflect.ValueOf(machine)
+//	for _, field := range reflect.VisibleFields(reflect.TypeOf(machine)) {
+//		value := v.FieldByIndex(field.Index)
+//		if v.Kind() == reflect.Pointer && !value.IsNil() {
+//			_, err = tx.Exec(`UPDATE Machines
+//				SET $1=$2
+//				WHERE Hostname=$3`,
+//				field.Name, reflect.Indirect(value), machine.Hostname,
+//			)
+//
+//			if err != nil {
+//				return errors.Join(err, tx.Rollback())
+//			}
+//		}
+//	}
 
-			if err != nil {
-				return errors.Join(err, tx.Rollback())
-			}
+	if machine.CPU != nil {
+		_, err = tx.Exec(`UPDATE Machines
+			SET CPU=$1
+			WHERE Hostname=$2`,
+			*machine.CPU, machine.Hostname
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	if machine.Motherboard != nil {
+		_, err = tx.Exec(`UPDATE Machines
+			SET Motherboard=$1
+			WHERE Hostname=$2`,
+			*machine.Motherboard, machine.Hostname
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	if machine.Notes != nil {
+		_, err = tx.Exec(`UPDATE Machines
+			SET Notes=$1
+			WHERE Hostname=$2`,
+			*machine.Notes, machine.Hostname
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	if machine.Group != nil {
+		_, err = tx.Exec(`UPDATE Machines
+			SET GroupName=$1
+			WHERE Hostname=$2`,
+			*machine.Group, machine.Hostname
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
 		}
 	}
 
