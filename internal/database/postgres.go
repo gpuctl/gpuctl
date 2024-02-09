@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
+
 	//	"reflect"
 	"time"
 
@@ -345,6 +346,7 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 	//	}
 
 	if machine.CPU != nil {
+		slog.Info("Changing CPU", "Hostname", machine.Hostname, "New CPU", *machine.CPU)
 		_, err = tx.Exec(`UPDATE Machines
 			SET CPU=$1
 			WHERE Hostname=$2`,
@@ -357,6 +359,7 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 	}
 
 	if machine.Motherboard != nil {
+		slog.Info("Changing Motherboard", "Hostname", machine.Hostname, "New Motherboard", *machine.Motherboard)
 		_, err = tx.Exec(`UPDATE Machines
 			SET Motherboard=$1
 			WHERE Hostname=$2`,
@@ -369,6 +372,7 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 	}
 
 	if machine.Notes != nil {
+		slog.Info("Changing Notes", "Hostname", machine.Hostname, "New Notes", *machine.Notes)
 		_, err = tx.Exec(`UPDATE Machines
 			SET Notes=$1
 			WHERE Hostname=$2`,
@@ -381,6 +385,7 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 	}
 
 	if machine.Group != nil {
+		slog.Info("Changing Group", "Hostname", machine.Hostname, "New Group", *machine.Group)
 		_, err = tx.Exec(`UPDATE Machines
 			SET GroupName=$1
 			WHERE Hostname=$2`,
