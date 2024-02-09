@@ -5,9 +5,11 @@ import (
 	"net/http"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
+	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+	"golang.org/x/crypto/ssh"
 )
 
 type Server struct {
@@ -16,7 +18,8 @@ type Server struct {
 }
 
 type api struct {
-	db database.Database
+	db          database.Database
+	onboardConf OnboardConf
 }
 
 type APIAuthCredientals struct {
@@ -24,9 +27,22 @@ type APIAuthCredientals struct {
 	Password string
 }
 
-func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals]) *Server {
+type OnboardConf struct {
+	// The login to run the satellite on other machines as
+	Username string
+	// The directory to store the satellite binary on remotes as
+	DataDir string
+	// The configuration to install on the remote.
+	RemoteConf config.SatelliteConfiguration
+
+	// SSH Options.
+	Signer      ssh.Signer
+	KeyCallback ssh.HostKeyCallback
+}
+
+func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals], onboardConf OnboardConf) *Server {
 	mux := new(femto.Femto)
-	api := &api{db}
+	api := &api{db, onboardConf}
 
 	femto.OnGet(mux, "/api/stats/all", api.allstats)
 
@@ -38,6 +54,7 @@ func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals
 	// Authenticated API endpoints
 	femto.OnPost(mux, "/api/admin/add_workstation", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.newMachine)))
 	femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addInfo)))
+	femto.OnPost(mux, "/api/onboard", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.onboard)))
 
 	return &Server{mux, api}
 }
