@@ -67,3 +67,7 @@ type OldGPUStatSample struct {
 type MachineMove struct{}
 
 type MachineAddInfo struct{}
+
+type OnboardReq struct {
+	Hostname string `json:"hostname"`
+}
