@@ -124,10 +124,8 @@ func (a *api) confirmAdmin(r *http.Request, l *slog.Logger) error {
 }
 
 // TODO
-func (a *api) modifyMachineInfo(info broadcast.ModifyInfo, r *http.Request, l *slog.Logger) error {
-	l.Info("Accessed modify machine info")
-	l.Info("Modification: ", "Hostname: ", *&info.Hostname)
-	return nil
+func (a *api) modifyMachineInfo(info broadcast.ModifyMachine, r *http.Request, l *slog.Logger) error {
+	return a.db.UpdateMachine(info)
 }
 
 // Bodge together stats and contextual data to make OldGpuStats
