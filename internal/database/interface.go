@@ -22,6 +22,7 @@ type Database interface {
 
 	// create and modify machines in the database
 	NewMachine(machine broadcast.NewMachine) error
+	RemoveMachine(machine broadcast.RemoveMachine) error
 	UpdateMachine(changes broadcast.ModifyMachine) error
 
 	// Drop all tables and data in the db and close the connection

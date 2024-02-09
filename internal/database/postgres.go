@@ -265,6 +265,18 @@ func (conn postgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
 	return
 }
 
+func (conn postgresConn) RemoveMachine(machine broadcast.RemoveMachine) (err error) {
+	rows, err := conn.db.Query(`SELECT g.Machine, g.Uuid
+		FROM GPUs g	WHERE g.Machine = $1`, machine.Hostname)
+
+	if err != nil {
+		return
+	}
+	rows = rows
+
+	return
+}
+
 // Update machine info
 func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 	tx, err := conn.db.Begin()

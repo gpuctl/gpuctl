@@ -12,6 +12,10 @@ type NewMachine struct {
 	Group    *string `json:"group"`
 }
 
+type RemoveMachine struct {
+	Hostname string `json:"hostname"`
+}
+
 type ModifyMachine struct {
 	Hostname    string  `json:"hostname"`
 	CPU         *string `json:"cpu"`         // nullable - means no change
