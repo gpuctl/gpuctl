@@ -65,17 +65,17 @@ func main() {
 		}
 	}()
 
-	backlog, _ := recoverState(satellite_configuration.Satellite.Cache)
+	// backlog, _ := recoverState(satellite_configuration.Satellite.Cache)
 
-	for stat := range backlog {
-		err := s.sendGPUStatus(backlog[stat])
+	// for stat := range backlog {
+	// 	err := s.sendGPUStatus(backlog[stat])
 
-		if err != nil {
-			log.Error("Failed to send backlogged GPU stat message", "err", err)
-		}
-	}
+	// 	if err != nil {
+	// 		log.Error("Failed to send backlogged GPU stat message", "err", err)
+	// 	}
+	// }
 
-	backlog = make([][]uplink.GPUStatSample, 0)
+	backlog := make([][]uplink.GPUStatSample, 0)
 
 	collectGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval))
 	publishGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval))
