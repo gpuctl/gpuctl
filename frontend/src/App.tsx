@@ -23,7 +23,8 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { MainView } from "./Pages/MainView";
 import { STATS_PATH } from "./Config/Paths";
 
-export const API_URL = "http://localhost:8000/api";
+export const API_URL =
+  process.env.NODE_ENV === "production" ? "" : "http://localhost:8000/api";
 export const REFRESH_INTERVAL = 5000;
 
 export enum ViewPage {
