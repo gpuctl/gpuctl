@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
@@ -67,20 +68,20 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // This function involves a lot of weird unwrapping
 // TODO: See if we can get the database layer to do it for us
-func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
+func (a *api) allstats(r *http.Request, l *slog.Logger) (broadcast.Workstations, error) {
 	data, err := a.db.LatestData()
 
 	if err != nil {
 		return nil, err
 	}
 
-	var ws []workStationData
+	var ws []broadcast.WorkstationData
 	for _, machine := range data {
 		if len(machine.Stats) == 0 {
 			continue
 		}
 
-		gpus := make([]OldGPUStatSample, 0)
+		gpus := make([]broadcast.OldGPUStatSample, 0)
 		for i := range machine.Stats {
 			gpus = append(gpus, zipStats(
 				machine.Hostname,
@@ -89,13 +90,13 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 			))
 		}
 
-		ws = append(ws, workStationData{
+		ws = append(ws, broadcast.WorkstationData{
 			Name: machine.Hostname,
 			Gpus: gpus,
 		})
 	}
 
-	result := []workstationGroup{{Name: "Shared", WorkStations: ws}}
+	result := []broadcast.WorkstationGroup{{Name: "Shared", WorkStations: ws}}
 	return result, nil
 }
 
@@ -110,11 +111,11 @@ func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet 
 }
 
 // TODO
-func (a *api) addMachine(add AddMachineInfo, r *http.Request, l *slog.Logger) error {
-	return a.onboard(OnboardReq{add.Hostname}, r, l)
+func (a *api) addMachine(add broadcast.AddMachineInfo, r *http.Request, l *slog.Logger) error {
+	return a.onboard(broadcast.OnboardReq{add.Hostname}, r, l)
 }
 
-func (a *api) removeMachine(rm RemoveMachineInfo, r *http.Request, l *slog.Logger) error {
+func (a *api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *slog.Logger) error {
 	return a.deboard(rm, r, l)
 }
 
@@ -123,15 +124,15 @@ func (a *api) confirmAdmin(r *http.Request, l *slog.Logger) error {
 }
 
 // TODO
-func (a *api) modifyMachineInfo(info ModifyInfo, r *http.Request, l *slog.Logger) error {
+func (a *api) modifyMachineInfo(info broadcast.ModifyInfo, r *http.Request, l *slog.Logger) error {
 	l.Info("Accessed modify machine info")
 	l.Info("Modification: ", "Hostname: ", *&info.Hostname)
 	return nil
 }
 
 // Bodge together stats and contextual data to make OldGpuStats
-func zipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) OldGPUStatSample {
-	return OldGPUStatSample{
+func zipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) broadcast.OldGPUStatSample {
+	return broadcast.OldGPUStatSample{
 		Hostname: host,
 		// info from GPUInfo
 		Uuid:          info.Uuid,
