@@ -4,8 +4,10 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
+	"reflect"
 	"time"
 
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -47,7 +49,11 @@ func createTables(db *sql.DB) error {
 	var err error
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Machines (
 		Hostname text NOT NULL,
-		LastSeen timestamp NOT NULL,
+		GroupName text,
+		CPU text,
+		Motherboard text,
+		Notes text,
+		LastSeen timestamp,
 		PRIMARY KEY (Hostname)
 	);`)
 
@@ -362,6 +368,42 @@ func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 	return result, rows.Close()
 }
 
+// Create new machine
+func (conn postgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
+	_, err = conn.db.Exec(`INSERT INTO Machines (Hostname, GroupName)
+		VALUES ($1, $2)`,
+		machine.Hostname, machine.Group,
+	)
+	return
+}
+
+// Update machine info
+func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
+	tx, err := conn.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	v := reflect.ValueOf(machine)
+	for _, field := range reflect.VisibleFields(reflect.TypeOf(machine)) {
+		value := v.FieldByIndex(field.Index)
+		if v.Kind() == reflect.Pointer && !value.IsNil() {
+			_, err = tx.Exec(`UPDATE Machines
+				SET $1=$2
+				WHERE Hostname=$3`,
+				field.Name, reflect.Indirect(value), machine.Hostname,
+			)
+
+			if err != nil {
+				return errors.Join(err, tx.Rollback())
+			}
+		}
+	}
+
+	return tx.Commit()
+}
+
+// drop all tables we create in the database
 func (conn postgresConn) Drop() error {
 	_, err := conn.db.Exec(`DROP TABLE stats;
 		DROP TABLE gpus;

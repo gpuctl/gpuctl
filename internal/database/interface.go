@@ -1,6 +1,7 @@
 package database
 
 import (
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
@@ -21,6 +22,9 @@ type Database interface {
 
 	// get last seen online metric for all machines
 	LastSeen() ([]uplink.WorkstationSeen, error)
+	// create and modify machines in the database
+	NewMachine(machine broadcast.NewMachine) error
+	UpdateMachine(changes broadcast.ModifyMachine) error
 
 	// downsample since certain unix time
 	Downsample(time int64) error
