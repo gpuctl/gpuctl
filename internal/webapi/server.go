@@ -115,7 +115,7 @@ func (a *api) addMachine(add AddMachineInfo, r *http.Request, l *slog.Logger) er
 }
 
 func (a *api) removeMachine(rm RemoveMachineInfo, r *http.Request, l *slog.Logger) error {
-	return a.removeMachine(rm, r, l)
+	return a.deboard(rm, r, l)
 }
 
 func (a *api) confirmAdmin(r *http.Request, l *slog.Logger) error {

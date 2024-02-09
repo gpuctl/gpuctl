@@ -23,6 +23,7 @@ import { gracefulify } from "graceful-fs";
 
 export const ADMIN_PATH = "/admin";
 const ADD_MACHINE_URL = "/add_workstation";
+const REMOVE_MACHINE_URL = "/rm_workstation";
 
 const addMachine = async (
   hostname: string,
@@ -44,8 +45,24 @@ const addMachine = async (
   } else {
     console.log("Unknown Error!");
   }
-  // We should probably await the response to give feedback on whether adding
-  // the machine was successful...
+};
+
+const removeMachine = async (hostname: string, token: AuthToken) => {
+  const resp = await fetch(API_URL + ADMIN_PATH + REMOVE_MACHINE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token.token}`,
+    },
+    body: JSON.stringify({ hostname }),
+  });
+  if (resp.ok) {
+    console.log("Success!");
+  } else if (resp.status === 401) {
+    console.log("Auth Error!");
+  } else {
+    console.log("Unknown Error!");
+  }
 };
 
 type ModifyData = {
@@ -214,6 +231,16 @@ export const AdminPanel = ({
                         <EditablePreview />
                         <EditableInput textColor={"gray.600"} />
                       </Editable>
+                    </Th>
+                    <Th>
+                      <Button
+                        bgColor={"red.300"}
+                        onClick={() => {
+                          removeMachine(hostname, token);
+                        }}
+                      >
+                        Kill Satellite
+                      </Button>
                     </Th>
                   </Tr>
                 );
