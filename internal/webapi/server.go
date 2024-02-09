@@ -63,7 +63,7 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	// femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addMachineInfo)))
 	// femto.OnPost(mux, "/api/machines/move", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.moveMachineGroup)))
 	// femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addMachineInfo)))
-	// femto.OnPost(mux, "/api/onboard", femto.AuthWrapPost(auth, femto.WrapPostFunc[OnboardReq](api.onboard)))
+	femto.OnPost(mux, "/api/onboard", authentication.AuthWrapPost(auth, api.onboard))
 
 	return &Server{mux, api}
 }
