@@ -1,6 +1,7 @@
 package config
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -12,8 +13,8 @@ func PortToAddress(port int) string {
 	return fmt.Sprintf(":%d", port)
 }
 
-func GenerateAddress(hostname string, port int) string {
-	return fmt.Sprintf("http://%s%s", hostname, PortToAddress(port))
+func GenerateAddress(protocol string, hostname string, port int) string {
+	return fmt.Sprintf("%s://%s%s", protocol, hostname, PortToAddress(port))
 }
 
 func IsFileEmpty(path string) (bool, error) {
@@ -56,4 +57,15 @@ func getConfiguration[T any](filename string, defaultGenerator func() T) (T, err
 		return zero, err
 	}
 	return config, nil
+}
+
+func ToToml(v any) (string, error) {
+	var buf bytes.Buffer
+	enc := toml.NewEncoder(&buf)
+
+	if err := enc.Encode(v); err != nil {
+		return "", err
+	}
+
+	return buf.String(), nil
 }

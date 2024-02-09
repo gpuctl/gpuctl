@@ -60,3 +60,20 @@ func TestAuthenticatorFromConfig(t *testing.T) {
 	assert.Equal(t, conf.Auth.Username, auth.Username)
 	assert.Equal(t, conf.Auth.Password, auth.Password)
 }
+
+type alwaysAuth struct{}
+
+// CheckToken implements femto.Authenticator.
+func (alwaysAuth) CheckToken(string) bool {
+	return true
+}
+
+// CreateToken implements femto.Authenticator.
+func (alwaysAuth) CreateToken(webapi.APIAuthCredientals) (string, error) {
+	return "auth", nil
+}
+
+// RevokeToken implements femto.Authenticator.
+func (alwaysAuth) RevokeToken(string) error {
+	return nil
+}
