@@ -18,9 +18,17 @@ import {
 import { ReactNode, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { STATS_PATH } from "../Config/Paths";
-import { AUTH_TOKEN_ITEM, AuthToken, VIEW_PAGE_INDEX, ViewPage } from "../App";
+import {
+  API_URL,
+  AUTH_TOKEN_ITEM,
+  AuthToken,
+  VIEW_PAGE_INDEX,
+  ViewPage,
+} from "../App";
 import { SignIn } from "./SignIn";
 import { Validated, failure, isSuccess } from "../Utils/Utils";
+import { ADMIN_PATH } from "../Pages/AdminPanel";
+import { log } from "console";
 
 const URLS = [
   `${STATS_PATH}/card_view`,
@@ -30,12 +38,14 @@ const URLS = [
 
 export const Navbar = ({
   children,
-  setAuth,
+  signIn,
+  signOut,
   authToken,
   initial,
 }: {
   children: ReactNode[];
-  setAuth: (tok: Validated<AuthToken>) => void;
+  signIn: (tok: AuthToken) => void;
+  signOut: () => void;
   authToken: Validated<AuthToken>;
   initial: ViewPage;
 }) => {
@@ -53,15 +63,7 @@ export const Navbar = ({
         <Tab isDisabled={!isSuccess(authToken)}>Admin Panel</Tab>
         <Spacer />
         {isSuccess(authToken) ? (
-          <Button
-            onClick={() => {
-              setAuth(failure(Error("Signed Out")));
-              localStorage.removeItem(AUTH_TOKEN_ITEM);
-              window.location.reload();
-            }}
-          >
-            Sign Out
-          </Button>
+          <Button onClick={signOut}>Sign Out</Button>
         ) : (
           <Popover>
             <PopoverTrigger>
@@ -70,7 +72,7 @@ export const Navbar = ({
             <PopoverContent w="100%">
               <PopoverArrow />
               <PopoverCloseButton />
-              <SignIn setAuth={setAuth} />
+              <SignIn signIn={signIn} />
             </PopoverContent>
           </Popover>
         )}

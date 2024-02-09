@@ -1,9 +1,16 @@
 import { Box, Heading, VStack } from "@chakra-ui/react";
-import { API_URL, AuthToken, REFRESH_INTERVAL, ViewPage } from "../App";
+import {
+  API_URL,
+  AUTH_TOKEN_ITEM,
+  AuthToken,
+  REFRESH_INTERVAL,
+  ViewPage,
+} from "../App";
 import { WorkStationGroup } from "../Data";
 import {
   Validated,
   Validation,
+  failure,
   success,
   validatedElim,
   validationElim,
@@ -14,7 +21,7 @@ import { WorkstationCardMin } from "../Components/WorkstationCardMinimal";
 import { Navbar } from "../Components/Navbar";
 import { useJarJar, useOnce } from "../Utils/Hooks";
 import { useParams } from "react-router-dom";
-import { AdminPanel } from "./AdminPanel";
+import { ADMIN_PATH, AdminPanel } from "./AdminPanel";
 
 const API_ALL_STATS_PATH = "/stats/all";
 
@@ -99,11 +106,46 @@ export const MainView = (props: {
     setInterval(updateStats, REFRESH_INTERVAL);
   });
 
+  const signOut = () => {
+    props.setAuth(failure(Error("Signed Out")));
+    localStorage.removeItem(AUTH_TOKEN_ITEM);
+    window.location.reload();
+  };
+
+  const signIn = (tok: AuthToken) => {
+    localStorage.setItem(AUTH_TOKEN_ITEM, tok.token);
+    props.setAuth(success(tok));
+    window.location.reload();
+  };
+
+  const checkStillAdmin = async (tok: AuthToken) => {
+    const resp = await fetch(API_URL + ADMIN_PATH + "/confirm", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${tok.token}`,
+      },
+    });
+    if (resp.ok) return;
+    if (resp.status === 401) signOut();
+    console.log("Unknown error occured when checking admin status!");
+  };
+
+  validatedElim(props.authToken, {
+    success: (tok) => {
+      // Just fire the check - it's not super important but doing this
+      // every so often is probably good practice
+      checkStillAdmin(tok);
+    },
+    failure: () => {},
+  });
+
   return (
     <Navbar
       initial={props.default}
       authToken={props.authToken}
-      setAuth={props.setAuth}
+      signOut={signOut}
+      signIn={signIn}
     >
       {displayPartial(stats, cardView)}
       {displayPartial(stats, tableView)}

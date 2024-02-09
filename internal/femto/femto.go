@@ -183,6 +183,13 @@ func WrapPostFunc[T any](f PostFunc[T]) PostFuncPure[T, struct{}] {
 	}
 }
 
+func WrapGetFunc(f GetFuncUnit) GetFunc[struct{}] {
+	return func(r *http.Request, l *slog.Logger) (struct{}, error) {
+		return struct{}{}, f(r, l)
+	}
+}
+
 type PostFuncPure[T any, R any] func(T, *http.Request, *slog.Logger) (R, error)
 type PostFunc[T any] func(T, *http.Request, *slog.Logger) error
+type GetFuncUnit func(*http.Request, *slog.Logger) error
 type GetFunc[T any] func(*http.Request, *slog.Logger) (T, error)

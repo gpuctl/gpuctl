@@ -54,17 +54,15 @@ type ModifyData = {
   notes: string | null;
 };
 
-const modifyInfo = (hostname: string, mod: ModifyData) => {
+const modifyInfo = (hostname: string, mod: ModifyData, token: AuthToken) => {
   fetch(API_URL + ADMIN_PATH + STATS_PATH + "/modify", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token.token}`,
+    },
     body: JSON.stringify({ hostname, ...mod }),
   });
-};
-
-const nonEmpty = (value: string): string => {
-  if (value) return value;
-  else return "-";
 };
 
 export const AdminPanel = ({
@@ -123,15 +121,19 @@ export const AdminPanel = ({
                     <Th key={id}> {workStation.name} </Th>
                     <Th key={id + 1}>
                       <Editable
-                        placeholder="Group"
+                        placeholder="Unknown"
                         defaultValue={name}
                         onSubmit={(s) =>
-                          modifyInfo(workStation.name, {
-                            group: s,
-                            cpu: null,
-                            motherboard: null,
-                            notes: null,
-                          })
+                          modifyInfo(
+                            workStation.name,
+                            {
+                              group: s,
+                              cpu: null,
+                              motherboard: null,
+                              notes: null,
+                            },
+                            token,
+                          )
                         }
                       >
                         <EditablePreview />
@@ -141,15 +143,19 @@ export const AdminPanel = ({
                     <Th key={id + 2}>
                       {" "}
                       <Editable
-                        placeholder="CPU"
+                        placeholder="Unknown"
                         defaultValue={workStation.cpu}
                         onSubmit={(s) =>
-                          modifyInfo(workStation.name, {
-                            group: null,
-                            cpu: s,
-                            motherboard: null,
-                            notes: null,
-                          })
+                          modifyInfo(
+                            workStation.name,
+                            {
+                              group: null,
+                              cpu: s,
+                              motherboard: null,
+                              notes: null,
+                            },
+                            token,
+                          )
                         }
                       >
                         <EditablePreview />
@@ -159,15 +165,19 @@ export const AdminPanel = ({
                     <Th key={id + 3}>
                       {" "}
                       <Editable
-                        placeholder="motherboard"
+                        placeholder="Unknown"
                         defaultValue={workStation.motherboard}
                         onSubmit={(s) =>
-                          modifyInfo(workStation.name, {
-                            group: null,
-                            cpu: null,
-                            motherboard: s,
-                            notes: null,
-                          })
+                          modifyInfo(
+                            workStation.name,
+                            {
+                              group: null,
+                              cpu: null,
+                              motherboard: s,
+                              notes: null,
+                            },
+                            token,
+                          )
                         }
                       >
                         <EditablePreview />
@@ -177,15 +187,19 @@ export const AdminPanel = ({
                     <Th key={id + 4}>
                       {" "}
                       <Editable
-                        placeholder="notes"
+                        placeholder="None"
                         defaultValue={workStation.notes}
                         onSubmit={(s) =>
-                          modifyInfo(workStation.name, {
-                            group: null,
-                            cpu: null,
-                            motherboard: null,
-                            notes: s,
-                          })
+                          modifyInfo(
+                            workStation.name,
+                            {
+                              group: null,
+                              cpu: null,
+                              motherboard: null,
+                              notes: s,
+                            },
+                            token,
+                          )
                         }
                       >
                         <EditablePreview />

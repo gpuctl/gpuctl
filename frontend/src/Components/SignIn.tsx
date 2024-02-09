@@ -50,16 +50,7 @@ const requestSignIn = async (
   return failure(Error("Authentication Failed for an Unknown Reason!"));
 };
 
-export const SignIn = ({
-  setAuth,
-}: {
-  setAuth: (tok: Validated<AuthToken>) => void;
-}) => {
-  const updateAuth = (tok: AuthToken) => {
-    localStorage.setItem(AUTH_TOKEN_ITEM, tok.token);
-    setAuth(success(tok));
-  };
-
+export const SignIn = ({ signIn }: { signIn: (tok: AuthToken) => void }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -94,7 +85,7 @@ export const SignIn = ({
             const tok = await requestSignIn(username, password);
             validatedElim(tok, {
               success: (t) => {
-                updateAuth(t);
+                signIn(t);
                 window.location.reload();
               },
               failure: () => {},
