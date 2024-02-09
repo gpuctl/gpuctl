@@ -9,7 +9,7 @@ import (
 
 type NewMachine struct {
 	Hostname string `json:"hostname"`
-	Group    string `json:"group"`
+	Group    *string `json:"group"`
 }
 
 type ModifyMachine struct {
