@@ -102,10 +102,7 @@ func (conn postgresConn) UpdateLastSeen(host string, given_time int64) error {
 	// check if machine exists
 	lastSeen, err := getLastSeen(host, tx)
 
-	seconds := int64(given_time / 1e9)
-	nanos := int64(given_time % 1e9)
-
-	now := time.Unix(seconds, nanos)
+	now := time.Unix(given_time, 0)
 
 	if err == nil {
 		// machine existed, check if time is in future
@@ -211,7 +208,7 @@ WITH OrderedStats AS (
     MaxMemoryClock,
     ROW_NUMBER() OVER (PARTITION BY Gpu ORDER BY Received ASC) - 1 AS RowNum
   FROM Stats
-  WHERE Received > '$1'
+  WHERE Received > $1
 ),
 GroupedStats AS (
   SELECT
@@ -237,7 +234,7 @@ GroupedStats AS (
 SELECT * FROM GroupedStats;`
 
 	delete_query := `DELETE FROM Stats
-WHERE Received > '$1'
+WHERE Received > $1
 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);
 	`
 
@@ -262,10 +259,7 @@ FROM TempDownsampled;
 
 	cleanup_query := `DROP TABLE TempDownsampled;`
 
-	seconds := (int_now / 1e9)
-	nanos := (int_now % 1e9)
-
-	now := time.Unix(seconds, nanos)
+	now := time.Unix(int_now, 0)
 	sixMonthsAgo := now.AddDate(0, -6, 0)
 	sixMonthsAgoFormatted := sixMonthsAgo.Format("2006-01-02 15:04:05")
 
@@ -387,8 +381,11 @@ func (conn postgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {
 
 	for rows.Next() {
 		var seen_instance uplink.WorkstationSeen
+		var t time.Time
 
-		err = rows.Scan(&seen_instance.Hostname, &seen_instance.LastSeen)
+		err = rows.Scan(&seen_instance.Hostname, &t)
+
+		seen_instance.LastSeen = t.Unix()
 
 		if err != nil {
 			return nil, err

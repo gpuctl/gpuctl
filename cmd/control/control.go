@@ -1,10 +1,13 @@
 package main
 
 import (
+	"encoding/base64"
 	"fmt"
 	"log/slog"
 	"net/http"
 	"os"
+
+	"golang.org/x/crypto/ssh"
 
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
@@ -27,18 +30,52 @@ func main() {
 	}
 
 	gs := groundstation.NewServer(db)
-	gs_port := config.PortToAddress(conf.Server.GSPort)
+	gsPort := config.PortToAddress(conf.Server.GSPort)
+
+	var signer ssh.Signer
+	var key []byte
+
+	if conf.Onboard.KeyPath == "" {
+		key64 := os.Getenv("GPU_SSH_KEY")
+		key, err = base64.StdEncoding.DecodeString(key64)
+		if err != nil {
+			fatal("failed to decode base64 key: " + err.Error())
+		}
+	} else {
+		key, err = os.ReadFile(conf.Onboard.KeyPath)
+		if err != nil {
+			fatal("failed to read key file: " + err.Error())
+		}
+	}
+
+	if len(key) != 0 {
+		signer, err = ssh.ParsePrivateKey(key)
+		if err != nil {
+			fatal(fmt.Sprintf("Unable to parse key: %v", err))
+		}
+	} else {
+		// We want to allow the server to run even without an SSH key,
+		// for local development.
+		log.Warn("No SSH key given, will not be able to handle onboard requests")
+	}
+
 	authenticator := webapi.AuthenticatorFromConfig(conf)
-	wa := webapi.NewServer(db, &authenticator)
-	wa_port := config.PortToAddress(conf.Server.WAPort)
+	wa := webapi.NewServer(db, &authenticator, webapi.OnboardConf{
+		Username:    conf.Onboard.Username,
+		DataDir:     conf.Onboard.DataDir,
+		RemoteConf:  conf.Onboard.RemoteConf,
+		Signer:      signer,
+		KeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: Be secure here.
+	})
+	waPort := config.PortToAddress(conf.Server.WAPort)
 
 	errs := make(chan (error), 1)
 
 	go func() {
-		errs <- http.ListenAndServe(gs_port, gs)
+		errs <- http.ListenAndServe(gsPort, gs)
 	}()
 	go func() {
-		errs <- http.ListenAndServe(wa_port, wa)
+		errs <- http.ListenAndServe(waPort, wa)
 	}()
 	go func() {
 		errs <- database.DownsampleOverTime(conf.Database.DownsampleInterval, db)

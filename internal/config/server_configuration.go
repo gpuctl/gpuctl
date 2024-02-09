@@ -22,9 +22,17 @@ type AuthConfig struct {
 }
 
 type ControlConfiguration struct {
-	Server   Server     `toml:"server"`
-	Database Database   `toml:"database"`
-	Auth     AuthConfig `toml:"auth"`
+	Server   Server      `toml:"server"`
+	Database Database    `toml:"database"`
+	Auth     AuthConfig  `toml:"auth"`
+	Onboard  OnboardConf `toml:"onboard"`
+}
+
+type OnboardConf struct {
+	DataDir    string                 `toml:"datadir"`
+	KeyPath    string                 `toml:"keyfile"`
+	Username   string                 `toml:"username"`
+	RemoteConf SatelliteConfiguration `toml:"remote"`
 }
 
 func DefaultControlConfiguration() ControlConfiguration {
@@ -41,6 +49,10 @@ func DefaultControlConfiguration() ControlConfiguration {
 		Auth: AuthConfig{
 			Username: "admin",
 			Password: "password",
+		},
+		Onboard: OnboardConf{
+			// We don't set any of the others.
+			RemoteConf: DefaultSatelliteConfiguration(),
 		},
 	}
 }

@@ -1,8 +1,37 @@
-:80 {
+https://gpuctl.perial.co.uk {
+	# Specify headers
+	# Based on Mozilla suggestions: https://infosec.mozilla.org/guidelines/web_security
+	header {
+		Strict-Transport-Security "max-age=15768000" # max age of 6 months
+		Content-Security-Policy "default-src 'none'; img-src 'self'; connect-src 'self'; style-src 'unsafe-inline' 'self'; script-src 'self'; require-trusted-types-for 'script'"
+		Referrer-Policy "no-referrer"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "DENY"
+		X-XSS-Protection "0"
+
+		X-Clacks-Overhead "GNU Terry Pratchett"
+
+		# TODO: allow the API to be accessed from other endpoints
+		# This will need CSRF protection
+		-Access-Control-Allow-Origin
+	}
+
+	# For api routes, we can lock down the CSP even further
+	# https://infosec.mozilla.org/guidelines/web_security#content-security-policy
+	header /gs-api/* Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+	header /api/* Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+
 	# forward groundstation and web-api requests to control
-	# should match ports set in ./control.toml
+	# should match ports set in ./control.toml.default
 	reverse_proxy /gs-api/* control:8080
 	reverse_proxy /api/* control:8000
 
 	file_server
+
+	# use DNS validation because this domain isn't accessible outside the
+	# imperial network. Depending on how you deploy, this could be replaced
+	# with plain HTTP validation
+	tls {
+		dns hetzner {env.HETZNER_DNS_API_TOKEN}
+	}
 }
