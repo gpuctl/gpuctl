@@ -424,8 +424,9 @@ func (conn postgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {
 	for rows.Next() {
 		var seen_instance uplink.WorkstationSeen
 		var t time.Time
+		var dud sql.NullString
 
-		err = rows.Scan(&seen_instance.Hostname, &t)
+		err = rows.Scan(&seen_instance.Hostname, &dud, &dud, &dud, &dud, &t)
 
 		seen_instance.LastSeen = t.Unix()
 
