@@ -102,10 +102,7 @@ func (conn postgresConn) UpdateLastSeen(host string, given_time int64) error {
 	// check if machine exists
 	lastSeen, err := getLastSeen(host, tx)
 
-	seconds := int64(given_time / 1e9)
-	nanos := int64(given_time % 1e9)
-
-	now := time.Unix(seconds, nanos)
+	now := time.Unix(given_time, 0)
 
 	if err == nil {
 		// machine existed, check if time is in future
@@ -262,10 +259,7 @@ FROM TempDownsampled;
 
 	cleanup_query := `DROP TABLE TempDownsampled;`
 
-	seconds := (int_now / 1e9)
-	nanos := (int_now % 1e9)
-
-	now := time.Unix(seconds, nanos)
+	now := time.Unix(int_now, 0)
 	sixMonthsAgo := now.AddDate(0, -6, 0)
 	sixMonthsAgoFormatted := sixMonthsAgo.Format("2006-01-02 15:04:05")
 

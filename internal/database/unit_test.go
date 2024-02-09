@@ -214,7 +214,7 @@ func testDownsample(t *testing.T, db database.Database) {
 
 func testLastSeen(t *testing.T, db database.Database) {
 	host := "TestHost"
-	lastSeenTime := time.Now().Unix() * 1e9
+	lastSeenTime := time.Now().Unix()
 	db.UpdateLastSeen(host, lastSeenTime)
 
 	lastSeenData, err := db.LastSeen()
@@ -224,7 +224,7 @@ func testLastSeen(t *testing.T, db database.Database) {
 
 	found := false
 	for _, data := range lastSeenData {
-		if data.Hostname == host && data.LastSeen == lastSeenTime/1e9 {
+		if data.Hostname == host && data.LastSeen == lastSeenTime {
 			found = true
 			break
 		}
