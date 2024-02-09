@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
-	"reflect"
+//	"reflect"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -348,7 +348,7 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 		_, err = tx.Exec(`UPDATE Machines
 			SET CPU=$1
 			WHERE Hostname=$2`,
-			*machine.CPU, machine.Hostname
+			*machine.CPU, machine.Hostname,
 		)
 
 		if err != nil {
@@ -360,7 +360,7 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 		_, err = tx.Exec(`UPDATE Machines
 			SET Motherboard=$1
 			WHERE Hostname=$2`,
-			*machine.Motherboard, machine.Hostname
+			*machine.Motherboard, machine.Hostname,
 		)
 
 		if err != nil {
@@ -372,7 +372,7 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 		_, err = tx.Exec(`UPDATE Machines
 			SET Notes=$1
 			WHERE Hostname=$2`,
-			*machine.Notes, machine.Hostname
+			*machine.Notes, machine.Hostname,
 		)
 
 		if err != nil {
@@ -384,7 +384,7 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 		_, err = tx.Exec(`UPDATE Machines
 			SET GroupName=$1
 			WHERE Hostname=$2`,
-			*machine.Group, machine.Hostname
+			*machine.Group, machine.Hostname,
 		)
 
 		if err != nil {
