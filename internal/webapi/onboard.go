@@ -5,11 +5,12 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/onboard"
 )
 
-func (a *Api) onboard(data OnboardReq, _ *http.Request, log *slog.Logger) (*femto.EmptyBodyResponse, error) {
+func (a *Api) onboard(data broadcast.OnboardReq, _ *http.Request, log *slog.Logger) (*femto.EmptyBodyResponse, error) {
 
 	hostname := data.Hostname
 

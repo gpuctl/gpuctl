@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/gpuctl/gpuctl/internal/authentication"
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/gpuctl/gpuctl/internal/webapi"
@@ -140,7 +141,7 @@ func TestZipStats(t *testing.T) {
 		MaxMemoryClock:    5100.0,
 	}
 
-	expected := webapi.OldGPUStatSample{
+	expected := broadcast.OldGPUStatSample{
 		Hostname:          host,
 		Uuid:              info.Uuid,
 		Name:              info.Name,
@@ -201,7 +202,7 @@ func TestServerEndpoints(t *testing.T) {
 		{
 			name:           "Test Authentication",
 			method:         http.MethodPost,
-			endpoint:       "/api/auth",
+			endpoint:       "/api/admin/auth",
 			body:           []byte(`{"username":"joe","password":"mama"}`),
 			expectedStatus: http.StatusOK,
 		},
