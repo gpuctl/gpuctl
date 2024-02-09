@@ -69,3 +69,45 @@ func TestToOldGPUStats(t *testing.T) {
 	assert.Equal(t, s.Uuid, a.Hostname)
 	assert.Equal(t, uint64(1337), a.MemoryTotal)
 }
+
+func TestNewMachine(t *testing.T) {
+	var data broadcast.NewMachine
+
+	jsonAll := `{"hostname": "blobfish", "group": "Personal"}`
+	err := json.Unmarshal([]byte(jsonAll), &data)
+	assert.NoError(t, err)
+	group := "Personal"
+	assert.Equal(t, broadcast.NewMachine{
+			Hostname: "blobfish",
+			Group: &group},
+		data,
+	)
+
+	jsonNil := `{"hostname": "cod", "group": null}`
+	err = json.Unmarshal([]byte(jsonNil), &data)
+	assert.NoError(t, err)
+	assert.Equal(t, broadcast.NewMachine{
+			Hostname: "cod",
+			Group: nil},
+		data,
+	)
+
+	jsonShort := `{"hostname": "haddock"}`
+	err = json.Unmarshal([]byte(jsonShort), &data)
+	assert.NoError(t, err)
+	assert.Equal(t, broadcast.NewMachine{
+			Hostname: "haddock",
+			Group: nil},
+		data,
+	)
+
+	jsonSpace := `{"hostname": "haddock", "group": ""}`
+	err = json.Unmarshal([]byte(jsonSpace), &data)
+	assert.NoError(t, err)
+	space := ""
+	assert.Equal(t, broadcast.NewMachine{
+			Hostname: "haddock",
+			Group: &space},
+		data,
+	)
+}
