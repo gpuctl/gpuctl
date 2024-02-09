@@ -32,9 +32,7 @@ func (gs *groundstation) gpustats(data uplink.GpuStatsUpload, req *http.Request,
 		}
 	}
 
-	response := femto.Ok[types.Unit](types.Unit{})
-
-	return &response, nil
+	return femto.Ok(types.Unit{})
 }
 
 func (gs *groundstation) handleGPUInfo(host string, infos []uplink.GPUInfo) error {

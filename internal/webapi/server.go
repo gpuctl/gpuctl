@@ -100,9 +100,8 @@ func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.Response[br
 		})
 	}
 
-	result := []broadcast.WorkstationGroup{{Name: "Shared", WorkStations: ws}}
-	response := femto.Ok[broadcast.Workstations](result)
-	return &response, nil
+	result := broadcast.Workstations{{Name: "Shared", WorkStations: ws}}
+	return femto.Ok(result)
 }
 
 func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
@@ -121,15 +120,25 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 // Create a new machine
 func (a *Api) newMachine(machine broadcast.NewMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	l.Info("Tried to create machine", "host", machine.Hostname, "group", machine.Group)
-	response := femto.Ok[types.Unit](types.Unit{})
-	return &response, a.DB.NewMachine(machine)
+
+	err := a.DB.NewMachine(machine)
+	if err != nil {
+		return nil, err
+	}
+
+	return femto.Ok(types.Unit{})
 }
 
 // Modify machine info
 func (a *Api) addInfo(info broadcast.ModifyMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	l.Info("Tried to modify machine", "host", info.Hostname, "changes", info)
-	response := femto.Ok[types.Unit](types.Unit{})
-	return &response, a.DB.UpdateMachine(info)
+
+	err := a.DB.UpdateMachine(info)
+	if err != nil {
+		return nil, err
+	}
+
+	return femto.Ok(types.Unit{})
 }
 
 // Bodge together stats and contextual data to make OldGpuStats
