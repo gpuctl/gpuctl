@@ -177,7 +177,7 @@ func TestServerEndpoints(t *testing.T) {
 		CurrentTokens: make(map[authentication.AuthToken]bool),
 	}
 
-	server := webapi.NewServer(mockDB, &auth)
+	server := webapi.NewServer(mockDB, &auth, webapi.OnboardConf{})
 
 	tests := []struct {
 		name           string

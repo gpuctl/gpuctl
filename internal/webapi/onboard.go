@@ -8,7 +8,7 @@ import (
 	"github.com/gpuctl/gpuctl/internal/onboard"
 )
 
-func (a *api) onboard(data OnboardReq, _ *http.Request, log *slog.Logger) error {
+func (a *Api) onboard(data OnboardReq, _ *http.Request, log *slog.Logger) error {
 
 	hostname := data.Hostname
 
