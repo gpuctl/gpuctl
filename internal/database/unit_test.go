@@ -242,8 +242,9 @@ func populateDatabaseWithSampleData(db database.Database, gpuID string, numberOf
 		DriverVersion: "1.0",
 		MemoryTotal:   4,
 	})
+
 	if err != nil {
-		panic("Failed to update GPU context")
+		panic("Failed to update GPU context: " + err.Error())
 	}
 
 	now := time.Now()
