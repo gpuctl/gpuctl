@@ -1,24 +1,26 @@
 package webapi
 
 import (
+	"fmt"
 	"log/slog"
 	"net/http"
 
+	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
+	"github.com/gpuctl/gpuctl/internal/types"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 	"golang.org/x/crypto/ssh"
 )
 
 type Server struct {
 	mux *femto.Femto
-	api *api
+	api *Api
 }
-
-type api struct {
-	db          database.Database
+type Api struct {
+	DB          database.Database
 	onboardConf OnboardConf
 }
 
@@ -27,6 +29,11 @@ type APIAuthCredientals struct {
 	Password string
 }
 
+func makeAuthCookie(token string) string {
+	return fmt.Sprintf("token=%s; Path=/; HttpOnly; Secure; SameSite=Strict", token)
+}
+
+// ! Key change
 type OnboardConf struct {
 	// The login to run the satellite on other machines as
 	Username string
@@ -40,21 +47,21 @@ type OnboardConf struct {
 	KeyCallback ssh.HostKeyCallback
 }
 
-func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals], onboardConf OnboardConf) *Server {
+func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], onboard OnboardConf) *Server {
 	mux := new(femto.Femto)
-	api := &api{db, onboardConf}
+	api := &Api{db, onboard}
 
-	femto.OnGet(mux, "/api/stats/all", api.allstats)
-
-	// Set up authentication endpoint
-	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
-		return api.authenticate(auth, packet, r, l)
-	})
+	femto.OnGet(mux, "/api/stats/all", api.AllStatistics)
+	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
 
 	// Authenticated API endpoints
-	femto.OnPost(mux, "/api/admin/add_workstation", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.newMachine)))
-	femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addInfo)))
-	femto.OnPost(mux, "/api/onboard", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.onboard)))
+
+	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+		return api.Authenticate(auth, packet, r, l)
+	})
+	femto.OnPost(mux, "/api/admin/add_workstation", authentication.AuthWrapPost(auth, api.newMachine))
+	femto.OnPost(mux, "/api/machines/addinfo", authentication.AuthWrapPost(auth, api.addInfo))
+	femto.OnPost(mux, "/api/onboard", authentication.AuthWrapPost(auth, api.onboard))
 
 	return &Server{mux, api}
 }
@@ -66,8 +73,8 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // This function involves a lot of weird unwrapping
 // TODO: See if we can get the database layer to do it for us
-func (a *api) allstats(r *http.Request, l *slog.Logger) (broadcast.Workstations, error) {
-	data, err := a.db.LatestData()
+func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.Response[broadcast.Workstations], error) {
+	data, err := a.DB.LatestData()
 
 	if err != nil {
 		return nil, err
@@ -81,7 +88,7 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (broadcast.Workstations,
 
 		gpus := make([]broadcast.OldGPUStatSample, 0)
 		for i := range machine.Stats {
-			gpus = append(gpus, zipStats(
+			gpus = append(gpus, ZipStats(
 				machine.Hostname,
 				machine.GPUInfos[i],
 				machine.Stats[i],
@@ -95,28 +102,39 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (broadcast.Workstations,
 	}
 
 	result := []broadcast.WorkstationGroup{{Name: "Shared", WorkStations: ws}}
-	return result, nil
+	response := femto.Ok[broadcast.Workstations](result)
+	return &response, nil
 }
 
-func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
+func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	// Check if credientals are correct
-	return auth.CreateToken(packet)
+	token, err := auth.CreateToken(packet)
+
+	if err != nil {
+		return nil, err
+	}
+
+	headers := make(map[string]string)
+	headers["Set-Cookie"] = makeAuthCookie(token)
+	return &femto.EmptyBodyResponse{Headers: headers, Status: http.StatusAccepted}, nil
 }
 
 // Create a new machine
-func (a *api) newMachine(machine broadcast.NewMachine, r *http.Request, l *slog.Logger) error {
+func (a *Api) newMachine(machine broadcast.NewMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	l.Info("Tried to create machine", "host", machine.Hostname, "group", machine.Group)
-	return a.db.NewMachine(machine)
+	response := femto.Ok[types.Unit](types.Unit{})
+	return &response, a.DB.NewMachine(machine)
 }
 
 // Modify machine info
-func (a *api) addInfo(info broadcast.ModifyMachine, r *http.Request, l *slog.Logger) error {
+func (a *Api) addInfo(info broadcast.ModifyMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	l.Info("Tried to modify machine", "host", info.Hostname, "changes", info)
-	return a.db.UpdateMachine(info)
+	response := femto.Ok[types.Unit](types.Unit{})
+	return &response, a.DB.UpdateMachine(info)
 }
 
 // Bodge together stats and contextual data to make OldGpuStats
-func zipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) broadcast.OldGPUStatSample {
+func ZipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) broadcast.OldGPUStatSample {
 	return broadcast.OldGPUStatSample{
 		Hostname: host,
 		// info from GPUInfo

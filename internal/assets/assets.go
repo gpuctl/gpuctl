@@ -1,5 +1,4 @@
 // package assets contains
-//
 // It must not be imported by the satelllite
 
 package assets

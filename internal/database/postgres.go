@@ -97,7 +97,7 @@ func createTables(db *sql.DB) error {
 }
 
 // implement interface
-func (conn postgresConn) UpdateLastSeen(host string) error {
+func (conn postgresConn) UpdateLastSeen(host string, given_time int64) error {
 	var err error
 
 	tx, err := conn.db.Begin()
@@ -108,7 +108,11 @@ func (conn postgresConn) UpdateLastSeen(host string) error {
 	// check if machine exists
 	lastSeen, err := getLastSeen(host, tx)
 
-	now := time.Now()
+	seconds := int64(given_time / 1e9)
+	nanos := int64(given_time % 1e9)
+
+	now := time.Unix(seconds, nanos)
+
 	if err == nil {
 		// machine existed, check if time is in future
 		if lastSeen.Before(now) {
@@ -298,4 +302,29 @@ func (conn postgresConn) Drop() error {
 		DROP TABLE machines`)
 
 	return errors.Join(err, conn.db.Close())
+}
+
+func (conn postgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {
+	rows, err := conn.db.Query(`SELECT * FROM Machines`)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var seens []uplink.WorkstationSeen
+
+	for rows.Next() {
+		var seen_instance uplink.WorkstationSeen
+
+		err = rows.Scan(&seen_instance.Hostname, &seen_instance.LastSeen)
+
+		if err != nil {
+			return nil, err
+		}
+
+		slog.Debug("Fetched last seen instance from Machine table", "Hostname", seen_instance.Hostname, "LastSeen", seen_instance.LastSeen)
+		seens = append(seens, seen_instance)
+	}
+
+	return seens, nil
 }

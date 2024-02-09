@@ -26,6 +26,7 @@ var UnitTests = [...]unitTest{
 	{"AppendingFailsIfContextMissing", appendingFailsIfContextMissing},
 	{"AppendedDataPointsAreSaved", appendedDataPointsAreSaved},
 	{"MultipleHeartbeats", multipleHeartbeats},
+	unitTest{"TestSuccessfulDrop", dropSuccess}, // Must be last unit test as database tables are dropped here :)
 }
 
 // fake data for adding during tests
@@ -100,7 +101,7 @@ func appendingFailsIfMachineMissing(t *testing.T, db database.Database) {
 	}
 
 	// even if a different machine is present
-	err = db.UpdateLastSeen("badger")
+	err = db.UpdateLastSeen("badger", 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -114,7 +115,7 @@ func appendingFailsIfMachineMissing(t *testing.T, db database.Database) {
 func appendingFailsIfContextMissing(t *testing.T, db database.Database) {
 	fakeHost := "rabbit"
 
-	err := db.UpdateLastSeen(fakeHost)
+	err := db.UpdateLastSeen(fakeHost, 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -128,7 +129,7 @@ func appendingFailsIfContextMissing(t *testing.T, db database.Database) {
 func appendedDataPointsAreSaved(t *testing.T, db database.Database) {
 	fakeHost := "elk"
 
-	err := db.UpdateLastSeen(fakeHost)
+	err := db.UpdateLastSeen(fakeHost, 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -175,13 +176,22 @@ func appendedDataPointsAreSaved(t *testing.T, db database.Database) {
 
 // TODO: verify datastamp changed in the database
 func multipleHeartbeats(t *testing.T, db database.Database) {
-	err := db.UpdateLastSeen("otter")
+	err := db.UpdateLastSeen("otter", 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	err = db.UpdateLastSeen("otter")
+	err = db.UpdateLastSeen("otter", 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
+	}
+}
+
+func dropSuccess(t *testing.T, db database.Database) {
+	t.Parallel()
+
+	err := db.Drop()
+	if err != nil {
+		t.Fatalf("Error dropping database: %v", err)
 	}
 }
 
