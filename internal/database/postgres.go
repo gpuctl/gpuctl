@@ -211,7 +211,7 @@ WITH OrderedStats AS (
     MaxMemoryClock,
     ROW_NUMBER() OVER (PARTITION BY Gpu ORDER BY Received ASC) - 1 AS RowNum
   FROM Stats
-  WHERE Received > '$1'
+  WHERE Received > $1
 ),
 GroupedStats AS (
   SELECT
@@ -237,7 +237,7 @@ GroupedStats AS (
 SELECT * FROM GroupedStats;`
 
 	delete_query := `DELETE FROM Stats
-WHERE Received > '$1'
+WHERE Received > $1
 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);
 	`
 
