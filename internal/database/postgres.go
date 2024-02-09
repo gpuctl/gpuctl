@@ -49,7 +49,7 @@ func createTables(db *sql.DB) error {
 	var err error
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Machines (
 		Hostname text NOT NULL,
-		Group text,
+		GroupName text,
 		CPU text,
 		Motherboard text,
 		Notes text,
@@ -258,7 +258,7 @@ func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 
 // Create new machine
 func (conn postgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
-	_, err = conn.db.Exec(`INSERT INTO Machines (Hostname, Group)
+	_, err = conn.db.Exec(`INSERT INTO Machines (Hostname, GroupName)
 		VALUES ($1, $2)`,
 		machine.Hostname, machine.Group,
 	)
