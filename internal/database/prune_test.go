@@ -124,3 +124,48 @@ func TestDownsample(t *testing.T) {
 	}
 
 }
+
+func TestDownsamplePruneMethod(t *testing.T) {
+
+	db := InMemory().(*inMemory)
+
+	cutoffTime := time.Now().AddDate(0, -6, 0)
+	gpuUUID := "gpu-test-1"
+	hostName := "test-host"
+
+	db.infos[gpuUUID] = gpuInfo{host: hostName, context: uplink.GPUInfo{Uuid: gpuUUID}}
+	db.UpdateLastSeen(hostName, time.Now().Unix())
+
+	for i := 1; i <= 250; i++ {
+		sampleTime := time.Now().AddDate(0, 0, -i*2).Unix() // Ensuring a spread over the year
+		db.stats[gpuUUID] = append(db.stats[gpuUUID], uplink.GPUStatSample{
+			Uuid:              gpuUUID,
+			MemoryUtilisation: float64(i % 100), // Example values, vary as needed
+			GPUUtilisation:    float64(i % 100),
+			MemoryUsed:        1024 + float64(i),         // Example incremental value
+			FanSpeed:          50 + float64(i%50),        // Example variation
+			Temp:              60 + float64(i%40),        // Example variation
+			MemoryTemp:        30 + float64(i%20),        // Example variation
+			GraphicsVoltage:   1.0 + float64(i%100)/1000, // Incremental variation
+			PowerDraw:         200 + float64(i%50),       // Example variation
+			GraphicsClock:     1000 + float64(i%500),     // Variation
+			MaxGraphicsClock:  1500 + float64(i%500),     // Variation
+			MemoryClock:       500 + float64(i%250),      // Variation
+			MaxMemoryClock:    750 + float64(i%250),      // Variation
+			Time:              sampleTime,
+			RunningProcesses: []uplink.GPUProcInfo{
+				{Pid: 1234, Name: "ProcessA", MemUsed: 250.0},
+				{Pid: 1235, Name: "ProcessB", MemUsed: 300.0},
+			},
+		})
+	}
+
+	expectedNumSamples := 94
+
+	if err := downsampleDatabase(db, cutoffTime); err != nil {
+		t.Fatalf("Downsample failed: %v", err)
+	}
+	if gotNumSamples := len(db.stats[gpuUUID]); gotNumSamples != expectedNumSamples {
+		t.Errorf("Downsample() resulted in %d samples for %s; want %d", gotNumSamples, gpuUUID, expectedNumSamples)
+	}
+}
