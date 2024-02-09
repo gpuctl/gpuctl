@@ -29,11 +29,6 @@ type APIAuthCredientals struct {
 	Password string
 }
 
-func makeAuthCookie(token string) string {
-	return fmt.Sprintf("token=%s; Path=/; HttpOnly; Secure; SameSite=Strict", token)
-}
-
-// ! Key change
 type OnboardConf struct {
 	// The login to run the satellite on other machines as
 	Username string
@@ -45,6 +40,10 @@ type OnboardConf struct {
 	// SSH Options.
 	Signer      ssh.Signer
 	KeyCallback ssh.HostKeyCallback
+}
+
+func makeAuthCookie(token string) string {
+	return fmt.Sprintf("token=%s; Path=/; HttpOnly; Secure; SameSite=Strict", token)
 }
 
 func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], onboard OnboardConf) *Server {

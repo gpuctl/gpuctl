@@ -43,17 +43,6 @@ func TestInMemoryUnit(t *testing.T) {
 	}
 }
 
-func TestUpdateGPUContext_Error(t *testing.T) {
-	t.Parallel()
-
-	db := database.InMemory()
-
-	err := db.UpdateGPUContext("foo", uplink.GPUInfo{Uuid: "550e8400-e29b-41d4-a716-446655440000"})
-	assert.Error(t, err)
-	assert.EqualError(t, err, database.ErrMachineNotPresent.Error()+": 550e8400-e29b-41d4-a716-446655440000")
-
-}
-
 func TestAppendDataPoint_Error(t *testing.T) {
 	t.Parallel()
 

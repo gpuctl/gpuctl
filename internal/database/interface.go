@@ -26,6 +26,9 @@ type Database interface {
 	NewMachine(machine broadcast.NewMachine) error
 	UpdateMachine(changes broadcast.ModifyMachine) error
 
+	// downsample since certain unix time
+	Downsample(time int64) error
+
 	// Drop all tables and data in the db and close the connection
 	Drop() error
 }

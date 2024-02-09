@@ -33,7 +33,8 @@ type GPUStatSample struct {
 	MaxGraphicsClock  float64       `json:"max_graphics_clock"` // Mhz
 	MemoryClock       float64       `json:"memory_clock"`       // Mhz
 	MaxMemoryClock    float64       `json:"max_memory_clock"`   // Mhz
-	RunningProcesses  []GPUProcInfo `json:"processes"`          // List of processes running
+	Time              int64         `json:"time"`
+	RunningProcesses  []GPUProcInfo `json:"processes"` // List of processes running
 }
 
 type GPUProcInfo struct {

@@ -6,9 +6,10 @@ type Server struct {
 }
 
 type Database struct {
-	InMemory    bool   `toml:"inmemory"`
-	Postgres    bool   `toml:"postgres"`
-	PostgresUrl string `toml:"url"`
+	InMemory           bool   `toml:"inmemory"`
+	Postgres           bool   `toml:"postgres"`
+	PostgresUrl        string `toml:"url"`
+	DownsampleInterval int    `toml:"downsample_interval`
 }
 
 type AuthConfig struct {
