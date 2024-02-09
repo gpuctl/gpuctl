@@ -6,9 +6,10 @@ import (
 	"net/http"
 
 	"github.com/gpuctl/gpuctl/internal/onboard"
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 )
 
-func (a *api) onboard(data OnboardReq, _ *http.Request, log *slog.Logger) error {
+func (a *api) onboard(data broadcast.OnboardReq, _ *http.Request, log *slog.Logger) error {
 
 	hostname := data.Hostname
 
