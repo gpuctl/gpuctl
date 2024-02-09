@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
-//	"reflect"
+	//	"reflect"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -328,21 +328,21 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 		return err
 	}
 
-//	v := reflect.ValueOf(machine)
-//	for _, field := range reflect.VisibleFields(reflect.TypeOf(machine)) {
-//		value := v.FieldByIndex(field.Index)
-//		if v.Kind() == reflect.Pointer && !value.IsNil() {
-//			_, err = tx.Exec(`UPDATE Machines
-//				SET $1=$2
-//				WHERE Hostname=$3`,
-//				field.Name, reflect.Indirect(value), machine.Hostname,
-//			)
-//
-//			if err != nil {
-//				return errors.Join(err, tx.Rollback())
-//			}
-//		}
-//	}
+	//	v := reflect.ValueOf(machine)
+	//	for _, field := range reflect.VisibleFields(reflect.TypeOf(machine)) {
+	//		value := v.FieldByIndex(field.Index)
+	//		if v.Kind() == reflect.Pointer && !value.IsNil() {
+	//			_, err = tx.Exec(`UPDATE Machines
+	//				SET $1=$2
+	//				WHERE Hostname=$3`,
+	//				field.Name, reflect.Indirect(value), machine.Hostname,
+	//			)
+	//
+	//			if err != nil {
+	//				return errors.Join(err, tx.Rollback())
+	//			}
+	//		}
+	//	}
 
 	if machine.CPU != nil {
 		_, err = tx.Exec(`UPDATE Machines
