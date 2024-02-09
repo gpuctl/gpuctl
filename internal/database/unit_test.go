@@ -27,8 +27,8 @@ var UnitTests = [...]unitTest{
 	{"AppendingFailsIfContextMissing", appendingFailsIfContextMissing},
 	{"AppendedDataPointsAreSaved", appendedDataPointsAreSaved},
 	{"MultipleHeartbeats", multipleHeartbeats},
-	unitTest{"Downsample", testDownsample},
 	unitTest{"LastSeen", testLastSeen},
+	unitTest{"Downsample", testDownsample},
 	unitTest{"TestSuccessfulDrop", dropSuccess}, // Must be last unit test as database tables are dropped here :)
 }
 
