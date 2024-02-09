@@ -78,8 +78,8 @@ func TestNewMachine(t *testing.T) {
 	assert.NoError(t, err)
 	group := "Personal"
 	assert.Equal(t, broadcast.NewMachine{
-			Hostname: "blobfish",
-			Group: &group},
+		Hostname: "blobfish",
+		Group:    &group},
 		data,
 	)
 
@@ -87,8 +87,8 @@ func TestNewMachine(t *testing.T) {
 	err = json.Unmarshal([]byte(jsonNil), &data)
 	assert.NoError(t, err)
 	assert.Equal(t, broadcast.NewMachine{
-			Hostname: "cod",
-			Group: nil},
+		Hostname: "cod",
+		Group:    nil},
 		data,
 	)
 
@@ -96,8 +96,8 @@ func TestNewMachine(t *testing.T) {
 	err = json.Unmarshal([]byte(jsonShort), &data)
 	assert.NoError(t, err)
 	assert.Equal(t, broadcast.NewMachine{
-			Hostname: "haddock",
-			Group: nil},
+		Hostname: "haddock",
+		Group:    nil},
 		data,
 	)
 
@@ -106,8 +106,8 @@ func TestNewMachine(t *testing.T) {
 	assert.NoError(t, err)
 	space := ""
 	assert.Equal(t, broadcast.NewMachine{
-			Hostname: "haddock",
-			Group: &space},
+		Hostname: "haddock",
+		Group:    &space},
 		data,
 	)
 }

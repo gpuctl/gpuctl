@@ -8,12 +8,12 @@ import (
 // These types need to be kept in sync with `frontend/src/Data.tsx`
 
 type NewMachine struct {
-	Hostname string `json:"hostname"`
+	Hostname string  `json:"hostname"`
 	Group    *string `json:"group"`
 }
 
 type ModifyMachine struct {
-	Hostname    string `json:"hostname"`
+	Hostname    string  `json:"hostname"`
 	CPU         *string `json:"cpu"`         // nullable - means no change
 	Motherboard *string `json:"motherboard"` // nullable - means no change
 	Notes       *string `json:"notes"`       // nullable - means no change
