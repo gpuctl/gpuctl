@@ -202,7 +202,7 @@ func TestServerEndpoints(t *testing.T) {
 		{
 			name:           "Test Authentication",
 			method:         http.MethodPost,
-			endpoint:       "/api/auth",
+			endpoint:       "/api/admin/auth",
 			body:           []byte(`{"username":"joe","password":"mama"}`),
 			expectedStatus: http.StatusOK,
 		},
