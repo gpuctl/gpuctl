@@ -20,6 +20,12 @@ import { Box, Center, HStack, Heading, VStack } from "@chakra-ui/layout";
 import { Button } from "@chakra-ui/button";
 import { useState } from "react";
 import { gracefulify } from "graceful-fs";
+import {
+  AutoComplete,
+  AutoCompleteInput,
+  AutoCompleteItem,
+  AutoCompleteList,
+} from "@choc-ui/chakra-autocomplete";
 
 export const ADMIN_PATH = "/admin";
 const ADD_MACHINE_URL = "/add_workstation";
@@ -106,11 +112,22 @@ export const AdminPanel = ({
           placeholder="Hostname (e.g. mira05.doc.ic.ac.uk)"
           onChange={(e) => setHostname(e.target.value)}
         ></Input>
-        <Input
-          w="45%"
-          placeholder="Group Name (e.g. shared)"
+        <AutoComplete
+          openOnFocus
+          creatable
           onChange={(e) => setGroup(e.target.value)}
-        ></Input>
+          values={groups.map((g) => g.name)}
+        >
+          <AutoCompleteInput
+            w="45%"
+            placeholder="Group Name (e.g. shared)"
+          ></AutoCompleteInput>
+          <AutoCompleteList maxHeight="200px" overflow="scroll">
+            {groups.map((g, i) => (
+              <AutoCompleteItem key={i} value={g.name}></AutoCompleteItem>
+            ))}
+          </AutoCompleteList>
+        </AutoComplete>
         <Button
           w="5%"
           onClick={() => {
