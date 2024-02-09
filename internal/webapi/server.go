@@ -112,7 +112,13 @@ func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet 
 
 // TODO
 func (a *api) addMachine(add broadcast.AddMachineInfo, r *http.Request, l *slog.Logger) error {
-	return a.onboard(broadcast.OnboardReq{add.Hostname}, r, l)
+	err := a.onboard(broadcast.OnboardReq{Hostname: add.Hostname}, r, l)
+	if err != nil {
+		return err
+	}
+	modify := broadcast.ModifyMachine{Hostname: add.Hostname, Group: &add.Group}
+	err = a.modifyMachineInfo(modify, r, l)
+	return err
 }
 
 func (a *api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *slog.Logger) error {
