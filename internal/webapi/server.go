@@ -53,6 +53,7 @@ func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals
 	// Authenticated API endpoints
 	femto.OnPost(mux, "/api/admin/add_workstation", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addMachine)))
 	femto.OnPost(mux, "/api/admin/stats/modify", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.modifyMachineInfo)))
+	femto.OnPost(mux, "/api/admin/rm_workstation", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.removeMachine)))
 	femto.OnGet(mux, "/api/admin/confirm",
 		femto.AuthWrapGet(auth, femto.WrapGetFunc(api.confirmAdmin)))
 
@@ -111,6 +112,10 @@ func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet 
 // TODO
 func (a *api) addMachine(add AddMachineInfo, r *http.Request, l *slog.Logger) error {
 	return a.onboard(OnboardReq{add.Hostname}, r, l)
+}
+
+func (a *api) removeMachine(rm RemoveMachineInfo, r *http.Request, l *slog.Logger) error {
+	return a.removeMachine(rm, r, l)
 }
 
 func (a *api) confirmAdmin(r *http.Request, l *slog.Logger) error {

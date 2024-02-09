@@ -68,6 +68,10 @@ type OnboardReq struct {
 	Hostname string `json:"hostname"`
 }
 
+type RemoveMachineInfo struct {
+	Hostname string `json:"hostname"`
+}
+
 type AddMachineInfo struct {
 	Hostname string `json:"hostname"`
 	Group    string `json:"group"`
