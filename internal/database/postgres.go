@@ -387,8 +387,11 @@ func (conn postgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {
 
 	for rows.Next() {
 		var seen_instance uplink.WorkstationSeen
+		var t time.Time
 
-		err = rows.Scan(&seen_instance.Hostname, &seen_instance.LastSeen)
+		err = rows.Scan(&seen_instance.Hostname, &t)
+
+		seen_instance.LastSeen = t.Unix()
 
 		if err != nil {
 			return nil, err
