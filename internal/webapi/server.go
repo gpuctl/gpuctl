@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
@@ -46,14 +47,14 @@ func NewServer(db database.Database, auth femto.Authenticator[APIAuthCredientals
 	femto.OnGet(mux, "/api/stats/all", api.allstats)
 
 	// Set up authentication endpoint
-	femto.OnPost(mux, "/api/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
+	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (femto.AuthToken, error) {
 		return api.authenticate(auth, packet, r, l)
 	})
 
 	// Authenticated API endpoints
-	femto.OnPost(mux, "/api/machines/move", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.moveMachineGroup)))
-	femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addMachineInfo)))
-	femto.OnPost(mux, "/api/onboard", femto.AuthWrapPost(auth, femto.WrapPostFunc[OnboardReq](api.onboard)))
+	femto.OnPost(mux, "/api/admin/add_workstation", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.newMachine)))
+	femto.OnPost(mux, "/api/machines/addinfo", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.addInfo)))
+	femto.OnPost(mux, "/api/onboard", femto.AuthWrapPost(auth, femto.WrapPostFunc(api.onboard)))
 
 	return &Server{mux, api}
 }
@@ -65,20 +66,20 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 // This function involves a lot of weird unwrapping
 // TODO: See if we can get the database layer to do it for us
-func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
+func (a *api) allstats(r *http.Request, l *slog.Logger) (broadcast.Workstations, error) {
 	data, err := a.db.LatestData()
 
 	if err != nil {
 		return nil, err
 	}
 
-	var ws []workStationData
+	var ws []broadcast.WorkstationData
 	for _, machine := range data {
 		if len(machine.Stats) == 0 {
 			continue
 		}
 
-		gpus := make([]OldGPUStatSample, 0)
+		gpus := make([]broadcast.OldGPUStatSample, 0)
 		for i := range machine.Stats {
 			gpus = append(gpus, zipStats(
 				machine.Hostname,
@@ -87,13 +88,13 @@ func (a *api) allstats(r *http.Request, l *slog.Logger) (workstations, error) {
 			))
 		}
 
-		ws = append(ws, workStationData{
+		ws = append(ws, broadcast.WorkstationData{
 			Name: machine.Hostname,
 			Gpus: gpus,
 		})
 	}
 
-	result := []workstationGroup{{Name: "Shared", WorkStations: ws}}
+	result := []broadcast.WorkstationGroup{{Name: "Shared", WorkStations: ws}}
 	return result, nil
 }
 
@@ -102,21 +103,21 @@ func (a *api) authenticate(auth femto.Authenticator[APIAuthCredientals], packet 
 	return auth.CreateToken(packet)
 }
 
-// TODO
-func (a *api) moveMachineGroup(move MachineMove, r *http.Request, l *slog.Logger) error {
-	l.Info("Accessed moveMachineGroup")
-	return nil
+// Create a new machine
+func (a *api) newMachine(machine broadcast.NewMachine, r *http.Request, l *slog.Logger) error {
+	l.Info("Tried to create machine", "host", machine.Hostname, "group", machine.Group)
+	return a.db.NewMachine(machine)
 }
 
-// TODO
-func (a *api) addMachineInfo(info MachineAddInfo, r *http.Request, l *slog.Logger) error {
-	l.Info("Accessed addMachineInfo")
-	return nil
+// Modify machine info
+func (a *api) addInfo(info broadcast.ModifyMachine, r *http.Request, l *slog.Logger) error {
+	l.Info("Tried to modify machine", "host", info.Hostname, "changes", info)
+	return a.db.UpdateMachine(info)
 }
 
 // Bodge together stats and contextual data to make OldGpuStats
-func zipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) OldGPUStatSample {
-	return OldGPUStatSample{
+func zipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) broadcast.OldGPUStatSample {
+	return broadcast.OldGPUStatSample{
 		Hostname: host,
 		// info from GPUInfo
 		Uuid:          info.Uuid,
