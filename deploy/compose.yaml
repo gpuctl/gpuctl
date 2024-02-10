@@ -11,7 +11,8 @@ services:
       interval: 10s
   control:
     build:
-      dockerfile: ./control.Dockerfile
+      dockerfile: ./deploy/control.Dockerfile
+      context: ..
     environment:
       GPU_DB_URL: postgres://postgres@postgres/postgres
     depends_on:
@@ -22,7 +23,7 @@ services:
     # HETZNER_DNS_API_TOKEN=key_value
     env_file: ./.env
     build:
-      dockerfile: ./frontend.Dockerfile
+      dockerfile: ./deploy/frontend.Dockerfile
       context: ..
     ports:
       - "80:80"
