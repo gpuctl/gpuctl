@@ -264,9 +264,9 @@ func TestInvalidAuthentication(t *testing.T) {
 
 func TestOk(t *testing.T) {
 	{
-		resp := femto.Ok("hello")
-		if resp.Status != http.StatusAccepted {
-			t.Errorf("Expected status %d, got %d", http.StatusAccepted, resp.Status)
+		resp, _ := femto.Ok("hello")
+		if resp.Status != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, resp.Status)
 		}
 		if resp.Body != "hello" {
 			t.Errorf("Expected body %q, got %q", "hello", resp.Body)
@@ -274,9 +274,9 @@ func TestOk(t *testing.T) {
 	}
 
 	{
-		resp := femto.Ok(123)
-		if resp.Status != http.StatusAccepted {
-			t.Errorf("Expected status %d, got %d", http.StatusAccepted, resp.Status)
+		resp, _ := femto.Ok(123)
+		if resp.Status != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, resp.Status)
 		}
 		if resp.Body != 123 {
 			t.Errorf("Expected body %d, got %d", 123, resp.Body)
@@ -289,9 +289,9 @@ func TestOk(t *testing.T) {
 	}
 	{
 		expectedBody := CustomStruct{Name: "John", Age: 30}
-		resp := femto.Ok(expectedBody)
-		if resp.Status != http.StatusAccepted {
-			t.Errorf("Expected status %d, got %d", http.StatusAccepted, resp.Status)
+		resp, _ := femto.Ok(expectedBody)
+		if resp.Status != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, resp.Status)
 		}
 		if resp.Body != expectedBody {
 			t.Errorf("Expected body %+v, got %+v", expectedBody, resp.Body)

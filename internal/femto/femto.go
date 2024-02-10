@@ -42,8 +42,9 @@ func OnGet[T any](f *Femto, pattern string, handle GetFunc[T]) {
 	})
 }
 
-func Ok[T any](content T) Response[T] {
-	return Response[T]{Status: http.StatusAccepted, Body: content}
+// Ok returns a response with 200 OK, and no error.
+func Ok[T any](content T) (*Response[T], error) {
+	return &Response[T]{Status: http.StatusOK, Body: content}, nil
 }
 
 func generateErrorLogger(l *slog.Logger, w http.ResponseWriter) func(ctx string, status int, e error) {
