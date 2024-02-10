@@ -1,8 +1,10 @@
 package database
 
 import (
+	"cmp"
 	"errors"
 	"fmt"
+	"slices"
 	"sort"
 	"sync"
 	"time"
@@ -161,6 +163,8 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 
 	var sumMemoryUtil, sumGPUUtil, sumMemoryUsed, sumFanSpeed, sumTemp, sumMemoryTemp, sumGraphicsVoltage, sumPowerDraw, sumGraphicsClock, sumMaxGraphicsClock, sumMemoryClock, sumMaxMemoryClock float64
 	var minTime int64 = samples[0].Time
+
+	// Pid -> Process
 	processesMap := make(map[uint64]uplink.GPUProcInfo)
 
 	for _, sample := range samples {
@@ -182,15 +186,21 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 		}
 
 		for _, proc := range sample.RunningProcesses {
+			// TODO: What if multiple samples have a process with the same PID?
 			processesMap[proc.Pid] = proc
 		}
 	}
 
 	n := float64(len(samples))
+
 	aggregatedProcesses := make([]uplink.GPUProcInfo, 0, len(processesMap))
 	for _, proc := range processesMap {
 		aggregatedProcesses = append(aggregatedProcesses, proc)
 	}
+	// Ensure deterministic order.
+	slices.SortFunc(aggregatedProcesses, func(a, b uplink.GPUProcInfo) int {
+		return cmp.Compare(a.Pid, b.Pid)
+	})
 
 	averagedSample := uplink.GPUStatSample{
 		Uuid:              samples[0].Uuid,
