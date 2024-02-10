@@ -96,3 +96,10 @@ jobs:
           go-version: "1.21.x"
       - run: make    
       - run: go test ./... -short
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp ./secrets/keys.example ./secrets/keys
+      - run: docker compose build
