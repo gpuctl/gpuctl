@@ -6,8 +6,9 @@ RUN go mod download && go mod verify
 
 COPY cmd ./cmd
 COPY internal ./internal
+COPY Makefile Makefile
 
-RUN go build -v ./cmd/control
+RUN make control
 
 COPY control.toml.default ./control.toml
 

@@ -98,7 +98,7 @@ func createTables(db *sql.DB) error {
 }
 
 // implement interface
-func (conn postgresConn) UpdateLastSeen(host string) error {
+func (conn postgresConn) UpdateLastSeen(host string, given_time int64) error {
 	var err error
 
 	tx, err := conn.db.Begin()
@@ -109,7 +109,8 @@ func (conn postgresConn) UpdateLastSeen(host string) error {
 	// check if machine exists
 	lastSeen, err := getLastSeen(host, tx)
 
-	now := time.Now()
+	now := time.Unix(given_time, 0)
+
 	if err == nil {
 		// machine existed, check if time is in future
 		if lastSeen.Before(now) {
@@ -192,6 +193,117 @@ func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) er
 		packet.DriverVersion, packet.MemoryTotal)
 
 	return err
+}
+
+func (conn postgresConn) Downsample(int_now int64) error {
+	downsample_query := `CREATE TEMPORARY TABLE TempDownsampled AS
+WITH OrderedStats AS (
+  SELECT
+    Gpu,
+    Received,
+    MemoryUtilisation,
+    GpuUtilisation,
+    MemoryUsed,
+    FanSpeed,
+    Temp,
+    MemoryTemp,
+    GraphicsVoltage,
+    PowerDraw,
+    GraphicsClock,
+    MaxGraphicsClock,
+    MemoryClock,
+    MaxMemoryClock,
+    ROW_NUMBER() OVER (PARTITION BY Gpu ORDER BY Received ASC) - 1 AS RowNum
+  FROM Stats
+  WHERE Received > $1
+),
+GroupedStats AS (
+  SELECT
+    Gpu,
+    AVG(MemoryUtilisation) AS AvgMemoryUtilisation,
+    AVG(GpuUtilisation) AS AvgGpuUtilisation,
+    AVG(MemoryUsed) AS AvgMemoryUsed,
+    AVG(FanSpeed) AS AvgFanSpeed,
+    AVG(Temp) AS AvgTemp,
+    AVG(MemoryTemp) AS AvgMemoryTemp,
+    AVG(GraphicsVoltage) AS AvgGraphicsVoltage,
+    AVG(PowerDraw) AS AvgPowerDraw,
+    AVG(GraphicsClock) AS AvgGraphicsClock,
+    AVG(MaxGraphicsClock) AS AvgMaxGraphicsClock,
+    AVG(MemoryClock) AS AvgMemoryClock,
+    AVG(MaxMemoryClock) AS AvgMaxMemoryClock,
+    MIN(Received) AS SampleStartTime,
+    MAX(Received) AS SampleEndTime,
+    (RowNum / 100) AS GroupId
+  FROM OrderedStats
+  GROUP BY Gpu, GroupId
+)
+SELECT * FROM GroupedStats;`
+
+	delete_query := `DELETE FROM Stats
+WHERE Received > $1
+AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);
+	`
+
+	insert_query := `INSERT INTO Stats (Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed, FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw, GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock)
+SELECT
+  Gpu,
+  SampleStartTime, 
+  AvgMemoryUtilisation,
+  AvgGpuUtilisation,
+  AvgMemoryUsed,
+  AvgFanSpeed,
+  AvgTemp,
+  AvgMemoryTemp,
+  AvgGraphicsVoltage,
+  AvgPowerDraw,
+  AvgGraphicsClock,
+  AvgMaxGraphicsClock,
+  AvgMemoryClock,
+  AvgMaxMemoryClock
+FROM TempDownsampled;
+	`
+
+	cleanup_query := `DROP TABLE TempDownsampled;`
+
+	now := time.Unix(int_now, 0)
+	sixMonthsAgo := now.AddDate(0, -6, 0)
+	sixMonthsAgoFormatted := sixMonthsAgo.Format("2006-01-02 15:04:05")
+
+	tx, err := conn.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(downsample_query, sixMonthsAgoFormatted)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec(delete_query, sixMonthsAgoFormatted)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec(insert_query)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec(cleanup_query)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 // TODO: consider returning workstationGroup
@@ -407,4 +519,33 @@ func (conn postgresConn) Drop() error {
 		DROP TABLE machines`)
 
 	return errors.Join(err, conn.db.Close())
+}
+
+func (conn postgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {
+	rows, err := conn.db.Query(`SELECT * FROM Machines`)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var seens []uplink.WorkstationSeen
+
+	for rows.Next() {
+		var seen_instance uplink.WorkstationSeen
+		var t time.Time
+		var dud sql.NullString
+
+		err = rows.Scan(&seen_instance.Hostname, &dud, &dud, &dud, &dud, &t)
+
+		seen_instance.LastSeen = t.Unix()
+
+		if err != nil {
+			return nil, err
+		}
+
+		slog.Debug("Fetched last seen instance from Machine table", "Hostname", seen_instance.Hostname, "LastSeen", seen_instance.LastSeen)
+		seens = append(seens, seen_instance)
+	}
+
+	return seens, nil
 }

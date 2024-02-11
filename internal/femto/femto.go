@@ -3,10 +3,11 @@ package femto
 
 import (
 	"encoding/json"
-	"errors"
 	"log/slog"
 	"net/http"
 	"sync/atomic"
+
+	"github.com/gpuctl/gpuctl/internal/types"
 )
 
 type Femto struct {
@@ -14,23 +15,34 @@ type Femto struct {
 	reqNo atomic.Uint64
 }
 
-func (f *Femto) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	f.mux.ServeHTTP(w, r)
+type Response[T any] struct {
+	Headers map[string]string
+	Body    T
+	Status  int
 }
 
-func OnPost[T any, R any](f *Femto, pattern string, handle PostFuncPure[T, R]) {
-	f.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		doPost(f, w, r, handle)
+type EmptyBodyResponse = Response[types.Unit]
+
+type PostFunc[T any] func(T, *http.Request, *slog.Logger) (*EmptyBodyResponse, error)
+type GetFunc[T any] func(*http.Request, *slog.Logger) (*Response[T], error)
+
+func (femto *Femto) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	femto.mux.ServeHTTP(w, r)
+}
+
+func OnPost[T any](f *Femto, pattern string, handle PostFunc[T]) {
+	f.mux.HandleFunc(pattern, func(writer http.ResponseWriter, request *http.Request) {
+		doPost(f, writer, request, handle)
 	})
 }
 
 func OnGet[T any](f *Femto, pattern string, handle GetFunc[T]) {
-	f.mux.HandleFunc(pattern, func(w http.ResponseWriter, r *http.Request) {
-		doGet(f, w, r, handle)
+	f.mux.HandleFunc(pattern, func(writer http.ResponseWriter, request *http.Request) {
+		doGet(f, writer, request, handle)
 	})
 }
 
-// correctMethod returns wether the request had the given method.
+// correctMethod returns whether the request had the given method.
 //
 // If not, it will return a suitable reponce: either No Content for an OPTIONS request,
 // or
@@ -56,7 +68,18 @@ func correctMethod(method string, req *http.Request, w http.ResponseWriter, log 
 		http.Error(w, "Expected "+method, http.StatusMethodNotAllowed)
 		return false
 	}
+}
 
+// Ok returns a response with 200 OK, and no error.
+func Ok[T any](content T) (*Response[T], error) {
+	return &Response[T]{Status: http.StatusOK, Body: content}, nil
+}
+
+func generateErrorLogger(l *slog.Logger, w http.ResponseWriter) func(ctx string, status int, e error) {
+	return func(ctx string, status int, e error) {
+		l.Error(ctx, "err", e)
+		http.Error(w, e.Error(), status)
+	}
 }
 
 func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFunc[T]) {
@@ -69,36 +92,41 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 		return
 	}
 
-	ise := func(ctx string, e error) {
-		log.Error(ctx, "err", e)
-		http.Error(w, e.Error(), http.StatusInternalServerError)
-	}
-
 	data, err := handle(r, log)
+
+	if data == nil {
+		data = &Response[T]{}
+	}
+
+	if data.Status == 0 {
+		data.Status = http.StatusInternalServerError
+	}
+
+	ise := generateErrorLogger(log, w)
+
 	if err != nil {
-		// Handle authentication related errors
-		if errors.Is(err, NotAuthenticatedError) {
-			log.Info("Invalid attempt at authentication")
-			http.Error(w, "Not authenticated", http.StatusUnauthorized)
-			return
-		}
-		ise("application error", err)
+		ise("There was an error in the server when trying to handle the provided request", data.Status, err)
 		return
 	}
 
-	jsonb, err := json.Marshal(data)
+	jsonb, err := json.Marshal(data.Body)
 	if err != nil {
-		ise("marshaling to json failed", err)
+		ise("There was an error in trying to serialise the handler's response into JSON", data.Status, err)
 		return
+	}
+
+	for key, value := range data.Headers {
+		w.Header().Add(key, value)
 	}
 
 	_, err = w.Write(jsonb)
+
 	if err != nil {
-		ise("writing failed", err)
+		ise("There was an error in trying to write to the user", data.Status, err)
 	}
 }
 
-func doPost[T any, R any](f *Femto, w http.ResponseWriter, r *http.Request, handle PostFuncPure[T, R]) {
+func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle PostFunc[T]) {
 	reqNo := f.nextReqNo()
 	log := f.logger().With(slog.Uint64("req_no", reqNo))
 
@@ -111,41 +139,40 @@ func doPost[T any, R any](f *Femto, w http.ResponseWriter, r *http.Request, hand
 	// TODO: Ensure all field's are present. I'm so mad this is hard.
 	var reqData T
 	decoder := json.NewDecoder(r.Body)
+
 	if err := decoder.Decode(&reqData); err != nil {
 		log.Info("Failed to unmarshal JSON", "error", err)
-		http.Error(w, "failed to decode json: "+err.Error(), http.StatusBadRequest)
+		http.Error(w, "Failed to decode the provided JSON: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	ise := func(ctx string, e error) {
-		log.Error(ctx, "err", e)
-		http.Error(w, e.Error(), http.StatusInternalServerError)
-	}
+	ise := generateErrorLogger(log, w)
 
 	data, userErr := handle(reqData, r, log)
 
+	if data == nil {
+		data = &EmptyBodyResponse{}
+	}
+
+	if data.Status == 0 {
+		data.Status = http.StatusInternalServerError
+	}
+
 	if userErr != nil {
-		// Handle authentication related errors
-		if errors.Is(userErr, NotAuthenticatedError) {
-			log.Info("Invalid attempt at authentication")
-			http.Error(w, "Not authenticated", http.StatusUnauthorized)
-			return
-		}
-		// TODO: Nicer error
-		log.Info("Error", "err", userErr)
-		http.Error(w, userErr.Error(), http.StatusInternalServerError)
+
+		ise("There was an error in the server when trying to handle the provided request", data.Status, userErr)
 		return
 	}
 
-	jsonb, err := json.Marshal(data)
-	if err != nil {
-		ise("marshaling to json failed", err)
-		return
+	for key, value := range data.Headers {
+		w.Header().Add(key, value)
 	}
 
-	_, err = w.Write(jsonb)
+	_, err := w.Write(make([]byte, 0))
+
 	if err != nil {
-		ise("writing failed", err)
+		ise("There was an error in trying to write to the user", data.Status, err)
+		return
 	}
 }
 
@@ -157,39 +184,3 @@ func (f *Femto) logger() *slog.Logger {
 	// TODO: Associate a logger with Femto.
 	return slog.Default()
 }
-
-func PurePost[T any](data T, r *http.Request, l *slog.Logger) (struct{}, error) {
-	return struct{}{}, nil
-}
-
-// go functional hackery
-func ParallelCompose[T any, R any](base PostFunc[T], pure PostFuncPure[T, R]) PostFuncPure[T, R] {
-	return func(data T, r *http.Request, l *slog.Logger) (R, error) {
-		err := base(data, r, l)
-
-		if pure != nil {
-			ret, e := pure(data, r, l)
-			return ret, errors.Join(err, e)
-		}
-
-		var zero R
-		return zero, err
-	}
-}
-
-func WrapPostFunc[T any](f PostFunc[T]) PostFuncPure[T, struct{}] {
-	return func(data T, r *http.Request, l *slog.Logger) (struct{}, error) {
-		return struct{}{}, f(data, r, l)
-	}
-}
-
-func WrapGetFunc(f GetFuncUnit) GetFunc[struct{}] {
-	return func(r *http.Request, l *slog.Logger) (struct{}, error) {
-		return struct{}{}, f(r, l)
-	}
-}
-
-type PostFuncPure[T any, R any] func(T, *http.Request, *slog.Logger) (R, error)
-type PostFunc[T any] func(T, *http.Request, *slog.Logger) error
-type GetFuncUnit func(*http.Request, *slog.Logger) error
-type GetFunc[T any] func(*http.Request, *slog.Logger) (T, error)

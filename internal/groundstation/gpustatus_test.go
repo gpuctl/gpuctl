@@ -65,7 +65,7 @@ func TestHandleStatusSubmission(t *testing.T) {
 
 	res := simulateSubmissionAndGetResponse(validJSON, "POST")
 
-	assertResponseHas(t, res, http.StatusOK, "{}")
+	assertResponseHas(t, res, http.StatusOK, "")
 }
 
 func TestHandleWrongMethodSubmission(t *testing.T) {
@@ -90,7 +90,7 @@ func TestHandleBadJsonDeserialisation(t *testing.T) {
 
 	res := simulateSubmissionAndGetResponse(invalidJSON, "POST")
 
-	assertResponseHas(t, res, http.StatusBadRequest, "failed to decode json")
+	assertResponseHas(t, res, http.StatusBadRequest, "Failed to decode the provided JSON")
 }
 
 // Once DB connection is made, should test that we can fail on error states during
