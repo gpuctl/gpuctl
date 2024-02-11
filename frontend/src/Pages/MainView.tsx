@@ -20,7 +20,6 @@ import { TableTab } from "../Components/DataTable";
 import { WorkstationCardMin } from "../Components/WorkstationCardMinimal";
 import { Navbar } from "../Components/Navbar";
 import { useJarJar, useOnce } from "../Utils/Hooks";
-import { useParams } from "react-router-dom";
 import { ADMIN_PATH, AdminPanel } from "./AdminPanel";
 
 const API_ALL_STATS_PATH = "/stats/all";

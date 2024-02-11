@@ -3,7 +3,6 @@ import { API_URL, AuthToken } from "../App";
 import {
   Editable,
   EditableInput,
-  EditableTextarea,
   EditablePreview,
   Table,
   TableContainer,
@@ -16,10 +15,9 @@ import {
 import { WorkStationGroup } from "../Data";
 
 import { STATS_PATH } from "../Config/Paths";
-import { Box, Center, HStack, Heading, VStack } from "@chakra-ui/layout";
+import { Box, HStack, Heading, VStack } from "@chakra-ui/layout";
 import { Button } from "@chakra-ui/button";
 import { useState } from "react";
-import { gracefulify } from "graceful-fs";
 import {
   AutoComplete,
   AutoCompleteInput,
@@ -34,7 +32,7 @@ const REMOVE_MACHINE_URL = "/rm_workstation";
 const addMachine = async (
   hostname: string,
   group: string,
-  token: AuthToken,
+  token: AuthToken
 ) => {
   const resp = await fetch(API_URL + ADMIN_PATH + ADD_MACHINE_URL, {
     method: "POST",
@@ -157,8 +155,8 @@ export const AdminPanel = ({
                 const id = (i * j + j) * 5;
                 return (
                   <Tr>
-                    <Th key={id}> {workStation.name} </Th>
-                    <Th key={id + 1}>
+                    <Td key={id}> {workStation.name} </Td>
+                    <Td key={id + 1}>
                       <Editable
                         placeholder="Unknown"
                         defaultValue={group}
@@ -172,15 +170,15 @@ export const AdminPanel = ({
                               motherboard: null,
                               notes: null,
                             },
-                            token,
+                            token
                           )
                         }
                       >
                         <EditablePreview />
                         <EditableInput textColor={"gray.600"} />
                       </Editable>{" "}
-                    </Th>
-                    <Th key={id + 2}>
+                    </Td>
+                    <Td key={id + 2}>
                       {" "}
                       <Editable
                         placeholder="Unknown"
@@ -195,15 +193,15 @@ export const AdminPanel = ({
                               motherboard: null,
                               notes: null,
                             },
-                            token,
+                            token
                           )
                         }
                       >
                         <EditablePreview />
                         <EditableInput textColor={"gray.600"} />
                       </Editable>{" "}
-                    </Th>
-                    <Th key={id + 3}>
+                    </Td>
+                    <Td key={id + 3}>
                       {" "}
                       <Editable
                         placeholder="Unknown"
@@ -218,15 +216,15 @@ export const AdminPanel = ({
                               motherboard: s,
                               notes: null,
                             },
-                            token,
+                            token
                           )
                         }
                       >
                         <EditablePreview />
                         <EditableInput textColor={"gray.600"} />
                       </Editable>{" "}
-                    </Th>
-                    <Th key={id + 4}>
+                    </Td>
+                    <Td key={id + 4}>
                       {" "}
                       <Editable
                         placeholder="None"
@@ -241,15 +239,15 @@ export const AdminPanel = ({
                               motherboard: null,
                               notes: s,
                             },
-                            token,
+                            token
                           )
                         }
                       >
                         <EditablePreview />
                         <EditableInput textColor={"gray.600"} />
                       </Editable>
-                    </Th>
-                    <Th>
+                    </Td>
+                    <Td>
                       <Button
                         bgColor={"red.300"}
                         onClick={() => {
@@ -258,7 +256,7 @@ export const AdminPanel = ({
                       >
                         Kill Satellite
                       </Button>
-                    </Th>
+                    </Td>
                   </Tr>
                 );
               });

@@ -1,23 +1,8 @@
 import { useState } from "react";
-import { API_URL, AUTH_TOKEN_ITEM, AuthToken } from "../App";
-import {
-  Validated,
-  failure,
-  success,
-  validatedElim,
-  validationElim,
-} from "../Utils/Utils";
+import { API_URL, AuthToken } from "../App";
+import { Validated, failure, success, validatedElim } from "../Utils/Utils";
 import { ADMIN_PATH } from "../Pages/AdminPanel";
-import {
-  Box,
-  Button,
-  Editable,
-  EditableInput,
-  EditablePreview,
-  Heading,
-  Input,
-  VStack,
-} from "@chakra-ui/react";
+import { Box, Button, Heading, Input, VStack } from "@chakra-ui/react";
 
 const AUTH_PATH = "/auth";
 
@@ -28,7 +13,7 @@ const DEBUG_TOKEN = "ABCDEFG";
 
 const requestSignIn = async (
   username: string,
-  password: string,
+  password: string
 ): Promise<Validated<AuthToken>> => {
   if (DEBUG_AUTH) {
     if (username === DEBUG_USER && password === DEBUG_PASSWORD) {

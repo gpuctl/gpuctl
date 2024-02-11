@@ -3,10 +3,8 @@ import {
   Heading,
   Popover,
   PopoverArrow,
-  PopoverBody,
   PopoverCloseButton,
   PopoverContent,
-  PopoverHeader,
   PopoverTrigger,
   Spacer,
   Tab,
@@ -15,20 +13,12 @@ import {
   TabPanels,
   Tabs,
 } from "@chakra-ui/react";
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { STATS_PATH } from "../Config/Paths";
-import {
-  API_URL,
-  AUTH_TOKEN_ITEM,
-  AuthToken,
-  VIEW_PAGE_INDEX,
-  ViewPage,
-} from "../App";
+import { AuthToken, VIEW_PAGE_INDEX, ViewPage } from "../App";
 import { SignIn } from "./SignIn";
-import { Validated, failure, isSuccess } from "../Utils/Utils";
-import { ADMIN_PATH } from "../Pages/AdminPanel";
-import { log } from "console";
+import { Validated, isSuccess } from "../Utils/Utils";
 
 const URLS = [
   `${STATS_PATH}/card_view`,
