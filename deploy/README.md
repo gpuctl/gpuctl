@@ -1,4 +1,6 @@
-# Deploying gpuctl
+> [!NOTE]
+> For user facing deployment documentation see the [root README.md](../README.md).
+> This file is targeted at developers (not users) of gpuctl.
 
 
 ## Building Docker images freestanding
@@ -8,6 +10,20 @@ Due to how Docker context works, you need to do this from the top level director
 ```console
 alona@Ashtabula:~/dev/gpuctl$ podman build -f ./deploy/control.Dockerfile .
 alona@Ashtabula:~/dev/gpuctl$ podman build -f ./deploy/frontend.Dockerfile .
+```
+
+[^podman]
+
+[^podman]: Note that while this example uses `podman` it's (suposedly) a drop-in
+    replacement for `docker` and has the same command-line API.
+
+
+Alternatively, from the `deploy` directory, you must specify the context being the 
+repo's root.
+
+```console
+dcg20@cloud-vm:~/gpuctl/deploy$ sudo docker build -f ./control.Dockerfile ..
+dcg20@cloud-vm:~/gpuctl/deploy$ sudo docker build -f ./frontend.Dockerfile ..
 ```
 
 ## npm ERR! EMFILE: too many open files
