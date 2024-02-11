@@ -8,7 +8,7 @@ export type WorkStationGroup = {
 
 export type WorkStationData = {
   name: string;
-  cpu : string;
+  cpu: string;
   motherboard: string;
   notes: string;
   gpus: GPUStats[];
@@ -61,7 +61,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             graphics_clock: 4,
             max_graphics_clock: 5,
             memory_clock: 6,
-            max_memory_clock: 7
+            max_memory_clock: 7,
           },
         ],
       },
@@ -105,7 +105,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             graphics_clock: 18,
             max_graphics_clock: 19,
             memory_clock: 20,
-            max_memory_clock: 21
+            max_memory_clock: 21,
           },
         ],
       },
@@ -131,7 +131,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             graphics_clock: 25,
             max_graphics_clock: 26,
             memory_clock: 27,
-            max_memory_clock: 28
+            max_memory_clock: 28,
           },
         ],
       },
@@ -139,7 +139,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         name: "Workstation 5",
         cpu: "Tesla DOJO",
         motherboard: "",
-        notes: "We don't particularly like this one, but it always works and we can't really bin it",
+        notes:
+          "We don't particularly like this one, but it always works and we can't really bin it",
         gpus: [
           {
             gpu_name: "NVIDIA TITAN Xp",
@@ -157,7 +158,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             graphics_clock: 32,
             max_graphics_clock: 33,
             memory_clock: 34,
-            max_memory_clock: 35
+            max_memory_clock: 35,
           },
           {
             gpu_name: "NVIDIA TITAN Xp",
@@ -175,7 +176,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             graphics_clock: 39,
             max_graphics_clock: 40,
             memory_clock: 41,
-            max_memory_clock: 42
+            max_memory_clock: 42,
           },
         ],
       },
@@ -201,7 +202,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             graphics_clock: 46,
             max_graphics_clock: 47,
             memory_clock: 48,
-            max_memory_clock: 49
+            max_memory_clock: 49,
           },
         ],
       },
@@ -228,7 +229,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             graphics_clock: 53,
             max_graphics_clock: 54,
             memory_clock: 55,
-            max_memory_clock: 56
+            max_memory_clock: 56,
           },
         ],
       },

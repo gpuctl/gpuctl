@@ -32,7 +32,7 @@ const REMOVE_MACHINE_URL = "/rm_workstation";
 const addMachine = async (
   hostname: string,
   group: string,
-  token: AuthToken
+  token: AuthToken,
 ) => {
   const resp = await fetch(API_URL + ADMIN_PATH + ADD_MACHINE_URL, {
     method: "POST",
@@ -170,7 +170,7 @@ export const AdminPanel = ({
                               motherboard: null,
                               notes: null,
                             },
-                            token
+                            token,
                           )
                         }
                       >
@@ -193,7 +193,7 @@ export const AdminPanel = ({
                               motherboard: null,
                               notes: null,
                             },
-                            token
+                            token,
                           )
                         }
                       >
@@ -216,7 +216,7 @@ export const AdminPanel = ({
                               motherboard: s,
                               notes: null,
                             },
-                            token
+                            token,
                           )
                         }
                       >
@@ -239,7 +239,7 @@ export const AdminPanel = ({
                               motherboard: null,
                               notes: s,
                             },
-                            token
+                            token,
                           )
                         }
                       >

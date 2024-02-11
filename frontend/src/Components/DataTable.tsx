@@ -54,7 +54,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
           <MenuOptionGroup
             type="checkbox"
             defaultValue={Object.keys(shownColumns).filter(
-              (key) => shownColumns[key]
+              (key) => shownColumns[key],
             )}
             onChange={(props) => {
               Object.keys(shownColumns).forEach((col) => {
@@ -188,8 +188,8 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                       ) : null}
                     </Tr>
                   );
-                })
-              )
+                }),
+              ),
             )}
           </Tbody>
         </Table>

@@ -13,7 +13,7 @@ const DEBUG_TOKEN = "ABCDEFG";
 
 const requestSignIn = async (
   username: string,
-  password: string
+  password: string,
 ): Promise<Validated<AuthToken>> => {
   if (DEBUG_AUTH) {
     if (username === DEBUG_USER && password === DEBUG_PASSWORD) {

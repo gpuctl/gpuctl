@@ -9,7 +9,7 @@ import {
 } from "./Utils/Utils";
 import { ChakraProvider } from "@chakra-ui/react";
 import {} from "@chakra-ui/react";
-import React, { useState } from "react";
+import { useState } from "react";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { MainView } from "./Pages/MainView";
 import { STATS_PATH } from "./Config/Paths";
