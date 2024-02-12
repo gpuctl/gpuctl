@@ -62,8 +62,7 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnPost(mux, "/api/admin/add_workstation", api.addMachine)
 	femto.OnPost(mux, "/api/admin/stats/modify", api.modifyMachineInfo)
 	femto.OnPost(mux, "/api/admin/rm_workstation", api.removeMachine)
-	// femto.OnGet(mux, "/api/admin/confirm",
-	// 	authentication.AuthWrapPost(auth, api.confirmAdmin))
+	femto.OnGet(mux, "/api/admin/confirm", api.confirmAdmin)
 
 	return &Server{mux, api}
 }
