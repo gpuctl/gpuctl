@@ -12,6 +12,10 @@ type NewMachine struct {
 	Group    *string `json:"group"`
 }
 
+type RemoveMachine struct {
+	Hostname string `json:"hostname"`
+}
+
 type ModifyMachine struct {
 	Hostname    string  `json:"hostname"`
 	CPU         *string `json:"cpu"`         // nullable - means no change
@@ -80,4 +84,21 @@ type OldGPUStatSample struct {
 
 type OnboardReq struct {
 	Hostname string `json:"hostname"`
+}
+
+type RemoveMachineInfo struct {
+	Hostname string `json:"hostname"`
+}
+
+type AddMachineInfo struct {
+	Hostname string `json:"hostname"`
+	Group    string `json:"group"`
+}
+
+type ModifyInfo struct {
+	Hostname    string  `json:"hostname"`
+	Cpu         *string `json:"cpu"`
+	Motherboard *string `json:"motherboard"`
+	Notes       *string `json:"notes"`
+	Group       *string `json:"group"`
 }

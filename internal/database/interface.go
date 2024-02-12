@@ -24,6 +24,7 @@ type Database interface {
 	LastSeen() ([]uplink.WorkstationSeen, error)
 	// create and modify machines in the database
 	NewMachine(machine broadcast.NewMachine) error
+	RemoveMachine(machine broadcast.RemoveMachine) error
 	UpdateMachine(changes broadcast.ModifyMachine) error
 
 	// downsample since certain unix time

@@ -30,7 +30,7 @@ func TestOnboardNoKey(t *testing.T) {
 		DataDir: "/foo",
 	})
 
-	req := httptest.NewRequest(http.MethodPost, "/api/onboard", strings.NewReader(`{"hostname": "foo.net"}`))
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader(`{"hostname": "foo.net"}`))
 	req.Header.Add("Authorization", "Bearer 123")
 	w := httptest.NewRecorder()
 
@@ -52,7 +52,7 @@ func TestOnboardNoHostname(t *testing.T) {
 		Signer:   sign,
 	})
 
-	req := httptest.NewRequest(http.MethodPost, "/api/onboard", strings.NewReader("{}"))
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader("{}"))
 	req.Header.Add("Authorization", "Bearer 123")
 	w := httptest.NewRecorder()
 

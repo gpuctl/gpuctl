@@ -240,6 +240,11 @@ func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {
 	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
 }
 
+func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) (err error) {
+	// TODO: add actual functionality. This was just to make the code compile
+	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
+}
+
 func (m *inMemory) UpdateMachine(changes broadcast.ModifyMachine) error {
 	// TODO: add actual functionality. This was just to make the code compile
 	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")

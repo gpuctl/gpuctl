@@ -4,7 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
-	"reflect"
+
+	//	"reflect"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -377,6 +378,62 @@ func (conn postgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
 	return
 }
 
+func (conn postgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
+	tx, err := conn.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	rows, err := tx.Query(`SELECT Uuid
+		FROM Gpus
+		WHERE Machine=$1`,
+		machine.Hostname,
+	)
+	if err != nil {
+		return err
+	}
+
+	for rows.Next() {
+		var uuid string
+		err = rows.Scan(&uuid)
+		if err != nil {
+			errors.Join(err, tx.Rollback())
+		}
+
+		_, err = tx.Exec(`DELETE FROM Stats
+			WHERE Gpu=$1`,
+			uuid,
+		)
+
+		if err != nil {
+			errors.Join(err, tx.Rollback())
+		}
+	}
+
+	err = rows.Err()
+	if !errors.Is(sql.ErrNoRows, rows.Err()) {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	_, err = tx.Exec(`DELETE FROM GPUs
+		WHERE Machine=$1`,
+		machine.Hostname,
+	)
+	if err != nil {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	_, err = tx.Exec(`DELETE FROM Machines
+		WHERE Hostname=$1`,
+		machine.Hostname,
+	)
+	if err != nil {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	return tx.Commit()
+}
+
 // Update machine info
 func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 	tx, err := conn.db.Begin()
@@ -384,19 +441,71 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 		return err
 	}
 
-	v := reflect.ValueOf(machine)
-	for _, field := range reflect.VisibleFields(reflect.TypeOf(machine)) {
-		value := v.FieldByIndex(field.Index)
-		if v.Kind() == reflect.Pointer && !value.IsNil() {
-			_, err = tx.Exec(`UPDATE Machines
-				SET $1=$2
-				WHERE Hostname=$3`,
-				field.Name, reflect.Indirect(value), machine.Hostname,
-			)
+	//	v := reflect.ValueOf(machine)
+	//	for _, field := range reflect.VisibleFields(reflect.TypeOf(machine)) {
+	//		value := v.FieldByIndex(field.Index)
+	//		if v.Kind() == reflect.Pointer && !value.IsNil() {
+	//			_, err = tx.Exec(`UPDATE Machines
+	//				SET $1=$2
+	//				WHERE Hostname=$3`,
+	//				field.Name, reflect.Indirect(value), machine.Hostname,
+	//			)
+	//
+	//			if err != nil {
+	//				return errors.Join(err, tx.Rollback())
+	//			}
+	//		}
+	//	}
 
-			if err != nil {
-				return errors.Join(err, tx.Rollback())
-			}
+	if machine.CPU != nil {
+		slog.Info("Changing CPU", "Hostname", machine.Hostname, "New CPU", *machine.CPU)
+		_, err = tx.Exec(`UPDATE Machines
+			SET CPU=$1
+			WHERE Hostname=$2`,
+			*machine.CPU, machine.Hostname,
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	if machine.Motherboard != nil {
+		slog.Info("Changing Motherboard", "Hostname", machine.Hostname, "New Motherboard", *machine.Motherboard)
+		_, err = tx.Exec(`UPDATE Machines
+			SET Motherboard=$1
+			WHERE Hostname=$2`,
+			*machine.Motherboard, machine.Hostname,
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	if machine.Notes != nil {
+		slog.Info("Changing Notes", "Hostname", machine.Hostname, "New Notes", *machine.Notes)
+		_, err = tx.Exec(`UPDATE Machines
+			SET Notes=$1
+			WHERE Hostname=$2`,
+			*machine.Notes, machine.Hostname,
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	if machine.Group != nil {
+		slog.Info("Changing Group", "Hostname", machine.Hostname, "New Group", *machine.Group)
+		_, err = tx.Exec(`UPDATE Machines
+			SET GroupName=$1
+			WHERE Hostname=$2`,
+			*machine.Group, machine.Hostname,
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
 		}
 	}
 

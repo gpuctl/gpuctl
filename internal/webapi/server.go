@@ -53,14 +53,17 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnGet(mux, "/api/stats/all", api.AllStatistics)
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
 
-	// Authenticated API endpoints
-
+	// Set up authentication endpoint
 	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 		return api.Authenticate(auth, packet, r, l)
 	})
-	femto.OnPost(mux, "/api/admin/add_workstation", authentication.AuthWrapPost(auth, api.newMachine))
-	femto.OnPost(mux, "/api/machines/addinfo", authentication.AuthWrapPost(auth, api.addInfo))
-	femto.OnPost(mux, "/api/onboard", authentication.AuthWrapPost(auth, api.onboard))
+
+	// Authenticated API endpoints
+	femto.OnPost(mux, "/api/admin/add_workstation", api.addMachine)
+	femto.OnPost(mux, "/api/admin/stats/modify", api.modifyMachineInfo)
+	femto.OnPost(mux, "/api/admin/rm_workstation", api.removeMachine)
+	// femto.OnGet(mux, "/api/admin/confirm",
+	// 	authentication.AuthWrapPost(auth, api.confirmAdmin))
 
 	return &Server{mux, api}
 }
@@ -117,11 +120,16 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 	return &femto.EmptyBodyResponse{Headers: headers, Status: http.StatusAccepted}, nil
 }
 
-// Create a new machine
-func (a *Api) newMachine(machine broadcast.NewMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+// TODO
+func (a *Api) addMachine(machine broadcast.NewMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	l.Info("Tried to create machine", "host", machine.Hostname, "group", machine.Group)
 
-	err := a.DB.NewMachine(machine)
+	_, err := a.onboard(broadcast.OnboardReq{Hostname: machine.Hostname}, r, l)
+	if err != nil {
+		return nil, err
+	}
+	modify := broadcast.ModifyMachine{Hostname: machine.Hostname, Group: machine.Group}
+	_, err = a.modifyMachineInfo(modify, r, l)
 	if err != nil {
 		return nil, err
 	}
@@ -129,8 +137,24 @@ func (a *Api) newMachine(machine broadcast.NewMachine, r *http.Request, l *slog.
 	return femto.Ok(types.Unit{})
 }
 
-// Modify machine info
-func (a *Api) addInfo(info broadcast.ModifyMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+func (a *Api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+	err := a.deboard(rm, r, l)
+	if err != nil {
+		return nil, err
+	}
+	err = a.DB.RemoveMachine(broadcast.RemoveMachine{Hostname: rm.Hostname})
+	if err != nil {
+		return nil, err
+	}
+	return femto.Ok(types.Unit{})
+}
+
+func (a *Api) confirmAdmin(r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+	return femto.Ok(types.Unit{})
+}
+
+// TODO
+func (a *Api) modifyMachineInfo(info broadcast.ModifyMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	l.Info("Tried to modify machine", "host", info.Hostname, "changes", info)
 
 	err := a.DB.UpdateMachine(info)

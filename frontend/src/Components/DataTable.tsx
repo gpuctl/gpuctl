@@ -18,21 +18,6 @@ import { useState } from "react";
 import { isFree } from "../Utils/Utils";
 import { useForceUpdate } from "framer-motion";
 
-/*
-  machine name - from workstation
-  gpu_name: string;
-  is_free: Boolean --derived value
-  gpu_brand: string;
-  driver_ver: string;
-  memory_total: number;
-
-  memory_util: number;
-  gpu_util: number;
-  memory_used: number;
-  fan_speed: number;
-  gpu_temp: number;
-
-  */
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   // default to show group, machine_name, gpu_name, isFree, brand, and memory_total
   const cols: Record<string, Boolean> = {
@@ -48,6 +33,13 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
     memory_used: false,
     fan_speed: false,
     gpu_temp: false,
+    memory_temp: false,
+    graphics_voltage: false,
+    power_draw: false,
+    graphics_clock: false,
+    max_graphics_clock: false,
+    memory_clock: false,
+    max_memory_clock: false,
   };
   const [shownColumns, setter] = useState(cols);
   const [refresh] = useForceUpdate();
@@ -58,7 +50,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
         <MenuButton as={Button} colorScheme="blue">
           Columns
         </MenuButton>
-        <MenuList>
+        <MenuList overflowY="scroll" maxHeight="200">
           <MenuOptionGroup
             type="checkbox"
             defaultValue={Object.keys(shownColumns).filter(
@@ -86,7 +78,32 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
             <MenuItemOption value="gpu_util"> GPU utilisation </MenuItemOption>
             <MenuItemOption value="memory_used"> Memory used </MenuItemOption>
             <MenuItemOption value="fan_speed"> Fan speed </MenuItemOption>
-            <MenuItemOption value="gpu_temp"> GPU temperature </MenuItemOption>
+            <MenuItemOption value="gpu_temp">
+              {" "}
+              GPU temperature (C){" "}
+            </MenuItemOption>
+            <MenuItemOption value="memory_temp">
+              {" "}
+              Memory temperature (C){" "}
+            </MenuItemOption>
+            <MenuItemOption value="graphics_voltage"> Voltage </MenuItemOption>
+            <MenuItemOption value="power_draw"> Power draw </MenuItemOption>
+            <MenuItemOption value="graphics_clock">
+              {" "}
+              GPU Clock (Mhz){" "}
+            </MenuItemOption>
+            <MenuItemOption value="max_graphics_clock">
+              {" "}
+              Max GPU Clock (Mhz){" "}
+            </MenuItemOption>
+            <MenuItemOption value="memory_clock">
+              {" "}
+              Memory Clock (Mhz){" "}
+            </MenuItemOption>
+            <MenuItemOption value="max_memory_clock">
+              {" "}
+              Max Memory Clock (Mhz){" "}
+            </MenuItemOption>
           </MenuOptionGroup>
         </MenuList>
       </Menu>
@@ -109,7 +126,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                     (i * gpus.length * workStations.length +
                       j * gpus.length +
                       k) *
-                    12; //size of gpu
+                    19; //size of gpu
                   return (
                     <Tr key={id}>
                       {shownColumns.group ? (
@@ -147,6 +164,27 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                       ) : null}
                       {shownColumns.gpu_temp ? (
                         <Td key={id + 11}> {gpu.gpu_temp}</Td>
+                      ) : null}
+                      {shownColumns.memory_temp ? (
+                        <Td key={id + 12}> {gpu.memory_temp}</Td>
+                      ) : null}
+                      {shownColumns.graphics_voltage ? (
+                        <Td key={id + 13}> {gpu.graphics_voltage}</Td>
+                      ) : null}
+                      {shownColumns.graphics_clock ? (
+                        <Td key={id + 14}> {gpu.graphics_clock}</Td>
+                      ) : null}
+                      {shownColumns.graphics_clock ? (
+                        <Td key={id + 15}> {gpu.graphics_clock}</Td>
+                      ) : null}
+                      {shownColumns.max_graphics_clock ? (
+                        <Td key={id + 16}> {gpu.max_graphics_clock}</Td>
+                      ) : null}
+                      {shownColumns.memory_clock ? (
+                        <Td key={id + 17}> {gpu.memory_clock}</Td>
+                      ) : null}
+                      {shownColumns.max_memory_clock ? (
+                        <Td key={id + 18}> {gpu.max_memory_clock}</Td>
                       ) : null}
                     </Tr>
                   );
