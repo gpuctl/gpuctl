@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Launches Satellite & Control binaries. Also runs npm.
+# WARN: there might be problems in satellite/control starting out-of-phase.
+# This is why the variable WAIT exists, which can be set to allow for the
+# booting up of gs and satellite to happen in sequence
+
+set -e
+
+# Variables
+SATELLITE_BIN="./satellite"
+SATELLITE_LOGS=$SATELLITE_BIN.log
+SATELLITE_CONF=$SATELLITE_BIN.toml
+CONTROL_BIN="./control"
+CONTROL_LOGS=$CONTROL_BIN.log
+CONTROL_CONF=$CONTROL_BIN.toml
+FE_DIR="./frontend/"
+FE_LOGS="frontend.log"
+WAIT_GAP=1
+
+# Launch everything
+echo "Starting groundstation/control (log: $CONTROL_LOGS)"
+$CONTROL_BIN &> $CONTROL_LOGS &
+control_pid=$!
+
+sleep $WAIT_GAP
+
+echo "Starting satellite (log: $SATELLITE_LOGS)"
+$SATELLITE_BIN &> $SATELLITE_LOGS &
+satellite_pid=$!
+
+echo "Launching front-end"
+(cd $FE_DIR && npm start &> $FE_LOGS) &
+fe_pid=$!
+
+# Wait for SIGINT
+( trap exit SIGINT ; read -r -d '' _ </dev/tty ) # NOTE: this _might_ not work on all systems
+
+# Clean up
+echo "Shutting down..."
+echo "Killing processes ($fe_pid, $satellite_pid, $control_pid)"
+kill $fe_pid | kill $satellite_pid | kill $control_pid

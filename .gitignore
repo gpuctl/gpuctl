@@ -8,3 +8,4 @@ satellite.toml
 .DS_Store
 cover.out
 __debug*
+*.log
