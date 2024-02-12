@@ -1,4 +1,4 @@
-FROM docker.io/golang:1.21
+FROM docker.io/golang:1.22
 
 WORKDIR /gpuctl
 COPY go.mod go.sum ./
