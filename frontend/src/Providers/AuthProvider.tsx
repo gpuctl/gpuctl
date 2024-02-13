@@ -2,8 +2,8 @@ import React, { ReactNode, createContext, useContext, useState } from "react";
 import {
   Validated,
   Validation,
-  discard,
   failure,
+  fire,
   isSuccess,
   loading,
   success,
@@ -72,7 +72,9 @@ export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
    * 'user'
    */
   const login = (username: string, password: string) => {
-    discard(async () => {
+    fire(async () => {
+      console.log("Tried to log in!");
+
       if (
         DEBUG_AUTH &&
         username === DEBUG_USER &&
@@ -111,7 +113,7 @@ export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
   const useAuthFetch = (path: string, init?: RequestInit | undefined) => {
     const [resp, setResp] = useState<Validation<Response>>(loading());
 
-    discard(async () => {
+    fire(async () => {
       const r = await authFetch(path, init);
       if (!r.ok && r.status === 403) {
         logout();

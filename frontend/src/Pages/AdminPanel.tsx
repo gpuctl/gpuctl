@@ -139,11 +139,11 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
           <Tbody>
             {groups.map(({ name: group, workStations }, i) => {
               return workStations.map((workStation, j) => {
-                const id = (i * j + j) * 5;
+                const id = i * j + j;
                 return (
-                  <Tr>
-                    <Td key={id}> {workStation.name} </Td>
-                    <Td key={id + 1}>
+                  <Tr key={id}>
+                    <Td> {workStation.name} </Td>
+                    <Td>
                       <Editable
                         placeholder="Unknown"
                         defaultValue={group}
@@ -159,10 +159,11 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
                       >
                         <EditablePreview />
                         <EditableInput textColor={"gray.600"} />
-                      </Editable>{" "}
+                      </Editable>
                     </Td>
-                    <Td key={id + 2}>
+                    <Td>
                       {" "}
+                      {/* Do we need this empty string? */}
                       <Editable
                         placeholder="Unknown"
                         textColor={pickCol(workStation.cpu)}
@@ -180,7 +181,7 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
                         <EditableInput textColor={"gray.600"} />
                       </Editable>{" "}
                     </Td>
-                    <Td key={id + 3}>
+                    <Td>
                       {" "}
                       <Editable
                         placeholder="Unknown"
@@ -199,7 +200,7 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
                         <EditableInput textColor={"gray.600"} />
                       </Editable>{" "}
                     </Td>
-                    <Td key={id + 4}>
+                    <Td>
                       {" "}
                       <Editable
                         placeholder="None"
