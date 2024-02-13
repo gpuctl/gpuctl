@@ -7,9 +7,18 @@ import {
   loading,
   success,
 } from "../Utils/Utils";
-import { useOnce } from "../Utils/Hooks";
 import { API_URL } from "../App";
 import { ADMIN_PATH } from "../Pages/AdminPanel";
+
+const AUTH_PATH = "/auth";
+
+/** Debug authentication is NOT a vulnerability: We don't get a token and so
+ * the WebAPI server will still reject any admin requests. The purpose is to
+ * just test sign-in functionality without the back-end running.
+ */
+const DEBUG_AUTH = true;
+const DEBUG_USER = "NathanielB";
+const DEBUG_PASSWORD = "drowssap";
 
 type AuthCtx = {
   user: Validated<string>;
@@ -35,9 +44,37 @@ export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
     failure(Error("Not logged in!")),
   );
 
+  const authFetch = (path: string, init?: RequestInit | undefined) =>
+    fetch(API_URL + ADMIN_PATH + path, init);
+
+  /** Feedback about if the login was successful should be retrieved by reading
+   *  'user'
+   */
   const login = (username: string, password: string) => {
-    // Hit /api/auth endpoint
-    setUser(success(username));
+    discard(async () => {
+      if (
+        DEBUG_AUTH &&
+        username === DEBUG_USER &&
+        password === DEBUG_PASSWORD
+      ) {
+        setUser(success(username));
+        return;
+      }
+
+      const r = await authFetch(AUTH_PATH, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (r.ok) {
+        setUser(success(username));
+      } else if (r.status === 401) {
+        setUser(failure(Error("Username or password was incorrect!")));
+      } else {
+        setUser(failure(Error("Auth failed for an unknown reason")));
+      }
+    });
   };
 
   const logout = () => {
@@ -48,7 +85,7 @@ export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
     const [resp, setResp] = useState<Validation<Response>>(loading());
 
     discard(async () => {
-      const r = await fetch(API_URL + ADMIN_PATH + path, init);
+      const r = await authFetch(path, init);
       if (!r.ok && r.status === 403) {
         logout();
       }
