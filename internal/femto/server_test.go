@@ -183,8 +183,11 @@ func (auth TestAuthenticator) RevokeToken(token authentication.AuthToken) error 
 	return nil
 }
 
-func (auth TestAuthenticator) CheckToken(token authentication.AuthToken) bool {
-	return token == "token"
+func (auth TestAuthenticator) CheckToken(token authentication.AuthToken) (string, error) {
+	if token != "token" {
+		return "", errors.New("Bad token!")
+	}
+	return "admin", nil
 }
 
 func TestValidAuthentication(t *testing.T) {

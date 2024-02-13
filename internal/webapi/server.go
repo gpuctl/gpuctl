@@ -148,8 +148,17 @@ func (a *Api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *
 	return femto.Ok(types.Unit{})
 }
 
-func (a *Api) confirmAdmin(r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
-	return femto.Ok(types.Unit{})
+type UsernameReminder struct {
+	Username string `json:"username"`
+}
+
+func (a *Api) confirmAdmin(auth authentication.Authenticator[APIAuthCredientals], r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
+	// We need to figure out how to get the token out of a request...
+	u, err := auth.CheckToken("")
+	if err != nil {
+		return nil, err
+	}
+	return femto.Ok(UsernameReminder{Username: u})
 }
 
 // TODO

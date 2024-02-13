@@ -2,6 +2,7 @@ import React, { ReactNode, createContext, useContext, useState } from "react";
 import {
   Validated,
   Validation,
+  discard,
   failure,
   fire,
   isSuccess,
@@ -10,6 +11,7 @@ import {
 } from "../Utils/Utils";
 import { API_URL } from "../App";
 import { ADMIN_PATH } from "../Pages/AdminPanel";
+import { useOnce } from "../Utils/Hooks";
 
 const AUTH_PATH = "/auth";
 
@@ -27,7 +29,7 @@ const DEBUG_PASSWORD = "drowssap";
  * update. The reload is primarily to make it obvious to the user than signing
  * in/out actually did something.
  */
-const RELOAD_ON_LOG_CHANGE = true;
+const RELOAD_ON_LOG_CHANGE = false;
 
 type AuthCtx = {
   user: Validated<string>;
@@ -39,6 +41,8 @@ type AuthCtx = {
     init?: RequestInit | undefined,
   ) => Validation<Response>;
 };
+
+type UsernameReminder = { username: string };
 
 const AuthContext = createContext<AuthCtx>({
   user: failure(Error("No auth context provided")),
@@ -56,6 +60,19 @@ export const useAuth = () => useContext(AuthContext);
 export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
   const [user, setUserDirect] = useState<Validated<string>>(
     failure(Error("Not logged in!")),
+  );
+
+  // On first page load, we would like to check if we are currently signed in
+  useOnce(
+    discard(async () => {
+      const r = await authFetch("confirm", {
+        method: "GET",
+      });
+      if (r.ok) {
+        const remind: UsernameReminder = await r.json();
+        setUserDirect(success(remind.username));
+      }
+    }),
   );
 
   const setUser = (u: Validated<string>) => {

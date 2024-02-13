@@ -19,7 +19,7 @@ type AuthToken = string
 type Authenticator[AuthCredientals any] interface {
 	CreateToken(AuthCredientals) (AuthToken, error)
 	RevokeToken(AuthToken) error
-	CheckToken(AuthToken) bool
+	CheckToken(AuthToken) (string, error)
 }
 
 func AuthWrapGet[A any, T any](auth Authenticator[A], handle femto.GetFunc[T]) femto.GetFunc[T] {
@@ -32,7 +32,8 @@ func AuthWrapGet[A any, T any](auth Authenticator[A], handle femto.GetFunc[T]) f
 			return &femto.Response[T]{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
 
-		if !auth.CheckToken(token) {
+		_, err := auth.CheckToken(token)
+		if err != nil {
 			return &femto.Response[T]{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
 
@@ -50,7 +51,8 @@ func AuthWrapPost[A any, T any](auth Authenticator[A], handle femto.PostFunc[T])
 			return &femto.EmptyBodyResponse{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
 
-		if !auth.CheckToken(token) {
+		_, err := auth.CheckToken(token)
+		if err != nil {
 			return &femto.EmptyBodyResponse{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
 		return handle(data, request, logger)
