@@ -6,7 +6,6 @@ import (
 	"slices"
 	"sort"
 	"sync"
-	"testing"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -217,11 +216,6 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 	}
 
 	return averagedSample
-}
-
-func (m *inMemory) Drop(t *testing.T) {
-	m.mu.Lock()
-	m = nil
 }
 
 func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {

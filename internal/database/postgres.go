@@ -4,9 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
-
-	//	"reflect"
-	"testing"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -15,9 +12,8 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// struct holding database context
-// only holds a pointer, so we can pass it around by value
-type postgresConn struct {
+// PostgresConn represents an open connection to a control database backed by postgres.
+type PostgresConn struct {
 	db *sql.DB
 }
 
@@ -39,7 +35,7 @@ func Postgres(databaseUrl string) (Database, error) {
 		return nil, err
 	}
 
-	return postgresConn{db}, nil
+	return PostgresConn{db}, nil
 }
 
 func createTables(db *sql.DB) error {
@@ -99,7 +95,7 @@ func createTables(db *sql.DB) error {
 }
 
 // implement interface
-func (conn postgresConn) UpdateLastSeen(host string, given_time int64) error {
+func (conn PostgresConn) UpdateLastSeen(host string, given_time int64) error {
 	var err error
 
 	tx, err := conn.db.Begin()
@@ -161,7 +157,7 @@ func updateLastSeen(host string, now time.Time, tx *sql.Tx) (err error) {
 	return
 }
 
-func (conn postgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
+func (conn PostgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 	now := time.Now()
 
 	_, err := conn.db.Exec(`INSERT INTO Stats
@@ -185,7 +181,7 @@ func (conn postgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 	return err
 }
 
-func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
+func (conn PostgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
 	// Insert the new context we've received into the db, overwriting the
 	// existing info
 	_, err := conn.db.Exec(`INSERT INTO GPUs
@@ -201,7 +197,7 @@ func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) er
 	return err
 }
 
-func (conn postgresConn) Downsample(int_now int64) error {
+func (conn PostgresConn) Downsample(int_now int64) error {
 	downsample_query := `CREATE TEMPORARY TABLE TempDownsampled AS
 WITH OrderedStats AS (
   SELECT
@@ -313,7 +309,7 @@ FROM TempDownsampled;
 }
 
 // TODO: consider returning workstationGroup
-func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
+func (conn PostgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 	// we pull Uuid twice so we can put one into Stat sample and the other into Info
 	rows, err := conn.db.Query(`SELECT g.Machine, g.Uuid, g.Uuid, g.Name,
 			g.Brand, g.DriverVersion, g.MemoryTotal,
@@ -376,7 +372,7 @@ func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 }
 
 // Create new machine
-func (conn postgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
+func (conn PostgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
 	_, err = conn.db.Exec(`INSERT INTO Machines (Hostname, GroupName)
 		VALUES ($1, $2)`,
 		machine.Hostname, machine.Group,
@@ -384,7 +380,7 @@ func (conn postgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
 	return
 }
 
-func (conn postgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
+func (conn PostgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
 	tx, err := conn.db.Begin()
 	if err != nil {
 		return err
@@ -441,7 +437,7 @@ func (conn postgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
 }
 
 // Update machine info
-func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
+func (conn PostgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 	tx, err := conn.db.Begin()
 	if err != nil {
 		return err
@@ -518,23 +514,21 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 	return tx.Commit()
 }
 
-// drop all tables we create in the database
-// this function is only for testing purposes
-func (conn postgresConn) Drop(t *testing.T) {
+// Drop drops all tables on the connected database, then closes the connection.
+//
+// This should only be used for testing purposes
+func (conn PostgresConn) Drop() error {
 	_, err := conn.db.Exec(`DROP TABLE stats;
 		DROP TABLE gpus;
 		DROP TABLE machines`)
 	if err != nil {
-		t.Fatalf("Error deleting tables: %v", err)
+		return err
 	}
 
-	err = conn.db.Close()
-	if err != nil {
-		t.Fatalf("Error closing database connection: %v", err)
-	}
+	return conn.db.Close()
 }
 
-func (conn postgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {
+func (conn PostgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {
 	rows, err := conn.db.Query(`SELECT * FROM Machines`)
 
 	if err != nil {
