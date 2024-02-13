@@ -21,6 +21,7 @@ https://gpuctl.perial.co.uk {
 		-Access-Control-Allow-Origin
 		-Access-Control-Allow-Methods
 		-Access-Control-Allow-Headers
+		-Access-Control-Allow-Credentials
 	}
 
 	# For api routes, we can lock down the CSP even further

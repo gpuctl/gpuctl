@@ -33,8 +33,8 @@ func TestAuthenticate(t *testing.T) {
 
 	response, err := api.Authenticate(&auth, creds, mockRequest, mockLogger)
 
-	if len(response.Headers) == 0 {
-		t.Error("Expected an authentication token header")
+	if len(response.Cookies) == 0 {
+		t.Error("Expected an authentication token cookie")
 	}
 
 	if err != nil {

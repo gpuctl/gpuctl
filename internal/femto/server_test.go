@@ -228,8 +228,8 @@ func TestValidAuthentication(t *testing.T) {
 	defer reqGet.Body.Close()
 	reqPost := httptest.NewRequest("POST", "/auth-post", strings.NewReader("{}"))
 	defer reqPost.Body.Close()
-	reqGet.Header.Set("Authorization", "Bearer token")
-	reqPost.Header.Set("Authorization", "Bearer token")
+	reqGet.Header.Set("Cookie", "token=token")
+	reqPost.Header.Set("Cookie", "token=token")
 
 	mux.ServeHTTP(w, reqGet)
 	assert.Equal(t, http.StatusOK, w.Code)
