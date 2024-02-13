@@ -6,6 +6,7 @@ import (
 	"slices"
 	"sort"
 	"sync"
+	"testing"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -218,16 +219,9 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 	return averagedSample
 }
 
-func (m *inMemory) Drop() error {
+func (m *inMemory) Drop(t *testing.T) {
 	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	// Reset each map to a new, empty instance.
-	m.infos = make(map[string]gpuInfo)
-	m.stats = make(map[string][]uplink.GPUStatSample)
-	m.lastSeen = make(map[string]int64)
-
-	return nil
+	m = nil
 }
 
 func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {

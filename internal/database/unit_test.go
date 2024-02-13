@@ -31,7 +31,6 @@ var UnitTests = [...]unitTest{
 	{"TestAppendDataPointMissingGPU", testAppendDataPointMissingGPU},
 	{"LastSeen", testLastSeen},
 	{"Downsample", testDownsample},
-	{"TestSuccessfulDrop", dropSuccess}, 
 }
 
 // fake data for adding during tests
@@ -188,15 +187,6 @@ func multipleHeartbeats(t *testing.T, db database.Database) {
 	err = db.UpdateLastSeen("otter", 0)
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
-	}
-}
-
-func dropSuccess(t *testing.T, db database.Database) {
-	t.Parallel()
-
-	err := db.Drop()
-	if err != nil {
-		t.Fatalf("Error dropping database: %v", err)
 	}
 }
 

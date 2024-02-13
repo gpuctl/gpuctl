@@ -2,6 +2,8 @@ package database
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
@@ -38,5 +40,6 @@ type Database interface {
 	Downsample(time int64) error
 
 	// Drop all tables and data in the db and close the connection
-	Drop() error
+	// Used for testing, not in code
+	Drop(t *testing.T)
 }

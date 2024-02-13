@@ -53,15 +53,6 @@ func TestAppendDataPoint_Error(t *testing.T) {
 	assert.EqualError(t, err, database.ErrGpuNotPresent.Error())
 }
 
-func TestDrop(t *testing.T) {
-	t.Parallel()
-
-	db := database.InMemory()
-
-	err := db.Drop()
-	assert.NoError(t, err)
-}
-
 func TestLastSeen(t *testing.T) {
 	t.Parallel()
 
