@@ -293,8 +293,6 @@ func verifyDownsampledData(t *testing.T, db database.Database, gpuID string, exp
 }
 
 func testAppendDataPointMissingGPU(t *testing.T, db database.Database) {
-	t.Parallel()
-
 	err := db.AppendDataPoint(uplink.GPUStatSample{Uuid: "bogus_uuid_blah"})
 	assert.Error(t, err)
 	assert.EqualError(t, err, database.ErrGpuNotPresent.Error())
