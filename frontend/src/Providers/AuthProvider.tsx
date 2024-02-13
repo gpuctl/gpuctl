@@ -36,10 +36,7 @@ type AuthCtx = {
   isSignedIn: () => boolean;
   login: (username: string, password: string) => void;
   logout: () => void;
-  useAuthFetch: (
-    path: string,
-    init?: RequestInit | undefined,
-  ) => Validation<Response>;
+  useAuthFetch: (path: string, init?: RequestInit) => Validation<Response>;
 };
 
 type UsernameReminder = { username: string };
@@ -52,8 +49,14 @@ const AuthContext = createContext<AuthCtx>({
   useAuthFetch: () => failure(Error("No auth context provided")),
 });
 
-const authFetch = (path: string, init?: RequestInit | undefined) =>
-  fetch(API_URL + ADMIN_PATH + path, init);
+const authFetch = (path: string, init?: RequestInit) => {
+  if (init === undefined) {
+    init = { credentials: "include" };
+  } else {
+    init["credentials"] = "include";
+  }
+  return fetch(API_URL + ADMIN_PATH + path, init);
+};
 
 export const useAuth = () => useContext(AuthContext);
 

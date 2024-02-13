@@ -66,6 +66,8 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	// TODO: Maybe unset in Caddyfile???
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	s.mux.ServeHTTP(w, r)
 }
 
@@ -111,8 +113,7 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 		return nil, err
 	}
 
-	cookies := make([]http.Cookie, 0)
-	cookies = append(cookies, http.Cookie{
+	cookies := []http.Cookie{{
 		Name:     "token",
 		Value:    token,
 		Path:     "/",
@@ -120,7 +121,7 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 		HttpOnly: true,
 		Secure:   true,
 		SameSite: http.SameSiteLaxMode,
-	})
+	}}
 
 	return &femto.EmptyBodyResponse{Cookies: cookies, Status: http.StatusAccepted}, nil
 }
