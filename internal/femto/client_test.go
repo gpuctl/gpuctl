@@ -11,7 +11,7 @@ import (
 func TestPostToUnresolvable(t *testing.T) {
 	t.Parallel()
 
-	err := femto.Post("https://lol.invalid", 101)
+	_, err := femto.Post("https://lol.invalid", 101)
 
 	var target *net.DNSError
 	if !errors.As(err, &target) {

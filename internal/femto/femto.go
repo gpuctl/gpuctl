@@ -75,10 +75,10 @@ func Ok[T any](content T) (*Response[T], error) {
 	return &Response[T]{Status: http.StatusOK, Body: content}, nil
 }
 
-func generateErrorLogger(l *slog.Logger, w http.ResponseWriter) func(ctx string, status int, e error) {
+func generateErrorLogger(l *slog.Logger, w *http.ResponseWriter) func(ctx string, status int, e error) {
 	return func(ctx string, status int, e error) {
 		l.Error(ctx, "err", e)
-		http.Error(w, e.Error(), status)
+		http.Error(*w, e.Error(), status)
 	}
 }
 
@@ -102,7 +102,7 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 		data.Status = http.StatusInternalServerError
 	}
 
-	ise := generateErrorLogger(log, w)
+	ise := generateErrorLogger(log, &w)
 
 	if err != nil {
 		ise("There was an error in the server when trying to handle the provided request", data.Status, err)
@@ -146,7 +146,7 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 		return
 	}
 
-	ise := generateErrorLogger(log, w)
+	ise := generateErrorLogger(log, &w)
 
 	data, userErr := handle(reqData, r, log)
 
@@ -159,7 +159,6 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 	}
 
 	if userErr != nil {
-
 		ise("There was an error in the server when trying to handle the provided request", data.Status, userErr)
 		return
 	}

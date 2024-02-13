@@ -13,6 +13,7 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+	"github.com/stretchr/testify/assert"
 )
 
 type unitTest struct {
@@ -27,6 +28,7 @@ var UnitTests = [...]unitTest{
 	{"AppendingFailsIfContextMissing", appendingFailsIfContextMissing},
 	{"AppendedDataPointsAreSaved", appendedDataPointsAreSaved},
 	{"MultipleHeartbeats", multipleHeartbeats},
+	{"TestAppendDataPointMissingGPU", testAppendDataPointMissingGPU},
 	unitTest{"LastSeen", testLastSeen},
 	unitTest{"Downsample", testDownsample},
 	unitTest{"TestSuccessfulDrop", dropSuccess}, // Must be last unit test as database tables are dropped here :)
@@ -298,4 +300,12 @@ func verifyDownsampledData(t *testing.T, db database.Database, gpuID string, exp
 		t.Fatalf("GPU %s not found in the latest data results", gpuID)
 	}
 
+}
+
+func testAppendDataPointMissingGPU(t *testing.T, db database.Database) {
+	t.Parallel()
+
+	err := db.AppendDataPoint(uplink.GPUStatSample{Uuid: "bogus_uuid_blah"})
+	assert.Error(t, err)
+	assert.EqualError(t, err, database.ErrGpuNotPresent.Error())
 }
