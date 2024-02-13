@@ -1,7 +1,6 @@
 package webapi
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -40,10 +39,6 @@ type OnboardConf struct {
 	// SSH Options.
 	Signer      ssh.Signer
 	KeyCallback ssh.HostKeyCallback
-}
-
-func makeAuthCookie(token string) string {
-	return fmt.Sprintf("token=%s; Path=/; HttpOnly; Secure; SameSite=Strict", token)
 }
 
 func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], onboard OnboardConf) *Server {
@@ -116,9 +111,18 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 		return nil, err
 	}
 
-	headers := make(map[string]string)
-	headers["Set-Cookie"] = makeAuthCookie(token)
-	return &femto.EmptyBodyResponse{Headers: headers, Status: http.StatusAccepted}, nil
+	cookies := make([]http.Cookie, 0)
+	cookies = append(cookies, http.Cookie{
+		Name:     "token",
+		Value:    token,
+		Path:     "/",
+		MaxAge:   3600,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteLaxMode,
+	})
+
+	return &femto.EmptyBodyResponse{Cookies: cookies, Status: http.StatusAccepted}, nil
 }
 
 // TODO
