@@ -50,7 +50,7 @@ func TestAppendDataPoint_Error(t *testing.T) {
 
 	err := db.AppendDataPoint(uplink.GPUStatSample{Uuid: "550e8400-e29b-41d4-a716-446655440000"})
 	assert.Error(t, err)
-	assert.EqualError(t, err, database.ErrGpuNotPresent.Error()+": 550e8400-e29b-41d4-a716-446655440000")
+	assert.EqualError(t, err, database.ErrGpuNotPresent.Error())
 }
 
 func TestDrop(t *testing.T) {
