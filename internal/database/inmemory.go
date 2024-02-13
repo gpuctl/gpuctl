@@ -3,7 +3,6 @@ package database
 import (
 	"cmp"
 	"errors"
-	"fmt"
 	"slices"
 	"sort"
 	"sync"
@@ -13,9 +12,6 @@ import (
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
-var ErrMachineNotPresent = errors.New("adding gpu to non present machine")
-
-var ErrGpuNotPresent = errors.New("appending to non present gpu")
 
 type gpuInfo struct {
 	host    string
@@ -42,7 +38,7 @@ func (m *inMemory) AppendDataPoint(sample uplink.GPUStatSample) error {
 	defer m.mu.Unlock()
 
 	if info, pres := m.infos[sample.Uuid]; !pres {
-		return fmt.Errorf("%w: %s", ErrGpuNotPresent, sample.Uuid)
+		return ErrGpuNotPresent
 	} else {
 		m.stats[sample.Uuid] = append(m.stats[sample.Uuid], sample)
 		m.lastSeen[info.host] = time.Now().Unix()

@@ -3,6 +3,13 @@ package database
 import (
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+	"errors"
+)
+
+// Constant errors for failures in DB
+var (
+	ErrMachineNotPresent = errors.New("adding gpu to non present machine")
+	ErrGpuNotPresent = errors.New("appending to non present gpu")
 )
 
 // define set of operations on the database that any provider will implement

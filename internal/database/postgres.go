@@ -176,6 +176,11 @@ func (conn postgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 		sample.GraphicsClock, sample.MaxGraphicsClock,
 		sample.MemoryClock, sample.MaxMemoryClock)
 
+	// TODO: hacky, untested. Might not work
+	if err != nil {
+		return ErrGpuNotPresent
+	}
+
 	return err
 }
 

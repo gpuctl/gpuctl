@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/types"
 	"github.com/gpuctl/gpuctl/internal/uplink"
@@ -27,7 +28,9 @@ func (gs *groundstation) gpustats(data uplink.GpuStatsUpload, req *http.Request,
 
 	if len(data.Stats) > 0 {
 		err := gs.handleGPUStatSamples(data.Hostname, data.Stats)
-		if err != nil {
+		if err == database.ErrGpuNotPresent {
+			return &femto.EmptyBodyResponse{Status: http.StatusBadRequest}, err
+		} else if err != nil {
 			return nil, err
 		}
 	}
