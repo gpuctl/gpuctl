@@ -32,3 +32,8 @@ func TestPostgres(t *testing.T) {
 		})
 	}
 }
+
+// STOP!!!
+// Don't add any more tests to this file
+// TestInMemoryUnit runs all the unit tests in unit_test.go
+// Add your new test cases there

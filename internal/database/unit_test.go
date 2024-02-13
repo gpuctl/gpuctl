@@ -29,8 +29,10 @@ var UnitTests = [...]unitTest{
 	{"AppendedDataPointsAreSaved", appendedDataPointsAreSaved},
 	{"MultipleHeartbeats", multipleHeartbeats},
 	{"TestAppendDataPointMissingGPU", testAppendDataPointMissingGPU},
-	{"LastSeen", testLastSeen},
+	{"LastSeen1", testLastSeen1},
+	{"LastSeen2", testLastSeen2},
 	{"Downsample", testDownsample},
+	{"OneGpu", oneGpu},
 }
 
 // fake data for adding during tests
@@ -204,7 +206,7 @@ func testDownsample(t *testing.T, db database.Database) {
 	verifyDownsampledData(t, db, "Test GPU", 101) // 101 here might not be true
 }
 
-func testLastSeen(t *testing.T, db database.Database) {
+func testLastSeen1(t *testing.T, db database.Database) {
 	host := "TestHost"
 	lastSeenTime := time.Now().Unix()
 	db.UpdateLastSeen(host, lastSeenTime)
@@ -224,6 +226,25 @@ func testLastSeen(t *testing.T, db database.Database) {
 	if !found {
 		t.Errorf("Last seen data for host %s was not updated correctly", host)
 	}
+}
+
+func testLastSeen2(t *testing.T, db database.Database) {
+	err := db.UpdateLastSeen("foo", 1234567890)
+	assert.NoError(t, err)
+
+	err = db.UpdateLastSeen("bar", 9876543210)
+	assert.NoError(t, err)
+
+	seen, err := db.LastSeen()
+	assert.NoError(t, err)
+	assert.Len(t, seen, 2)
+
+	expected := []uplink.WorkstationSeen{
+		{Hostname: "foo", LastSeen: 1234567890},
+		{Hostname: "bar", LastSeen: 9876543210},
+	}
+
+	assert.ElementsMatch(t, expected, seen)
 }
 
 func populateDatabaseWithSampleData(db database.Database, gpuID string, numberOfSamples int) {
@@ -296,4 +317,24 @@ func testAppendDataPointMissingGPU(t *testing.T, db database.Database) {
 	err := db.AppendDataPoint(uplink.GPUStatSample{Uuid: "bogus_uuid_blah"})
 	assert.Error(t, err)
 	assert.EqualError(t, err, database.ErrGpuNotPresent.Error())
+}
+
+// test getting data all the way to a GPU
+func oneGpu(t *testing.T, db database.Database) {
+	data, err := db.LatestData()
+	assert.NoError(t, err)
+	assert.Empty(t, data)
+
+	err = db.UpdateLastSeen("foo", 0)
+	assert.NoError(t, err)
+
+	err = db.UpdateGPUContext("foo", uplink.GPUInfo{})
+	assert.NoError(t, err)
+
+	err = db.AppendDataPoint(uplink.GPUStatSample{})
+	assert.NoError(t, err)
+
+	data, err = db.LatestData()
+	assert.NoError(t, err)
+	assert.Len(t, data, 1)
 }
