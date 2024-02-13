@@ -65,7 +65,7 @@ export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
   // On first page load, we would like to check if we are currently signed in
   useOnce(
     discard(async () => {
-      const r = await authFetch("confirm", {
+      const r = await authFetch("/confirm", {
         method: "GET",
       });
       if (r.ok) {

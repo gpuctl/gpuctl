@@ -62,7 +62,9 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnPost(mux, "/api/admin/add_workstation", api.addMachine)
 	femto.OnPost(mux, "/api/admin/stats/modify", api.modifyMachineInfo)
 	femto.OnPost(mux, "/api/admin/rm_workstation", api.removeMachine)
-	femto.OnGet(mux, "/api/admin/confirm", api.confirmAdmin)
+	femto.OnGet(mux, "/api/admin/confirm", func(r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
+		return api.confirmAdmin(auth, r, l)
+	})
 
 	return &Server{mux, api}
 }
@@ -154,7 +156,12 @@ type UsernameReminder struct {
 
 func (a *Api) confirmAdmin(auth authentication.Authenticator[APIAuthCredientals], r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
 	// We need to figure out how to get the token out of a request...
-	u, err := auth.CheckToken("")
+
+	c, err := r.Cookie("token")
+	if err != nil {
+		return nil, err
+	}
+	u, err := auth.CheckToken(c.Value)
 	if err != nil {
 		return nil, err
 	}

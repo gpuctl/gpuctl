@@ -4,7 +4,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"strings"
 
 	"github.com/gpuctl/gpuctl/internal/femto"
 )
@@ -24,15 +23,13 @@ type Authenticator[AuthCredientals any] interface {
 
 func AuthWrapGet[A any, T any](auth Authenticator[A], handle femto.GetFunc[T]) femto.GetFunc[T] {
 	return func(request *http.Request, logger *slog.Logger) (*femto.Response[T], error) {
-		authorisation := request.Header.Get("Authorization")
-
-		token, bearerPresent := strings.CutPrefix(authorisation, "Bearer ")
-
-		if !bearerPresent {
+		c, err := request.Cookie("token")
+		if err != nil {
 			return &femto.Response[T]{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
 
-		_, err := auth.CheckToken(token)
+		token := c.Value
+		_, err = auth.CheckToken(token)
 		if err != nil {
 			return &femto.Response[T]{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
@@ -43,15 +40,13 @@ func AuthWrapGet[A any, T any](auth Authenticator[A], handle femto.GetFunc[T]) f
 
 func AuthWrapPost[A any, T any](auth Authenticator[A], handle femto.PostFunc[T]) femto.PostFunc[T] {
 	return func(data T, request *http.Request, logger *slog.Logger) (*femto.EmptyBodyResponse, error) {
-		authorisation := request.Header.Get("Authorization")
-
-		token, bearerPresent := strings.CutPrefix(authorisation, "Bearer ")
-
-		if !bearerPresent {
+		c, err := request.Cookie("token")
+		if err != nil {
 			return &femto.EmptyBodyResponse{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
 
-		_, err := auth.CheckToken(token)
+		token := c.Value
+		_, err = auth.CheckToken(token)
 		if err != nil {
 			return &femto.EmptyBodyResponse{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
