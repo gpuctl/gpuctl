@@ -1,41 +1,10 @@
 import { useState } from "react";
-import { API_URL, AuthToken } from "../App";
-import { Validated, failure, success, validatedElim } from "../Utils/Utils";
-import { ADMIN_PATH } from "../Pages/AdminPanel";
 import { Box, Button, Heading, Input, VStack } from "@chakra-ui/react";
+import { useAuth } from "../Providers/AuthProvider";
 
-const AUTH_PATH = "/auth";
+export const SignIn = () => {
+  const { login } = useAuth();
 
-const DEBUG_AUTH = true;
-const DEBUG_USER = "NathanielB";
-const DEBUG_PASSWORD = "drowssap";
-const DEBUG_TOKEN = "ABCDEFG";
-
-const requestSignIn = async (
-  username: string,
-  password: string,
-): Promise<Validated<AuthToken>> => {
-  if (DEBUG_AUTH) {
-    if (username === DEBUG_USER && password === DEBUG_PASSWORD) {
-      return success({ token: DEBUG_TOKEN });
-    }
-  }
-
-  const resp = await fetch(API_URL + ADMIN_PATH + AUTH_PATH, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ username, password }),
-  });
-
-  if (resp.ok) {
-    const tok: AuthToken = await resp.json();
-    return success(tok);
-  }
-  if (resp.status === 401) return failure(Error("Unauthorised!"));
-  return failure(Error("Authentication Failed for an Unknown Reason!"));
-};
-
-export const SignIn = ({ signIn }: { signIn: (tok: AuthToken) => void }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -67,14 +36,7 @@ export const SignIn = ({ signIn }: { signIn: (tok: AuthToken) => void }) => {
         <Button
           bgColor={"white"}
           onClick={async () => {
-            const tok = await requestSignIn(username, password);
-            validatedElim(tok, {
-              success: (t) => {
-                signIn(t);
-                window.location.reload();
-              },
-              failure: () => {},
-            });
+            login(username, password);
           }}
         >
           Sign In

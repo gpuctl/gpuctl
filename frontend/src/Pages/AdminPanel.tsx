@@ -1,5 +1,5 @@
 import { Input } from "@chakra-ui/input";
-import { API_URL, AuthToken } from "../App";
+import { API_URL } from "../App";
 import {
   Editable,
   EditableInput,
@@ -29,16 +29,11 @@ export const ADMIN_PATH = "/admin";
 const ADD_MACHINE_URL = "/add_workstation";
 const REMOVE_MACHINE_URL = "/rm_workstation";
 
-const addMachine = async (
-  hostname: string,
-  group: string,
-  token: AuthToken,
-) => {
+const addMachine = async (hostname: string, group: string) => {
   const resp = await fetch(API_URL + ADMIN_PATH + ADD_MACHINE_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token.token}`,
     },
     body: JSON.stringify({ hostname, group }),
   });
@@ -51,12 +46,11 @@ const addMachine = async (
   }
 };
 
-const removeMachine = async (hostname: string, token: AuthToken) => {
+const removeMachine = async (hostname: string) => {
   const resp = await fetch(API_URL + ADMIN_PATH + REMOVE_MACHINE_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token.token}`,
     },
     body: JSON.stringify({ hostname }),
   });
@@ -76,24 +70,17 @@ type ModifyData = {
   notes: string | null;
 };
 
-const modifyInfo = (hostname: string, mod: ModifyData, token: AuthToken) => {
+const modifyInfo = (hostname: string, mod: ModifyData) => {
   fetch(API_URL + ADMIN_PATH + STATS_PATH + "/modify", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token.token}`,
     },
     body: JSON.stringify({ hostname, ...mod }),
   });
 };
 
-export const AdminPanel = ({
-  token,
-  groups,
-}: {
-  token: AuthToken;
-  groups: WorkStationGroup[];
-}) => {
+export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
   const [hostname, setHostname] = useState("");
   const [group, setGroup] = useState("");
 
@@ -129,7 +116,7 @@ export const AdminPanel = ({
         <Button
           w="5%"
           onClick={() => {
-            addMachine(hostname, group, token);
+            addMachine(hostname, group);
           }}
         >
           Add
@@ -162,16 +149,12 @@ export const AdminPanel = ({
                         defaultValue={group}
                         textColor={pickCol(group)}
                         onSubmit={(s) =>
-                          modifyInfo(
-                            workStation.name,
-                            {
-                              group: s,
-                              cpu: null,
-                              motherboard: null,
-                              notes: null,
-                            },
-                            token,
-                          )
+                          modifyInfo(workStation.name, {
+                            group: s,
+                            cpu: null,
+                            motherboard: null,
+                            notes: null,
+                          })
                         }
                       >
                         <EditablePreview />
@@ -185,16 +168,12 @@ export const AdminPanel = ({
                         textColor={pickCol(workStation.cpu)}
                         defaultValue={workStation.cpu}
                         onSubmit={(s) =>
-                          modifyInfo(
-                            workStation.name,
-                            {
-                              group: null,
-                              cpu: s,
-                              motherboard: null,
-                              notes: null,
-                            },
-                            token,
-                          )
+                          modifyInfo(workStation.name, {
+                            group: null,
+                            cpu: s,
+                            motherboard: null,
+                            notes: null,
+                          })
                         }
                       >
                         <EditablePreview />
@@ -208,16 +187,12 @@ export const AdminPanel = ({
                         defaultValue={workStation.motherboard}
                         textColor={pickCol(workStation.motherboard)}
                         onSubmit={(s) =>
-                          modifyInfo(
-                            workStation.name,
-                            {
-                              group: null,
-                              cpu: null,
-                              motherboard: s,
-                              notes: null,
-                            },
-                            token,
-                          )
+                          modifyInfo(workStation.name, {
+                            group: null,
+                            cpu: null,
+                            motherboard: s,
+                            notes: null,
+                          })
                         }
                       >
                         <EditablePreview />
@@ -231,16 +206,12 @@ export const AdminPanel = ({
                         defaultValue={workStation.notes}
                         textColor={pickCol(workStation.notes)}
                         onSubmit={(s) =>
-                          modifyInfo(
-                            workStation.name,
-                            {
-                              group: null,
-                              cpu: null,
-                              motherboard: null,
-                              notes: s,
-                            },
-                            token,
-                          )
+                          modifyInfo(workStation.name, {
+                            group: null,
+                            cpu: null,
+                            motherboard: null,
+                            notes: s,
+                          })
                         }
                       >
                         <EditablePreview />
@@ -251,7 +222,7 @@ export const AdminPanel = ({
                       <Button
                         bgColor={"red.300"}
                         onClick={() => {
-                          removeMachine(hostname, token);
+                          removeMachine(hostname);
                         }}
                       >
                         Kill Satellite

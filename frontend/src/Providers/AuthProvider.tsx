@@ -4,6 +4,7 @@ import {
   Validation,
   discard,
   failure,
+  isSuccess,
   loading,
   success,
 } from "../Utils/Utils";
@@ -12,7 +13,8 @@ import { ADMIN_PATH } from "../Pages/AdminPanel";
 
 const AUTH_PATH = "/auth";
 
-/** Debug authentication is NOT a vulnerability: We don't get a token and so
+/**
+ * Debug authentication is NOT a vulnerability: We don't get a token and so
  * the WebAPI server will still reject any admin requests. The purpose is to
  * just test sign-in functionality without the back-end running.
  */
@@ -20,8 +22,16 @@ const DEBUG_AUTH = true;
 const DEBUG_USER = "NathanielB";
 const DEBUG_PASSWORD = "drowssap";
 
+/**
+ * Ideally no part of our site should *rely* on the page being reloaded to
+ * update. The reload is primarily to make it obvious to the user than signing
+ * in/out actually did something.
+ */
+const RELOAD_ON_LOG_CHANGE = true;
+
 type AuthCtx = {
   user: Validated<string>;
+  isSignedIn: () => boolean;
   login: (username: string, password: string) => void;
   logout: () => void;
   useAuthFetch: (
@@ -32,23 +42,34 @@ type AuthCtx = {
 
 const AuthContext = createContext<AuthCtx>({
   user: failure(Error("No auth context provided")),
+  isSignedIn: () => false,
   login: () => {},
   logout: () => {},
   useAuthFetch: () => failure(Error("No auth context provided")),
 });
 
+const authFetch = (path: string, init?: RequestInit | undefined) =>
+  fetch(API_URL + ADMIN_PATH + path, init);
+
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
-  const [user, setUser] = useState<Validated<string>>(
+  const [user, setUserDirect] = useState<Validated<string>>(
     failure(Error("Not logged in!")),
   );
 
-  const authFetch = (path: string, init?: RequestInit | undefined) =>
-    fetch(API_URL + ADMIN_PATH + path, init);
+  const setUser = (u: Validated<string>) => {
+    const changed = isSuccess(u) !== isSuccess(user);
+    setUserDirect(u);
 
-  /** Feedback about if the login was successful should be retrieved by reading
-   *  'user'
+    if (changed && RELOAD_ON_LOG_CHANGE) {
+      window.location.reload();
+    }
+  };
+
+  /**
+   * Feedback about if the login was successful should be retrieved by reading
+   * 'user'
    */
   const login = (username: string, password: string) => {
     discard(async () => {
@@ -67,13 +88,19 @@ export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
         body: JSON.stringify({ username, password }),
       });
 
-      if (r.ok) {
-        setUser(success(username));
-      } else if (r.status === 401) {
-        setUser(failure(Error("Username or password was incorrect!")));
-      } else {
-        setUser(failure(Error("Auth failed for an unknown reason")));
+      if (!r.ok) {
+        setUser(
+          failure(
+            r.status === 401
+              ? Error("Username or password was incorrect!")
+              : Error("Auth failed for an unknown reason"),
+          ),
+        );
+        return;
       }
+
+      setUser(success(username));
+      return;
     });
   };
 
@@ -95,7 +122,13 @@ export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
     return resp;
   };
 
-  const value = { user, login, logout, useAuthFetch };
+  const isSignedIn = () => isSuccess(user);
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider
+      value={{ user, isSignedIn, login, logout, useAuthFetch }}
+    >
+      {children}
+    </AuthContext.Provider>
+  );
 };

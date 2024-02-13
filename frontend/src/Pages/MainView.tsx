@@ -1,26 +1,16 @@
 import { Box, Heading, VStack } from "@chakra-ui/react";
-import {
-  API_URL,
-  AUTH_TOKEN_ITEM,
-  AuthToken,
-  REFRESH_INTERVAL,
-  ViewPage,
-} from "../App";
+import { API_URL, DEFAULT_VIEW, REFRESH_INTERVAL, ViewPage } from "../App";
 import { WorkStationGroup } from "../Data";
-import {
-  Validated,
-  Validation,
-  failure,
-  success,
-  validatedElim,
-  validationElim,
-} from "../Utils/Utils";
+import { Validated, Validation, success, validationElim } from "../Utils/Utils";
 import { ColumnGrid } from "../Components/ColumnGrid";
 import { TableTab } from "../Components/DataTable";
 import { WorkstationCardMin } from "../Components/WorkstationCardMinimal";
 import { Navbar } from "../Components/Navbar";
 import { useJarJar, useOnce } from "../Utils/Hooks";
-import { ADMIN_PATH, AdminPanel } from "./AdminPanel";
+import { useAuth } from "../Providers/AuthProvider";
+import { STATS_PATH } from "../Config/Paths";
+import { AdminPanel } from "./AdminPanel";
+import { Navigate } from "react-router-dom";
 
 const API_ALL_STATS_PATH = "/stats/all";
 
@@ -80,8 +70,8 @@ const tableView = (stats: WorkStationGroup[]) => (
   <TableTab groups={stats}></TableTab>
 );
 
-const adminView = (stats: WorkStationGroup[], token: AuthToken) => (
-  <AdminPanel groups={stats} token={token}></AdminPanel>
+const adminView = (stats: WorkStationGroup[]) => (
+  <AdminPanel groups={stats}></AdminPanel>
 );
 
 const displayPartial = (
@@ -94,64 +84,26 @@ const displayPartial = (
     failure: (_) => <p>Something has gone wrong!</p>,
   });
 
-export const MainView = (props: {
-  default: ViewPage;
-  authToken: Validated<AuthToken>;
-  setAuth: (tok: Validated<AuthToken>) => void;
-}) => {
+export const MainView = ({ page }: { page: ViewPage }) => {
+  const { isSignedIn } = useAuth();
+  if (page === ViewPage.ADMIN && !isSignedIn()) {
+    return <Navigate to={STATS_PATH + DEFAULT_VIEW} replace />;
+  }
+  return <ConfirmedMainView initial={page} />;
+};
+
+export const ConfirmedMainView = ({ initial }: { initial: ViewPage }) => {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
 
   useOnce(() => {
     setInterval(updateStats, REFRESH_INTERVAL);
   });
 
-  const signOut = () => {
-    props.setAuth(failure(Error("Signed Out")));
-    localStorage.removeItem(AUTH_TOKEN_ITEM);
-    window.location.reload();
-  };
-
-  const signIn = (tok: AuthToken) => {
-    localStorage.setItem(AUTH_TOKEN_ITEM, tok.token);
-    props.setAuth(success(tok));
-    window.location.reload();
-  };
-
-  const checkStillAdmin = async (tok: AuthToken) => {
-    const resp = await fetch(API_URL + ADMIN_PATH + "/confirm", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${tok.token}`,
-      },
-    });
-    if (resp.ok) return;
-    if (resp.status === 401) signOut();
-    console.log("Unknown error occured when checking admin status!");
-  };
-
-  validatedElim(props.authToken, {
-    success: (tok) => {
-      // Just fire the check - it's not super important but doing this
-      // every so often is probably good practice
-      checkStillAdmin(tok);
-    },
-    failure: () => {},
-  });
-
   return (
-    <Navbar
-      initial={props.default}
-      authToken={props.authToken}
-      signOut={signOut}
-      signIn={signIn}
-    >
+    <Navbar initial={initial}>
       {displayPartial(stats, cardView)}
       {displayPartial(stats, tableView)}
-      {validatedElim(props.authToken, {
-        success: (tok) => displayPartial(stats, (s) => adminView(s, tok)),
-        failure: () => <></>,
-      })}
+      {displayPartial(stats, (s) => adminView(s))}
     </Navbar>
   );
 };
