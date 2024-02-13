@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	//	"reflect"
+	"testing"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -518,12 +519,19 @@ func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 }
 
 // drop all tables we create in the database
-func (conn postgresConn) Drop() error {
+// this function is only for testing purposes
+func (conn postgresConn) Drop(t *testing.T) {
 	_, err := conn.db.Exec(`DROP TABLE stats;
 		DROP TABLE gpus;
 		DROP TABLE machines`)
+	if err != nil {
+		t.Fatalf("Error deleting tables: %v", err)
+	}
 
-	return errors.Join(err, conn.db.Close())
+	err = conn.db.Close()
+	if err != nil {
+		t.Fatalf("Error closing database connection: %v", err)
+	}
 }
 
 func (conn postgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {

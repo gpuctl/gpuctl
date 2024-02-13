@@ -26,24 +26,14 @@ func TestPostgres(t *testing.T) {
 				t.Fatalf("Failed to open database: %v", err)
 			}
 
-			// TODO: This is a really bad way of doing things, fix this
-
-			/*
-			 * What needs to be fixed here:
-			 * 	- The tests must test the db.Drop() functionality
-			 * 	- Therefore the database must be dropped
-			 * 	- The test cleanup infrastructure must not rely on tested code
-			 * 	- Must find a way to clean-up without using db.Drop() directly
-			 */
-
-			t.Cleanup(func() {
-				err = db.Drop()
-				if err != nil {
-					t.Logf("Got error on cleanup: %v", err)
-				}
-			})
+			t.Cleanup(func() { db.Drop(t) })
 
 			test.F(t, db)
 		})
 	}
 }
+
+// STOP!!!
+// Don't add any more tests to this file
+// TestInMemoryUnit runs all the unit tests in unit_test.go
+// Add your new test cases there
