@@ -11,7 +11,7 @@ import (
 func TestPostgres(t *testing.T) {
 	if testing.Short() {
 		t.Skip("not connecting to postgres in short tests")
-}
+	}
 
 	// set default value that matches github workflow
 	url := os.Getenv("TEST_URL")
