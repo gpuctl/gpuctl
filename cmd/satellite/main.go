@@ -2,10 +2,10 @@ package main
 
 import (
 	"encoding/json"
-	"log/slog"
-	"os"
 	"errors"
+	"log/slog"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/config"
@@ -191,9 +191,11 @@ func (s *satellite) sendHeartBeat() error {
 		s.gsAddr+uplink.HeartbeatUrl,
 		uplink.HeartbeatReq{Hostname: s.hostname},
 	)
+
 	if err != nil {
 		return err
 	}
+
 	if resp.StatusCode != http.StatusOK {
 		return err // TODO: add errors for each status code
 	}
@@ -236,6 +238,11 @@ func (s *satellite) sendGPUStatus(stats []uplink.GPUStatSample) error {
 		s.gsAddr+uplink.GPUStatsUrl,
 		uplink.GpuStatsUpload{Hostname: s.hostname, Stats: stats},
 	)
+
+	if err != nil {
+		return err
+	}
+
 	if resp.StatusCode == http.StatusBadRequest {
 		// Could not send status, suspected cause is server does not have context.
 		return errSuspectedServerMissingInfo

@@ -12,7 +12,6 @@ import (
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
-
 type gpuInfo struct {
 	host    string
 	context uplink.GPUInfo
