@@ -10,7 +10,7 @@ test("renders welcome message", async () => {
   const welcome = await screen.findByText("Welcome to the GPU Control Room!");
   expect(welcome).toBeInTheDocument();
 
-  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 });
 
 test(`before fetch succeeds inform the user that data is being fetched
