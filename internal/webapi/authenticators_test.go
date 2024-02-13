@@ -65,7 +65,7 @@ func TestAuthenticatorFromConfig(t *testing.T) {
 type alwaysAuth struct{}
 
 // CheckToken implements femto.Authenticator.
-func (alwaysAuth) CheckToken(string) (string, error) {
+func (alwaysAuth) CheckToken(string) (authentication.Username, error) {
 	return "admin", nil
 }
 

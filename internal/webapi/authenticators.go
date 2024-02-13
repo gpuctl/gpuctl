@@ -48,7 +48,7 @@ func (auth *ConfigFileAuthenticator) RevokeToken(token authentication.AuthToken)
 	return nil
 }
 
-func (auth *ConfigFileAuthenticator) CheckToken(token authentication.AuthToken) (string, error) {
+func (auth *ConfigFileAuthenticator) CheckToken(token authentication.AuthToken) (authentication.Username, error) {
 	auth.mu.Lock()
 	defer auth.mu.Unlock()
 

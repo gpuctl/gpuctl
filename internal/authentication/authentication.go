@@ -13,12 +13,20 @@ var (
 	InvalidCredientalsError = errors.New("Invalid credientals for creating an authentication token")
 )
 
+// These would probably be safer as newtypes, but exactly where to use the raw
+// types and where to use the newtypes is slightly subtle (i.e. should packets
+// from front-end use raw types because those values haven't been checked yet?
+// What about packets we send back to the front-end?) so I would like someone
+// else to worry about refactoring this - NB
 type AuthToken = string
+type Username = string
 
 type Authenticator[AuthCredientals any] interface {
 	CreateToken(AuthCredientals) (AuthToken, error)
 	RevokeToken(AuthToken) error
-	CheckToken(AuthToken) (string, error)
+	// Returns the username associated with the authentication token if it is
+	// valid, otherwise an error
+	CheckToken(AuthToken) (Username, error)
 }
 
 func AuthWrapGet[A any, T any](auth Authenticator[A], handle femto.GetFunc[T]) femto.GetFunc[T] {
