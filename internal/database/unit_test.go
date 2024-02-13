@@ -29,9 +29,9 @@ var UnitTests = [...]unitTest{
 	{"AppendedDataPointsAreSaved", appendedDataPointsAreSaved},
 	{"MultipleHeartbeats", multipleHeartbeats},
 	{"TestAppendDataPointMissingGPU", testAppendDataPointMissingGPU},
-	unitTest{"LastSeen", testLastSeen},
-	unitTest{"Downsample", testDownsample},
-	unitTest{"TestSuccessfulDrop", dropSuccess}, // Must be last unit test as database tables are dropped here :)
+	{"LastSeen", testLastSeen},
+	{"Downsample", testDownsample},
+	{"TestSuccessfulDrop", dropSuccess}, 
 }
 
 // fake data for adding during tests
