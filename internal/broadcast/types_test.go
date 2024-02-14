@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
-	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -24,50 +23,43 @@ func TestMarshal(t *testing.T) {
 		t,
 
 		broadcast.Workstations(broadcast.Workstations{
-			broadcast.WorkstationGroup{
-				Name: "Shared", WorkStations: []broadcast.WorkstationData{
+			broadcast.Group{
+				Name: "Shared", Workstations: []broadcast.Workstation{
 					{
-						Name: "Workstation 1", Gpus: []broadcast.OldGPUStatSample{
+						Name: "Workstation 1", Gpus: []broadcast.GPU{
 							{Name: "NVIDIA GeForce GT 1030", Brand: "GeForce", DriverVersion: "535.146.02", MemoryTotal: 0x800, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 82, FanSpeed: 35, Temp: 31},
 						},
 					},
 					{
-						Name: "Workstation 2", Gpus: []broadcast.OldGPUStatSample{
+						Name: "Workstation 2", Gpus: []broadcast.GPU{
 							{Name: "NVIDIA TITAN Xp", Brand: "Titan", DriverVersion: "535.146.02", MemoryTotal: 0x3000, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 83, FanSpeed: 23, Temp: 32},
 							{Name: "NVIDIA TITAN Xp", Brand: "Titan", DriverVersion: "535.146.02", MemoryTotal: 0x3000, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 83, FanSpeed: 23, Temp: 32},
 						},
 					},
 					{
-						Name: "Workstation 3", Gpus: []broadcast.OldGPUStatSample{
+						Name: "Workstation 3", Gpus: []broadcast.GPU{
 							{Name: "NVIDIA GeForce GT 730", Brand: "GeForce", DriverVersion: "470.223.02", MemoryTotal: 0x7d1, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 220, FanSpeed: 30, Temp: 27},
 						},
 					},
 					{
-						Name: "Workstation 5", Gpus: []broadcast.OldGPUStatSample{
+						Name: "Workstation 5", Gpus: []broadcast.GPU{
 							{Name: "NVIDIA TITAN Xp", Brand: "Titan", DriverVersion: "535.146.02", MemoryTotal: 0x3000, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 83, FanSpeed: 23, Temp: 32},
 							{Name: "NVIDIA TITAN Xp", Brand: "Titan", DriverVersion: "535.146.02", MemoryTotal: 0x3000, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 83, FanSpeed: 23, Temp: 32},
 						},
 					},
 					{
-						Name: "Workstation 4", Gpus: []broadcast.OldGPUStatSample{
+						Name: "Workstation 4", Gpus: []broadcast.GPU{
 							{Name: "NVIDIA GeForce GT 1030", Brand: "GeForce", DriverVersion: "535.146.02", MemoryTotal: 0x800, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 82, FanSpeed: 35, Temp: 31},
 						},
 					},
 					{
-						Name: "Workstation 6", Gpus: []broadcast.OldGPUStatSample{
+						Name: "Workstation 6", Gpus: []broadcast.GPU{
 							{Name: "NVIDIA GeForce GT 730", Brand: "GeForce", DriverVersion: "470.223.02", MemoryTotal: 0x7d1, MemoryUtilisation: 0, GPUUtilisation: 0, MemoryUsed: 220, FanSpeed: 30, Temp: 27},
 						},
 					},
 				}}}),
 		data,
 	)
-}
-
-func TestToOldGPUStats(t *testing.T) {
-	s := uplink.GPUStatSample{Uuid: "stuff"}
-	a := broadcast.ToOldGPUStats(s)
-	assert.Equal(t, s.Uuid, a.Hostname)
-	assert.Equal(t, uint64(1337), a.MemoryTotal)
 }
 
 func TestNewMachine(t *testing.T) {
