@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
+	//	"reflect"
+	"strings"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -309,66 +311,124 @@ FROM TempDownsampled;
 }
 
 // TODO: consider returning workstationGroup
-func (conn PostgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
-	// we pull Uuid twice so we can put one into Stat sample and the other into Info
-	rows, err := conn.db.Query(`SELECT g.Machine, g.Uuid, g.Uuid, g.Name,
-			g.Brand, g.DriverVersion, g.MemoryTotal,
-			s.MemoryUtilisation, s.GpuUtilisation, s.MemoryUsed,
-			s.FanSpeed, s.Temp, s.MemoryTemp, s.GraphicsVoltage,
-			s.PowerDraw, s.GraphicsClock, s.MaxGraphicsClock,
-			s.MemoryClock, s.MaxMemoryClock
+func (conn PostgresConn) LatestData() (broadcast.Workstations, error) {
+	// pull all the machines in, then gpus for those machines
+	// has to all be done in a transaction to avoid race conditions
+	tx, err := conn.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	groups := make(map[string][]broadcast.Workstation)
+	machines, err := tx.Query(`SELECT GroupName, Hostname, CPU, Motherboard,
+		Notes, LastSeen
+		FROM Machines`)
+	if err != nil {
+		return nil, errors.Join(err, tx.Rollback())
+	}
+
+	for machines.Next() {
+		var groupName *string
+		var machine broadcast.Workstation
+		var lastSeen time.Time
+
+		err = machines.Scan(&groupName, &machine.Name, &machine.CPU,
+			&machine.Motherboard, &machine.Notes, &lastSeen)
+		if err != nil {
+			return nil, errors.Join(err, tx.Rollback())
+		}
+
+		// coalesce null and empty group names to default
+		if groupName == nil || strings.TrimSpace(*groupName) == "" {
+			groupName = &defaultGroup
+		}
+
+		machine.LastSeen = time.Since(lastSeen)
+		machine.Gpus = nil
+
+		groups[*groupName] = append(groups[*groupName], machine)
+	}
+
+	// check for error whilst iterating, continuing if it's "no results"
+	err = machines.Err()
+	if err != nil && !errors.Is(sql.ErrNoRows, err) {
+		return nil, errors.Join(err, tx.Rollback())
+	}
+
+	// attach gpus to all machines
+	// can't be done in the previous loop because we can't be iterating
+	// through two queries at once
+	for group := range groups {
+		for i, machine := range groups[group] {
+			machine.Gpus, err = getGpus(machine.Name, tx)
+			if err != nil {
+				return nil, errors.Join(err, tx.Rollback())
+			}
+			groups[group][i] = machine
+		}
+	}
+
+	// flatten map
+	var result broadcast.Workstations
+	for groupName, machines := range groups {
+		result = append(result, broadcast.Group{
+			Name:         groupName,
+			Workstations: machines,
+		})
+	}
+
+	return result, tx.Commit()
+}
+
+// get the latest stat for all the gpus on a machine
+func getGpus(host string, tx *sql.Tx) ([]broadcast.GPU, error) {
+	result := make([]broadcast.GPU, 0)
+
+	gpus, err := tx.Query(`SELECT g.Uuid, g.Name, g.Brand,
+		g.DriverVersion, g.MemoryTotal,
+		s.MemoryUtilisation, s.GpuUtilisation,
+		s.MemoryUsed, s.FanSpeed, s.Temp, s.MemoryTemp,
+		s.GraphicsVoltage, s.PowerDraw, s.GraphicsClock,
+		s.MaxGraphicsClock, s.MemoryClock,
+		s.MaxMemoryClock
 		FROM GPUs g INNER JOIN Stats s ON g.Uuid = s.Gpu
 		INNER JOIN (
 			SELECT Gpu, Max(Received) Received
 			FROM Stats
 			GROUP BY Gpu
-		) latest ON s.Gpu = latest.Gpu AND s.Received = latest.Received
-	`)
-
+		) latest ON s.Gpu = latest.Gpu
+			AND s.Received = latest.Received
+		WHERE g.Machine=$1`,
+		host,
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	// collect rows into a map of hostname to {GPUInfo, Stat} because
-	// they'll come out of the db out of hostname order
-	type gpus struct {
-		infos []uplink.GPUInfo
-		stats []uplink.GPUStatSample
-	}
-	var latest = make(map[string]gpus)
-
-	for rows.Next() {
-		var host string
-		var info uplink.GPUInfo
-		var stat uplink.GPUStatSample
-
-		err = rows.Scan(&host, &info.Uuid, &stat.Uuid,
-			&info.Name, &info.Brand, &info.DriverVersion,
-			&info.MemoryTotal,
-			&stat.MemoryUtilisation, &stat.GPUUtilisation,
-			&stat.MemoryUsed, &stat.FanSpeed, &stat.Temp,
-			&stat.MemoryTemp, &stat.GraphicsVoltage,
-			&stat.PowerDraw, &stat.GraphicsClock,
-			&stat.MaxGraphicsClock, &stat.MemoryClock,
-			&stat.MaxMemoryClock,
-		)
-
+	for gpus.Next() {
+		var gpu broadcast.GPU
+		err = gpus.Scan(&gpu.Uuid, &gpu.Name, &gpu.Brand,
+			&gpu.DriverVersion, &gpu.MemoryTotal,
+			&gpu.MemoryUtilisation,
+			&gpu.GPUUtilisation, &gpu.MemoryUsed,
+			&gpu.FanSpeed, &gpu.Temp,
+			&gpu.MemoryTemp, &gpu.GraphicsVoltage,
+			&gpu.PowerDraw, &gpu.GraphicsClock,
+			&gpu.MaxGraphicsClock, &gpu.MemoryClock,
+			&gpu.MaxMemoryClock)
 		if err != nil {
 			return nil, err
 		}
 
-		slog.Debug("got stat from table", "host", host, "info", info, "stat", stat)
-		latest[host] = gpus{infos: append(latest[host].infos, info), stats: append(latest[host].stats, stat)}
+		result = append(result, gpu)
 	}
 
-	// flatten map structure
-	var result []uplink.GpuStatsUpload
-	for key, value := range latest {
-		result = append(result, uplink.GpuStatsUpload{Hostname: key,
-			GPUInfos: value.infos, Stats: value.stats})
+	err = gpus.Err()
+	if err == nil || errors.Is(err, sql.ErrNoRows) {
+		return result, nil
+	} else {
+		return nil, err
 	}
-
-	return result, rows.Close()
 }
 
 // Create new machine
@@ -528,17 +588,17 @@ func (conn PostgresConn) Drop() error {
 	return conn.db.Close()
 }
 
-func (conn PostgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {
+func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 	rows, err := conn.db.Query(`SELECT * FROM Machines`)
 
 	if err != nil {
 		return nil, err
 	}
 
-	var seens []uplink.WorkstationSeen
+	var seens []broadcast.WorkstationSeen
 
 	for rows.Next() {
-		var seen_instance uplink.WorkstationSeen
+		var seen_instance broadcast.WorkstationSeen
 		var t time.Time
 		var dud sql.NullString
 

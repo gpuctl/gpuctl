@@ -13,6 +13,9 @@ var (
 	ErrGpuNotPresent     = errors.New("appending to non present gpu")
 )
 
+// default group to give to machines with a null or empty group
+var defaultGroup = "Shared"
+
 // define set of operations on the database that any provider will implement
 type Database interface {
 	// update the last seen time for a satellite to the current time
