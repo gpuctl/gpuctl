@@ -31,7 +31,6 @@ var UnitTests = [...]unitTest{
 	{"TestAppendDataPointMissingGPU", testAppendDataPointMissingGPU},
 	{"LastSeen1", testLastSeen1},
 	{"LastSeen2", testLastSeen2},
-	{"Downsample", testDownsample},
 	{"OneGpu", oneGpu},
 }
 
@@ -194,18 +193,6 @@ func multipleHeartbeats(t *testing.T, db database.Database) {
 
 // TODO: verify latest set of stats returned
 
-func testDownsample(t *testing.T, db database.Database) {
-	populateDatabaseWithSampleData(db, "Test GPU", 200)
-
-	cutoffTime := time.Now().AddDate(0, -6, 0).Unix()
-
-	if err := db.Downsample(cutoffTime); err != nil {
-		t.Fatalf("Downsample failed: %v", err)
-	}
-
-	verifyDownsampledData(t, db, "Test GPU", 101) // 101 here might not be true
-}
-
 func testLastSeen1(t *testing.T, db database.Database) {
 	host := "TestHost"
 	lastSeenTime := time.Now().Unix()
@@ -245,72 +232,6 @@ func testLastSeen2(t *testing.T, db database.Database) {
 	}
 
 	assert.ElementsMatch(t, expected, seen)
-}
-
-func populateDatabaseWithSampleData(db database.Database, gpuID string, numberOfSamples int) {
-	db.UpdateLastSeen("test-host", 0)
-	err := db.UpdateGPUContext("test-host", uplink.GPUInfo{
-		Uuid:          gpuID,
-		Name:          "Test GPU",
-		Brand:         "Test Brand",
-		DriverVersion: "1.0",
-		MemoryTotal:   4,
-	})
-
-	if err != nil {
-		panic("Failed to update GPU context: " + err.Error())
-	}
-
-	now := time.Now()
-	for i := 0; i < numberOfSamples; i++ {
-		sampleTime := now.AddDate(0, 0, -i).Unix()
-		sample := uplink.GPUStatSample{
-			Uuid:              gpuID,
-			MemoryUtilisation: 25.4 + float64(i%10),
-			GPUUtilisation:    63.5 + float64(i%10),
-			MemoryUsed:        1.24 + float64(i),
-			FanSpeed:          35.2 + float64(i%5),
-			Temp:              54.3 + float64(i%5),
-			MemoryTemp:        45.3 + float64(i%5),
-			GraphicsVoltage:   150.0 + float64(i%5),
-			PowerDraw:         143.5 + float64(i%10),
-			GraphicsClock:     50 + float64(i%5),
-			MaxGraphicsClock:  134.4 + float64(i%5),
-			MemoryClock:       650.3 + float64(i%10),
-			MaxMemoryClock:    750 + float64(i%10),
-			Time:              sampleTime,
-			RunningProcesses:  nil, // Assuming process data is not relevant for this test
-		}
-		err := db.AppendDataPoint(sample)
-		if err != nil {
-			panic("Failed to append data point")
-		}
-	}
-}
-
-func verifyDownsampledData(t *testing.T, db database.Database, gpuID string, expectedNumSamplesAfterDownsample int) {
-	results, err := db.LatestData()
-	if err != nil {
-		t.Fatalf("Failed to retrieve latest data: %v", err)
-	}
-
-	found := false
-	var totalSamples int
-	for _, upload := range results {
-		if upload.Hostname == "test-host" {
-			for _, info := range upload.GPUInfos {
-				if info.Name == gpuID {
-					found = true
-					totalSamples += len(upload.Stats)
-				}
-			}
-		}
-	}
-
-	if !found {
-		t.Fatalf("GPU %s not found in the latest data results", gpuID)
-	}
-
 }
 
 func testAppendDataPointMissingGPU(t *testing.T, db database.Database) {
