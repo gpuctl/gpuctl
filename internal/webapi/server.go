@@ -114,7 +114,7 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 	}
 
 	cookies := []http.Cookie{{
-		Name:     "token",
+		Name:     authentication.TOKEN_KEY,
 		Value:    token,
 		Path:     "/",
 		MaxAge:   3600,
@@ -160,15 +160,13 @@ type UsernameReminder struct {
 }
 
 func (a *Api) confirmAdmin(auth authentication.Authenticator[APIAuthCredientals], r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
-	// We need to figure out how to get the token out of a request...
-
-	c, err := r.Cookie("token")
+	c, err := r.Cookie(authentication.TOKEN_KEY)
 	if err != nil {
-		return nil, err
+		return &femto.Response[UsernameReminder]{Status: http.StatusUnauthorized}, nil
 	}
 	u, err := auth.CheckToken(c.Value)
 	if err != nil {
-		return nil, err
+		return &femto.Response[UsernameReminder]{Status: http.StatusUnauthorized}, nil
 	}
 	return femto.Ok(UsernameReminder{Username: u})
 }

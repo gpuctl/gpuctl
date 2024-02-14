@@ -176,7 +176,7 @@ func TestGetApplicationErr(t *testing.T) {
 type TestAuthenticator struct{}
 
 func (auth TestAuthenticator) CreateToken(unit types.Unit) (authentication.AuthToken, error) {
-	return "token", nil
+	return authentication.TOKEN_KEY, nil
 }
 
 func (auth TestAuthenticator) RevokeToken(token authentication.AuthToken) error {
