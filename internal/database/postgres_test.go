@@ -21,12 +21,23 @@ func TestPostgres(t *testing.T) {
 
 	for _, test := range UnitTests {
 		t.Run(test.Name, func(t *testing.T) {
-			db, err := database.Postgres(url)
+			dbi, err := database.Postgres(url)
 			if err != nil {
 				t.Fatalf("Failed to open database: %v", err)
 			}
 
-			t.Cleanup(func() { db.Drop(t) })
+			// We want cast from the interface to the actual type, so we can call
+			// the Drop method, which exists only for this tests, but not the application.
+			db, ok := dbi.(database.PostgresConn)
+			if !ok {
+				t.Fatal("database.Postgres didn't return database.PostgresConn")
+			}
+
+			t.Cleanup(func() {
+				if err := db.Drop(); err != nil {
+					t.Fatal("Failed to drop database", err)
+				}
+			})
 
 			test.F(t, db)
 		})
