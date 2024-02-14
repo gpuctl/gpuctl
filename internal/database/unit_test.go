@@ -6,11 +6,12 @@
 package database_test
 
 import (
+	"log/slog"
 	"math"
-	"reflect"
 	"testing"
 	"time"
 
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/stretchr/testify/assert"
@@ -68,20 +69,80 @@ const margin float64 = 0.01
 func floatsNear(a float64, b float64) bool {
 	return math.Abs(a-b) < margin
 }
-func statsNear(a uplink.GPUStatSample, b uplink.GPUStatSample) bool {
-	aType := reflect.ValueOf(a)
-	bType := reflect.ValueOf(b)
+func statsNear(target broadcast.GPU, stat uplink.GPUStatSample, context uplink.GPUInfo) bool {
+	// TODO: make this nicer/automatically extending with reflection
+	if target.Uuid != stat.Uuid {
+		slog.Error("stat uuid didn't match", "was", target.Uuid, "wanted", stat.Uuid)
+		return false
+	}
+	if target.Uuid != context.Uuid {
+		slog.Error("context uuid didn't match", "was", target.Uuid, "wanted", context.Uuid)
+	}
 
-	for i := 0; i < aType.NumField(); i++ {
-		aVal := aType.Field(i)
-
-		if !aVal.CanFloat() {
-			continue
-		}
-
-		if !floatsNear(aVal.Float(), bType.Field(i).Float()) {
-			return false
-		}
+	// compare all the other fields
+	if target.Name != context.Name {
+		slog.Error("'Name' did not match", "was", target.Name, "wanted", context.Name)
+		return false
+	}
+	if target.Brand != context.Brand {
+		slog.Error("'Brand' did not match", "was", target.Brand, "wanted", context.Brand)
+		return false
+	}
+	if target.DriverVersion != context.DriverVersion {
+		slog.Error("'DriverVersion' did not match", "was", target.DriverVersion, "wanted", context.DriverVersion)
+		return false
+	}
+	if target.MemoryTotal != context.MemoryTotal {
+		slog.Error("'MemoryTotal' did not match", "was", target.MemoryTotal, "wanted", context.MemoryTotal)
+		return false
+	}
+	if !floatsNear(target.MemoryUtilisation, stat.MemoryUtilisation) {
+		slog.Error("'MemoryUtilisation' did not match", "was", target.MemoryUtilisation, "wanted", stat.MemoryUtilisation)
+		return false
+	}
+	if !floatsNear(target.GPUUtilisation, stat.GPUUtilisation) {
+		slog.Error("'GPUUtilisation' did not match", "was", target.GPUUtilisation, "wanted", stat.GPUUtilisation)
+		return false
+	}
+	if !floatsNear(target.MemoryUsed, stat.MemoryUsed) {
+		slog.Error("'MemoryUsed' did not match", "was", target.MemoryUsed, "wanted", stat.MemoryUsed)
+		return false
+	}
+	if !floatsNear(target.FanSpeed, stat.FanSpeed) {
+		slog.Error("'FanSpeed' did not match", "was", target.FanSpeed, "wanted", stat.FanSpeed)
+		return false
+	}
+	if !floatsNear(target.Temp, stat.Temp) {
+		slog.Error("'Temp' did not match", "was", target.Temp, "wanted", stat.Temp)
+		return false
+	}
+	if !floatsNear(target.MemoryTemp, stat.MemoryTemp) {
+		slog.Error("'MemoryTemp' did not match", "was", target.MemoryTemp, "wanted", stat.MemoryTemp)
+		return false
+	}
+	if !floatsNear(target.GraphicsVoltage, stat.GraphicsVoltage) {
+		slog.Error("'GraphicsVoltage' did not match", "was", target.GraphicsVoltage, "wanted", stat.GraphicsVoltage)
+		return false
+	}
+	if !floatsNear(target.PowerDraw, stat.PowerDraw) {
+		slog.Error("'PowerDraw' did not match", "was", target.PowerDraw, "wanted", stat.PowerDraw)
+		return false
+	}
+	if !floatsNear(target.GraphicsClock, stat.GraphicsClock) {
+		slog.Error("'GraphicsClock' did not match", "was", target.GraphicsClock, "wanted", stat.GraphicsClock)
+		return false
+	}
+	if !floatsNear(target.MaxGraphicsClock, stat.MaxGraphicsClock) {
+		slog.Error("'MaxGraphicsClock' did not match", "was", target.MaxGraphicsClock, "wanted", stat.MaxGraphicsClock)
+		return false
+	}
+	if !floatsNear(target.MemoryClock, stat.MemoryClock) {
+		slog.Error("'MemoryClock' did not match", "was", target.MemoryClock, "wanted", stat.MemoryClock)
+		return false
+	}
+	if !floatsNear(target.MaxMemoryClock, stat.MaxMemoryClock) {
+		slog.Error("'MaxMemoryClock' did not match", "was", target.MaxMemoryClock, "wanted", stat.MaxMemoryClock)
+		return false
 	}
 
 	return true
@@ -159,12 +220,16 @@ func appendedDataPointsAreSaved(t *testing.T, db database.Database) {
 	}
 
 	var found = false
-	var gpus []uplink.GPUStatSample
-	for _, machine := range results {
-		if machine.Hostname == fakeHost {
-			found = true
-			gpus = machine.Stats
-			break
+	var gpus []broadcast.GPU
+	var foundGroup string
+	for _, group := range results {
+		for _, machine := range group.Workstations {
+			if machine.Name == fakeHost {
+				found = true
+				gpus = machine.Gpus
+				foundGroup = group.Name
+				break
+			}
 		}
 	}
 
@@ -172,10 +237,10 @@ func appendedDataPointsAreSaved(t *testing.T, db database.Database) {
 		t.Fatalf("'results' didn't contain entry for '%s'", fakeHost)
 	}
 	if len(gpus) != 1 {
-		t.Fatalf("'results[%s]' is the wrong length. Expected: 1, Was: %d", fakeHost, len(gpus))
+		t.Fatalf("gpus for '%s.%s' is the wrong length. Expected: 1, Was: %d", foundGroup, fakeHost, len(gpus))
 	}
-	if !statsNear(gpus[0], fakeDataSample) {
-		t.Fatalf("Appended data doesn't match returned latest data. Expected: %v, Got: %v", fakeDataSample, gpus[0])
+	if !statsNear(gpus[0], fakeDataSample, fakeDataInfo) {
+		t.Fatalf("Appended data doesn't match returned latest data. Expected: %v and %v, Got: %v", fakeDataInfo, fakeDataSample, gpus[0])
 	}
 }
 
@@ -226,7 +291,7 @@ func testLastSeen2(t *testing.T, db database.Database) {
 	assert.NoError(t, err)
 	assert.Len(t, seen, 2)
 
-	expected := []uplink.WorkstationSeen{
+	expected := []broadcast.WorkstationSeen{
 		{Hostname: "foo", LastSeen: 1234567890},
 		{Hostname: "bar", LastSeen: 9876543210},
 	}
