@@ -399,7 +399,7 @@ func (conn PostgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
 		var uuid string
 		err = rows.Scan(&uuid)
 		if err != nil {
-			errors.Join(err, tx.Rollback())
+			return errors.Join(err, tx.Rollback())
 		}
 
 		_, err = tx.Exec(`DELETE FROM Stats
@@ -408,7 +408,7 @@ func (conn PostgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
 		)
 
 		if err != nil {
-			errors.Join(err, tx.Rollback())
+			return errors.Join(err, tx.Rollback())
 		}
 	}
 
