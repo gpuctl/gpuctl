@@ -26,10 +26,11 @@ type Database interface {
 	UpdateGPUContext(host string, info uplink.GPUInfo) error
 
 	// get the latest metrics for all approved machines
-	LatestData() ([]uplink.GpuStatsUpload, error)
+	LatestData() (broadcast.Workstations, error)
 
 	// get last seen online metric for all machines
-	LastSeen() ([]uplink.WorkstationSeen, error)
+	LastSeen() ([]broadcast.WorkstationSeen, error)
+
 	// create and modify machines in the database
 	NewMachine(machine broadcast.NewMachine) error
 	RemoveMachine(machine broadcast.RemoveMachine) error

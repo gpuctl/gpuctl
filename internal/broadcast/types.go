@@ -2,9 +2,10 @@
 package broadcast
 
 import (
-	"github.com/gpuctl/gpuctl/internal/uplink"
+	"time"
 )
 
+// frontend<->web-api types
 // These types need to be kept in sync with `frontend/src/Data.tsx`
 
 type NewMachine struct {
@@ -24,50 +25,29 @@ type ModifyMachine struct {
 	Group       *string `json:"group"`       // nullable - means no change
 }
 
-type Workstations []WorkstationGroup
+// data type representing struct returned on all workstations request
+type Workstations []Group
 
-type WorkstationGroup struct {
-	Name         string            `json:"name"`
-	WorkStations []WorkstationData `json:"workstations"`
+type Group struct {
+	Name         string        `json:"name"` // group name
+	Workstations []Workstation `json:"workstations"`
 }
 
-// TODO: HACK: this just uses our old GPU stat packet
-type WorkstationData struct {
-	Name string             `json:"name"`
-	Gpus []OldGPUStatSample `json:"gpus"`
+type Workstation struct {
+	Name        string        `json:"name"`        // machine hostname
+	CPU         *string       `json:"cpu"`         // cpu name (optional)
+	Motherboard *string       `json:"motherboard"` // motherboard (optional)
+	Notes       *string       `json:"notes"`       // general note (optional)
+	LastSeen    time.Duration `json:"last_seen"`   // time since the machine was last seen
+	Gpus        []GPU         `json:"gpus"`
 }
 
-// TODO: HACK: this is very jerry-rigged. Delete whenever we have completely changed to the new gpu data
-func ToOldGPUStats(sample uplink.GPUStatSample) OldGPUStatSample {
-	return OldGPUStatSample{
-		Hostname:          sample.Uuid,
-		Name:              "dummy name",
-		Brand:             "Dummy brand",
-		DriverVersion:     "dummy driver",
-		MemoryTotal:       1337,
-		Uuid:              sample.Uuid,
-		MemoryUtilisation: sample.MemoryUtilisation,
-		GPUUtilisation:    sample.GPUUtilisation,
-		MemoryUsed:        sample.MemoryUsed,
-		FanSpeed:          sample.FanSpeed,
-		Temp:              sample.Temp,
-		MemoryTemp:        sample.MemoryTemp,
-		GraphicsVoltage:   sample.GraphicsVoltage,
-		PowerDraw:         sample.PowerDraw,
-		GraphicsClock:     sample.GraphicsClock,
-		MaxGraphicsClock:  sample.MaxGraphicsClock,
-		MemoryClock:       sample.MemoryClock,
-		MaxMemoryClock:    sample.MaxGraphicsClock,
-	}
-}
-
-type OldGPUStatSample struct {
-	Hostname          string  `json:"hostname"`
+type GPU struct {
+	Uuid              string  `json:"uuid"`
 	Name              string  `json:"gpu_name"`
 	Brand             string  `json:"gpu_brand"`
 	DriverVersion     string  `json:"driver_ver"`
 	MemoryTotal       uint64  `json:"memory_total"`
-	Uuid              string  `json:"uuid"`
 	MemoryUtilisation float64 `json:"memory_util"`        // Percentage of memory used
 	GPUUtilisation    float64 `json:"gpu_util"`           // Percentage of memory used
 	MemoryUsed        float64 `json:"memory_used"`        // In megabytes
@@ -90,17 +70,10 @@ type RemoveMachineInfo struct {
 	Hostname string `json:"hostname"`
 }
 
-type AddMachineInfo struct {
-	Hostname string `json:"hostname"`
-	Group    string `json:"group"`
-}
-
-type ModifyInfo struct {
-	Hostname    string  `json:"hostname"`
-	Cpu         *string `json:"cpu"`
-	Motherboard *string `json:"motherboard"`
-	Notes       *string `json:"notes"`
-	Group       *string `json:"group"`
+// data type returned by queries of when a workstation was last seen
+type WorkstationSeen struct {
+	Hostname string
+	LastSeen int64
 }
 
 type DurationDeltas struct {
