@@ -23,9 +23,9 @@ const retrieveAllStats: () => Promise<
 //success(foo);
 
 const sortData = (gs: WorkStationGroup[]) =>
-  gs.map(({ name, workStations }) => ({
+  gs.map(({ name, workstations }) => ({
     name: name,
-    workStations: workStations.sort((ws1, ws2) =>
+    workstations: workstations.sort((ws1, ws2) =>
       ws1.name.localeCompare(ws2.name),
     ),
   }));
@@ -49,7 +49,7 @@ const cardView = (stats: WorkStationGroup[]) => (
           </Box>
           <Box w="100%">
             <ColumnGrid minChildWidth={325} hMinSpacing={40} vSpacing={10}>
-              {l.workStations.map((row, i) => {
+              {l.workstations.map((row, i) => {
                 return (
                   <WorkstationCardMin
                     key={i}

@@ -119,11 +119,11 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
             </Tr>
           </Thead>
           <Tbody key={1}>
-            {groups.map(({ name: group_name, workStations }, i) =>
-              workStations.map(({ name: workstation_name, gpus }, j) =>
+            {groups.map(({ name: group_name, workstations }, i) =>
+              workstations.map(({ name: workstation_name, gpus }, j) =>
                 gpus.map((gpu, k) => {
                   const id =
-                    (i * gpus.length * workStations.length +
+                    (i * gpus.length * workstations.length +
                       j * gpus.length +
                       k) *
                     19; //size of gpu

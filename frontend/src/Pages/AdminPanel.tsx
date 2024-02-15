@@ -139,18 +139,18 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
           </Thead>
           <Tbody>
             {instKeys(
-              groups.flatMap(({ name: group, workStations }, i) => {
-                return workStations.map((workStation, j) => {
+              groups.flatMap(({ name: group, workstations }, i) => {
+                return workstations.map((workstation, j) => {
                   return (k: number) => (
                     <Tr key={k}>
-                      <Td> {workStation.name} </Td>
+                      <Td> {workstation.name} </Td>
                       <Td>
                         <Editable
                           placeholder="Unknown"
                           defaultValue={group}
                           textColor={pickCol(group)}
                           onSubmit={(s) =>
-                            modifyInfo(workStation.name, {
+                            modifyInfo(workstation.name, {
                               group: s,
                               cpu: null,
                               motherboard: null,
@@ -167,10 +167,10 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
                         {/* Do we need this empty string? */}
                         <Editable
                           placeholder="Unknown"
-                          textColor={pickCol(workStation.cpu)}
-                          defaultValue={workStation.cpu}
+                          textColor={pickCol(workstation.cpu)}
+                          defaultValue={workstation.cpu}
                           onSubmit={(s) =>
-                            modifyInfo(workStation.name, {
+                            modifyInfo(workstation.name, {
                               group: null,
                               cpu: s,
                               motherboard: null,
@@ -186,10 +186,10 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
                         {" "}
                         <Editable
                           placeholder="Unknown"
-                          defaultValue={workStation.motherboard}
-                          textColor={pickCol(workStation.motherboard)}
+                          defaultValue={workstation.motherboard}
+                          textColor={pickCol(workstation.motherboard)}
                           onSubmit={(s) =>
-                            modifyInfo(workStation.name, {
+                            modifyInfo(workstation.name, {
                               group: null,
                               cpu: null,
                               motherboard: s,
@@ -205,10 +205,10 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
                         {" "}
                         <Editable
                           placeholder="None"
-                          defaultValue={workStation.notes}
-                          textColor={pickCol(workStation.notes)}
+                          defaultValue={workstation.notes}
+                          textColor={pickCol(workstation.notes)}
                           onSubmit={(s) =>
-                            modifyInfo(workStation.name, {
+                            modifyInfo(workstation.name, {
                               group: null,
                               cpu: null,
                               motherboard: null,

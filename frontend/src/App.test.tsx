@@ -43,7 +43,7 @@ test("retrieves data from API server and displays correctly", async () => {
   await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
 
   EXAMPLE_DATA_1.forEach((g) => {
-    g.workStations.forEach((ws) => {
+    g.workstations.forEach((ws) => {
       ws.gpus.forEach((gpu) => {
         screen
           .getAllByText(gpu.gpu_name, { exact: false })
@@ -75,8 +75,8 @@ test("data is fetched again after refresh interval", async () => {
   );
 
   const group = data[0];
-  const workStation = group.workStations[0];
-  const gpu = workStation.gpus[0];
+  const workstation = group.workstations[0];
+  const gpu = workstation.gpus[0];
   gpu.gpu_temp = 100;
 
   jest.advanceTimersByTime(REFRESH_INTERVAL + 1);

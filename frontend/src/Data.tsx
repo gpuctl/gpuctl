@@ -3,7 +3,7 @@
 export type WorkStationGroup = {
   name: string;
   // TODO: Consistant cases here
-  workStations: WorkStationData[];
+  workstations: WorkStationData[];
 };
 
 export type WorkStationData = {
@@ -38,7 +38,7 @@ export type GPUStats = {
 export const EXAMPLE_DATA_1: WorkStationGroup[] = [
   {
     name: "Shared",
-    workStations: [
+    workstations: [
       {
         name: "Workstation 1",
         cpu: "i7-7700k",
