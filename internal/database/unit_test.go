@@ -34,6 +34,8 @@ var UnitTests = [...]unitTest{
 	{"LastSeen1", testLastSeen1},
 	{"LastSeen2", testLastSeen2},
 	{"OneGpu", oneGpu},
+	{"MachineInfoStartsEmpty", machineInfoStartsEmpty},
+	{"MachineInfoUpdatesWork", machineInfoUpdatesWork},
 }
 
 // fake data for adding during tests
@@ -309,4 +311,67 @@ func oneGpu(t *testing.T, db database.Database) {
 	data, err = db.LatestData()
 	assert.NoError(t, err)
 	assert.Len(t, data, 1)
+}
+
+// a machines info starts empty
+func machineInfoStartsEmpty(t *testing.T, db database.Database) {
+	fakeHost := "porcupine"
+
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	data, err := db.LatestData()
+	assert.NoError(t, err)
+	found, group, machine := getMachine(data, fakeHost)
+
+	if !found {
+		t.Errorf("Couldn't find machine '%s'", fakeHost)
+	}
+
+	// assert that the group is the default
+	assert.Equal(t, group.Name, database.DefaultGroup)
+
+	// check all the optional characteristics start empty
+	assert.Nil(t, machine.CPU)
+	assert.Nil(t, machine.Motherboard)
+	assert.Nil(t, machine.Notes)
+}
+
+// changes to a machine are present in the result
+func machineInfoUpdatesWork(t *testing.T, db database.Database) {
+	fakeHost := "porcupine"
+
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	fakeGroup := "Personal"
+	fakeCPU := "Intel 8080"
+	fakeMotherboard := "Connect-a-tron"
+	fakeNote := "Has a fan that is very loud!"
+	fakeChange := broadcast.ModifyMachine{
+		Hostname: fakeHost,
+		CPU: &fakeCPU,
+		Motherboard: &fakeMotherboard,
+		Notes: &fakeNote,
+		Group: &fakeGroup,
+	}
+
+	err = db.UpdateMachine(fakeChange)
+	assert.NoError(t, err)
+
+	data, err := db.LatestData()
+	found, group, machine := getMachine(data, fakeHost)
+
+	if !found {
+		t.Errorf("Couldn't find machine '%s'", fakeHost)
+	}
+
+	assert.NotNil(t, machine.CPU)
+	assert.NotNil(t, machine.Motherboard)
+	assert.NotNil(t, machine.Notes)
+
+	assert.Equal(t, *machine.CPU, fakeCPU)
+	assert.Equal(t, *machine.Motherboard, fakeMotherboard)
+	assert.Equal(t, *machine.Notes, fakeNote)
+	assert.Equal(t, group.Name, fakeGroup)
 }
