@@ -100,7 +100,7 @@ func TestUserError(t *testing.T) {
 
 	mux := new(femto.Femto)
 	femto.OnPost(mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
-		return nil, errors.New("their is no spoon")
+		return nil, errors.New("there is no spoon")
 	})
 
 	req := httptest.NewRequest("POST", "/postme", bytes.NewBufferString("{}"))
@@ -112,7 +112,7 @@ func TestUserError(t *testing.T) {
 
 	data, err := io.ReadAll(w.Body)
 	assert.NoError(t, err)
-	assert.Contains(t, string(data), "their is no spoon")
+	assert.Contains(t, string(data), "there is no spoon")
 }
 
 func TestGetHappyPath(t *testing.T) {
@@ -125,7 +125,7 @@ func TestGetHappyPath(t *testing.T) {
 	}
 
 	femto.OnGet(mux, "/happy", func(r *http.Request, l *slog.Logger) (*femto.Response[Foo], error) {
-		return &femto.Response[Foo]{Body: Foo{101}}, nil
+		return femto.Ok(Foo{101})
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/happy", nil)
@@ -176,7 +176,7 @@ func TestGetApplicationErr(t *testing.T) {
 type TestAuthenticator struct{}
 
 func (auth TestAuthenticator) CreateToken(unit types.Unit) (authentication.AuthToken, error) {
-	return authentication.TOKEN_KEY, nil
+	return authentication.TokenCookieName, nil
 }
 
 func (auth TestAuthenticator) RevokeToken(token authentication.AuthToken) error {
@@ -200,7 +200,7 @@ func TestValidAuthentication(t *testing.T) {
 
 	getHandler :=
 		func(r *http.Request, l *slog.Logger) (*femto.Response[string], error) {
-			return &femto.Response[string]{Body: "OKGET"}, nil
+			return femto.Ok("OKGET")
 		}
 
 	authenticatedGetHandler :=

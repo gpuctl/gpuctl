@@ -123,6 +123,7 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 		http.SetCookie(w, &data.Cookies[i])
 	}
 
+	w.WriteHeader(data.Status)
 	_, err = w.Write(jsonb)
 
 	if err != nil {

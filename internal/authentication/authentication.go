@@ -8,7 +8,7 @@ import (
 	"github.com/gpuctl/gpuctl/internal/femto"
 )
 
-const TOKEN_KEY = "token"
+const TokenCookieName = "token"
 
 var (
 	NotAuthenticatedError   = errors.New("User does not have a valid authentication token")
@@ -33,7 +33,7 @@ type Authenticator[AuthCredientals any] interface {
 
 func AuthWrapGet[A any, T any](auth Authenticator[A], handle femto.GetFunc[T]) femto.GetFunc[T] {
 	return func(request *http.Request, logger *slog.Logger) (*femto.Response[T], error) {
-		c, err := request.Cookie(TOKEN_KEY)
+		c, err := request.Cookie(TokenCookieName)
 		if err != nil {
 			return &femto.Response[T]{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}
@@ -50,7 +50,7 @@ func AuthWrapGet[A any, T any](auth Authenticator[A], handle femto.GetFunc[T]) f
 
 func AuthWrapPost[A any, T any](auth Authenticator[A], handle femto.PostFunc[T]) femto.PostFunc[T] {
 	return func(data T, request *http.Request, logger *slog.Logger) (*femto.EmptyBodyResponse, error) {
-		c, err := request.Cookie(TOKEN_KEY)
+		c, err := request.Cookie(TokenCookieName)
 		if err != nil {
 			return &femto.EmptyBodyResponse{Status: http.StatusUnauthorized}, NotAuthenticatedError
 		}

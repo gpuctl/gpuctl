@@ -114,13 +114,13 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 	}
 
 	cookies := []http.Cookie{{
-		Name:     authentication.TOKEN_KEY,
+		Name:     authentication.TokenCookieName,
 		Value:    token,
 		Path:     "/",
 		MaxAge:   3600,
 		HttpOnly: true,
 		Secure:   true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: http.SameSiteStrictMode,
 	}}
 
 	return &femto.EmptyBodyResponse{Cookies: cookies, Status: http.StatusAccepted}, nil
@@ -160,7 +160,8 @@ type UsernameReminder struct {
 }
 
 func (a *Api) confirmAdmin(auth authentication.Authenticator[APIAuthCredientals], r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
-	c, err := r.Cookie(authentication.TOKEN_KEY)
+	c, err := r.Cookie(authentication.TokenCookieName)
+	slog.Info("TEST", "Cookie", c, "Err", err)
 	if err != nil {
 		return &femto.Response[UsernameReminder]{Status: http.StatusUnauthorized}, nil
 	}

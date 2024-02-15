@@ -175,7 +175,7 @@ func TestServerEndpoints(t *testing.T) {
 	auth := webapi.ConfigFileAuthenticator{
 		Username:      "joe",
 		Password:      "mama",
-		CurrentTokens: make(map[authentication.AuthToken]bool),
+		CurrentTokens: map[authentication.AuthToken]bool{"example_token": true},
 	}
 
 	server := webapi.NewServer(mockDB, &auth, webapi.OnboardConf{})
@@ -186,6 +186,7 @@ func TestServerEndpoints(t *testing.T) {
 		endpoint       string
 		body           []byte
 		expectedStatus int
+		headers        map[string]string
 	}{
 		{
 			name:           "Test Stats All",
@@ -200,17 +201,33 @@ func TestServerEndpoints(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
+			name:           "Test Confirm Authentication Fails",
+			method:         http.MethodGet,
+			endpoint:       "/api/admin/confirm",
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
 			name:           "Test Authentication",
 			method:         http.MethodPost,
 			endpoint:       "/api/admin/auth",
 			body:           []byte(`{"username":"joe","password":"mama"}`),
 			expectedStatus: http.StatusOK,
 		},
+		{
+			name:           "Test Confirm Authentication Succeeds",
+			method:         http.MethodGet,
+			endpoint:       "/api/admin/confirm",
+			expectedStatus: http.StatusOK,
+			headers:        map[string]string{"Cookie": "token=example_token"},
+		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			request := httptest.NewRequest(tc.method, tc.endpoint, bytes.NewBuffer(tc.body))
+			for k, v := range tc.headers {
+				request.Header.Add(k, v)
+			}
 			recorder := httptest.NewRecorder()
 
 			server.ServeHTTP(recorder, request)
