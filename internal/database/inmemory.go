@@ -105,7 +105,8 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 	for machine, info := range m.machines {
 		group := info.Group
 		if group == nil || strings.TrimSpace(*group) == "" {
-			group = &defaultGroup
+			fallback := defaultGroup
+			group = &fallback
 		}
 
 		var workstation = broadcast.Workstation{

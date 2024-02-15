@@ -340,7 +340,8 @@ func (conn PostgresConn) LatestData() (broadcast.Workstations, error) {
 
 		// coalesce null and empty group names to default
 		if groupName == nil || strings.TrimSpace(*groupName) == "" {
-			groupName = &defaultGroup
+			fallback := defaultGroup
+			groupName = &fallback
 		}
 
 		machine.LastSeen = time.Since(lastSeen)

@@ -14,7 +14,7 @@ var (
 )
 
 // default group to give to machines with a null or empty group
-var defaultGroup = "Shared"
+const defaultGroup string = "Shared"
 
 // define set of operations on the database that any provider will implement
 type Database interface {
