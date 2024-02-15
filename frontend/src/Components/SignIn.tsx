@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Box, Button, Heading, Input, VStack } from "@chakra-ui/react";
 import { useAuth } from "../Providers/AuthProvider";
-
+import { Failure, VTag } from "../Utils/Utils";
+ 
 export const SignIn = () => {
-  const { login } = useAuth();
+  const { login, user : authName } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -33,6 +34,7 @@ export const SignIn = () => {
           onChange={(e) => setPassword(e.target.value)}
           bgColor={"white"}
         ></Input>
+        { authName.tag == VTag.Failure && (authName as Failure).error.message == "Username or password was incorrect!" ? (<p> Username or passowrd incorrect</p>) : (<p> test</p>)}
         <Button
           bgColor={"white"}
           onClick={async () => {
