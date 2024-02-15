@@ -28,7 +28,7 @@ type Workstations []WorkstationGroup
 
 type WorkstationGroup struct {
 	Name         string            `json:"name"`
-	WorkStations []WorkstationData `json:"workStations"`
+	WorkStations []WorkstationData `json:"workstations"`
 }
 
 // TODO: HACK: this just uses our old GPU stat packet
