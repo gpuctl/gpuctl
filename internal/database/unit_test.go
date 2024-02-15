@@ -8,6 +8,7 @@ package database_test
 import (
 	"log/slog"
 	"math"
+	"reflect"
 	"testing"
 	"time"
 
@@ -70,7 +71,6 @@ func floatsNear(a float64, b float64) bool {
 	return math.Abs(a-b) < margin
 }
 func statsNear(target broadcast.GPU, stat uplink.GPUStatSample, context uplink.GPUInfo) bool {
-	// TODO: make this nicer/automatically extending with reflection
 	if target.Uuid != stat.Uuid {
 		slog.Error("stat uuid didn't match", "was", target.Uuid, "wanted", stat.Uuid)
 		return false
@@ -79,70 +79,51 @@ func statsNear(target broadcast.GPU, stat uplink.GPUStatSample, context uplink.G
 		slog.Error("context uuid didn't match", "was", target.Uuid, "wanted", context.Uuid)
 	}
 
-	// compare all the other fields
-	if target.Name != context.Name {
-		slog.Error("'Name' did not match", "was", target.Name, "wanted", context.Name)
-		return false
-	}
-	if target.Brand != context.Brand {
-		slog.Error("'Brand' did not match", "was", target.Brand, "wanted", context.Brand)
-		return false
-	}
-	if target.DriverVersion != context.DriverVersion {
-		slog.Error("'DriverVersion' did not match", "was", target.DriverVersion, "wanted", context.DriverVersion)
-		return false
-	}
-	if target.MemoryTotal != context.MemoryTotal {
-		slog.Error("'MemoryTotal' did not match", "was", target.MemoryTotal, "wanted", context.MemoryTotal)
-		return false
-	}
-	if !floatsNear(target.MemoryUtilisation, stat.MemoryUtilisation) {
-		slog.Error("'MemoryUtilisation' did not match", "was", target.MemoryUtilisation, "wanted", stat.MemoryUtilisation)
-		return false
-	}
-	if !floatsNear(target.GPUUtilisation, stat.GPUUtilisation) {
-		slog.Error("'GPUUtilisation' did not match", "was", target.GPUUtilisation, "wanted", stat.GPUUtilisation)
-		return false
-	}
-	if !floatsNear(target.MemoryUsed, stat.MemoryUsed) {
-		slog.Error("'MemoryUsed' did not match", "was", target.MemoryUsed, "wanted", stat.MemoryUsed)
-		return false
-	}
-	if !floatsNear(target.FanSpeed, stat.FanSpeed) {
-		slog.Error("'FanSpeed' did not match", "was", target.FanSpeed, "wanted", stat.FanSpeed)
-		return false
-	}
-	if !floatsNear(target.Temp, stat.Temp) {
-		slog.Error("'Temp' did not match", "was", target.Temp, "wanted", stat.Temp)
-		return false
-	}
-	if !floatsNear(target.MemoryTemp, stat.MemoryTemp) {
-		slog.Error("'MemoryTemp' did not match", "was", target.MemoryTemp, "wanted", stat.MemoryTemp)
-		return false
-	}
-	if !floatsNear(target.GraphicsVoltage, stat.GraphicsVoltage) {
-		slog.Error("'GraphicsVoltage' did not match", "was", target.GraphicsVoltage, "wanted", stat.GraphicsVoltage)
-		return false
-	}
-	if !floatsNear(target.PowerDraw, stat.PowerDraw) {
-		slog.Error("'PowerDraw' did not match", "was", target.PowerDraw, "wanted", stat.PowerDraw)
-		return false
-	}
-	if !floatsNear(target.GraphicsClock, stat.GraphicsClock) {
-		slog.Error("'GraphicsClock' did not match", "was", target.GraphicsClock, "wanted", stat.GraphicsClock)
-		return false
-	}
-	if !floatsNear(target.MaxGraphicsClock, stat.MaxGraphicsClock) {
-		slog.Error("'MaxGraphicsClock' did not match", "was", target.MaxGraphicsClock, "wanted", stat.MaxGraphicsClock)
-		return false
-	}
-	if !floatsNear(target.MemoryClock, stat.MemoryClock) {
-		slog.Error("'MemoryClock' did not match", "was", target.MemoryClock, "wanted", stat.MemoryClock)
-		return false
-	}
-	if !floatsNear(target.MaxMemoryClock, stat.MaxMemoryClock) {
-		slog.Error("'MaxMemoryClock' did not match", "was", target.MaxMemoryClock, "wanted", stat.MaxMemoryClock)
-		return false
+	// compare all the other fields using reflection
+	for _, compare := range []interface{}{stat, context} {
+		compareV := reflect.ValueOf(compare)
+
+		for _, field := range reflect.VisibleFields(compareV.Type()) {
+			// we've already compared uuids
+			if field.Name == "Uuid" {
+				continue
+			}
+			// TODO: determine where we use time field
+			if field.Name == "Time" {
+				continue
+			}
+			// TODO: Start actually using running processes
+			if field.Name == "RunningProcesses" {
+				continue
+			}
+
+			// get fields from structs
+			from := compareV.FieldByIndex(field.Index)
+			to := reflect.ValueOf(target).FieldByName(field.Name)
+			if !to.IsValid() {
+				slog.Error("Couldn't get field from target struct", "field name", field.Name)
+				return false
+			}
+			if from.Type() != to.Type() {
+				slog.Error("Comparision type mismatch", "field name", field.Name, "expected", from.Type().String())
+				return false
+			}
+
+			// do a different comparision based on type
+			if from.CanInt() {
+				if from.Int() != to.Int() {
+					slog.Error("Int comparision mismatch", "field name", field.Name, "expected", from.String(), "actual", to.String())
+					return false
+				}
+			} else if from.CanFloat() {
+				if !floatsNear(from.Float(), to.Float()) {
+					slog.Error("Float comparision mismatch", "field name", field.Name, "expected", from.String(), "actual", to.String())
+					return false
+				}
+			} else {
+				slog.Error("Test case for this type not yet written", "field name", field.Name, "type", field.Type.String())
+			}
+		}
 	}
 
 	return true
