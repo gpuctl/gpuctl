@@ -3,6 +3,7 @@ package webapi
 import (
 	"log/slog"
 	"net/http"
+	"time"
 
 	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -47,6 +48,7 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 
 	femto.OnGet(mux, "/api/stats/all", api.AllStatistics)
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
+	femto.OnGet(mux, "/api/stats/deltas", api.durationDelta)
 
 	// Set up authentication endpoint
 	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
@@ -170,6 +172,34 @@ func (a *Api) confirmAdmin(auth authentication.Authenticator[APIAuthCredientals]
 		return &femto.Response[UsernameReminder]{Status: http.StatusUnauthorized}, nil
 	}
 	return femto.Ok(UsernameReminder{Username: u})
+}
+
+type DurationDeltas struct {
+	Hostname string `json:"hostname"`
+	Delta    int64  `json:"seconds_since"`
+}
+
+func (a *Api) durationDelta(r *http.Request, l *slog.Logger) (*femto.Response[[]DurationDeltas], error) {
+	latest, err := a.DB.LastSeen()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var deltas []DurationDeltas
+
+	now := time.Now().Unix() / 1e9
+
+	for idx := range latest {
+		then_s := latest[idx].LastSeen / 1e9
+
+		deltas = append(deltas, DurationDeltas{
+			Hostname: latest[idx].Hostname,
+			Delta:    now - then_s,
+		})
+	}
+
+	return femto.Ok(deltas)
 }
 
 // TODO
