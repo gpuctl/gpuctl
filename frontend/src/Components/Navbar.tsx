@@ -16,9 +16,9 @@ import {
 import { ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { STATS_PATH } from "../Config/Paths";
-import { AuthToken, VIEW_PAGE_INDEX, ViewPage } from "../App";
+import { VIEW_PAGE_INDEX, ViewPage } from "../App";
 import { SignIn } from "./SignIn";
-import { Validated, isSuccess } from "../Utils/Utils";
+import { useAuth } from "../Providers/AuthProvider";
 
 const URLS = [
   `${STATS_PATH}/card_view`,
@@ -28,17 +28,12 @@ const URLS = [
 
 export const Navbar = ({
   children,
-  signIn,
-  signOut,
-  authToken,
   initial,
 }: {
   children: ReactNode[];
-  signIn: (tok: AuthToken) => void;
-  signOut: () => void;
-  authToken: Validated<AuthToken>;
   initial: ViewPage;
 }) => {
+  const { isSignedIn, logout } = useAuth();
   const nav = useNavigate();
 
   return (
@@ -50,10 +45,10 @@ export const Navbar = ({
       <TabList>
         <Tab>Card View</Tab>
         <Tab>Table View</Tab>
-        <Tab isDisabled={!isSuccess(authToken)}>Admin Panel</Tab>
+        <Tab isDisabled={!isSignedIn()}>Admin Panel</Tab>
         <Spacer />
-        {isSuccess(authToken) ? (
-          <Button onClick={signOut}>Sign Out</Button>
+        {isSignedIn() ? (
+          <Button onClick={logout}>Sign Out</Button>
         ) : (
           <Popover>
             <PopoverTrigger>
@@ -62,7 +57,7 @@ export const Navbar = ({
             <PopoverContent w="100%">
               <PopoverArrow />
               <PopoverCloseButton />
-              <SignIn signIn={signIn} />
+              <SignIn />
             </PopoverContent>
           </Popover>
         )}

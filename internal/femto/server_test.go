@@ -100,7 +100,7 @@ func TestUserError(t *testing.T) {
 
 	mux := new(femto.Femto)
 	femto.OnPost(mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
-		return nil, errors.New("their is no spoon")
+		return nil, errors.New("there is no spoon")
 	})
 
 	req := httptest.NewRequest("POST", "/postme", bytes.NewBufferString("{}"))
@@ -112,7 +112,7 @@ func TestUserError(t *testing.T) {
 
 	data, err := io.ReadAll(w.Body)
 	assert.NoError(t, err)
-	assert.Contains(t, string(data), "their is no spoon")
+	assert.Contains(t, string(data), "there is no spoon")
 }
 
 func TestGetHappyPath(t *testing.T) {
@@ -125,7 +125,7 @@ func TestGetHappyPath(t *testing.T) {
 	}
 
 	femto.OnGet(mux, "/happy", func(r *http.Request, l *slog.Logger) (*femto.Response[Foo], error) {
-		return &femto.Response[Foo]{Body: Foo{101}}, nil
+		return femto.Ok(Foo{101})
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/happy", nil)
@@ -176,15 +176,18 @@ func TestGetApplicationErr(t *testing.T) {
 type TestAuthenticator struct{}
 
 func (auth TestAuthenticator) CreateToken(unit types.Unit) (authentication.AuthToken, error) {
-	return "token", nil
+	return authentication.TokenCookieName, nil
 }
 
 func (auth TestAuthenticator) RevokeToken(token authentication.AuthToken) error {
 	return nil
 }
 
-func (auth TestAuthenticator) CheckToken(token authentication.AuthToken) bool {
-	return token == "token"
+func (auth TestAuthenticator) CheckToken(token authentication.AuthToken) (authentication.Username, error) {
+	if token != "token" {
+		return "", errors.New("Bad token!")
+	}
+	return "admin", nil
 }
 
 func TestValidAuthentication(t *testing.T) {
@@ -197,7 +200,7 @@ func TestValidAuthentication(t *testing.T) {
 
 	getHandler :=
 		func(r *http.Request, l *slog.Logger) (*femto.Response[string], error) {
-			return &femto.Response[string]{Body: "OKGET"}, nil
+			return femto.Ok("OKGET")
 		}
 
 	authenticatedGetHandler :=
@@ -225,8 +228,8 @@ func TestValidAuthentication(t *testing.T) {
 	defer reqGet.Body.Close()
 	reqPost := httptest.NewRequest("POST", "/auth-post", strings.NewReader("{}"))
 	defer reqPost.Body.Close()
-	reqGet.Header.Set("Authorization", "Bearer token")
-	reqPost.Header.Set("Authorization", "Bearer token")
+	reqGet.Header.Set("Cookie", "token=token")
+	reqPost.Header.Set("Cookie", "token=token")
 
 	mux.ServeHTTP(w, reqGet)
 	assert.Equal(t, http.StatusOK, w.Code)

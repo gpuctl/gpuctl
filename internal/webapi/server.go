@@ -1,7 +1,6 @@
 package webapi
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -42,10 +41,6 @@ type OnboardConf struct {
 	KeyCallback ssh.HostKeyCallback
 }
 
-func makeAuthCookie(token string) string {
-	return fmt.Sprintf("token=%s; Path=/; HttpOnly; Secure; SameSite=Strict", token)
-}
-
 func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], onboard OnboardConf) *Server {
 	mux := new(femto.Femto)
 	api := &Api{db, onboard}
@@ -62,13 +57,17 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnPost(mux, "/api/admin/add_workstation", api.addMachine)
 	femto.OnPost(mux, "/api/admin/stats/modify", api.modifyMachineInfo)
 	femto.OnPost(mux, "/api/admin/rm_workstation", api.removeMachine)
-	femto.OnGet(mux, "/api/admin/confirm", api.confirmAdmin)
+	femto.OnGet(mux, "/api/admin/confirm", func(r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
+		return api.confirmAdmin(auth, r, l)
+	})
 
 	return &Server{mux, api}
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	// TODO: Maybe unset in Caddyfile???
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	s.mux.ServeHTTP(w, r)
 }
 
@@ -114,9 +113,17 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 		return nil, err
 	}
 
-	headers := make(map[string]string)
-	headers["Set-Cookie"] = makeAuthCookie(token)
-	return &femto.EmptyBodyResponse{Headers: headers, Status: http.StatusAccepted}, nil
+	cookies := []http.Cookie{{
+		Name:     authentication.TokenCookieName,
+		Value:    token,
+		Path:     "/",
+		MaxAge:   3600,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}}
+
+	return &femto.EmptyBodyResponse{Cookies: cookies, Status: http.StatusAccepted}, nil
 }
 
 // TODO
@@ -148,8 +155,21 @@ func (a *Api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *
 	return femto.Ok(types.Unit{})
 }
 
-func (a *Api) confirmAdmin(r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
-	return femto.Ok(types.Unit{})
+type UsernameReminder struct {
+	Username string `json:"username"`
+}
+
+func (a *Api) confirmAdmin(auth authentication.Authenticator[APIAuthCredientals], r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
+	c, err := r.Cookie(authentication.TokenCookieName)
+	slog.Info("TEST", "Cookie", c, "Err", err)
+	if err != nil {
+		return &femto.Response[UsernameReminder]{Status: http.StatusUnauthorized}, nil
+	}
+	u, err := auth.CheckToken(c.Value)
+	if err != nil {
+		return &femto.Response[UsernameReminder]{Status: http.StatusUnauthorized}, nil
+	}
+	return femto.Ok(UsernameReminder{Username: u})
 }
 
 // TODO

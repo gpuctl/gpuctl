@@ -17,6 +17,7 @@ type Femto struct {
 
 type Response[T any] struct {
 	Headers map[string]string
+	Cookies []http.Cookie
 	Body    T
 	Status  int
 }
@@ -118,7 +119,11 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 	for key, value := range data.Headers {
 		w.Header().Add(key, value)
 	}
+	for i := range data.Cookies {
+		http.SetCookie(w, &data.Cookies[i])
+	}
 
+	w.WriteHeader(data.Status)
 	_, err = w.Write(jsonb)
 
 	if err != nil {
@@ -165,6 +170,9 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 
 	for key, value := range data.Headers {
 		w.Header().Add(key, value)
+	}
+	for i := range data.Cookies {
+		http.SetCookie(w, &data.Cookies[i])
 	}
 
 	_, err := w.Write(make([]byte, 0))

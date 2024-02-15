@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"errors"
 	"sync"
 
 	"github.com/google/uuid"
@@ -47,9 +48,13 @@ func (auth *ConfigFileAuthenticator) RevokeToken(token authentication.AuthToken)
 	return nil
 }
 
-func (auth *ConfigFileAuthenticator) CheckToken(token authentication.AuthToken) bool {
+func (auth *ConfigFileAuthenticator) CheckToken(token authentication.AuthToken) (authentication.Username, error) {
 	auth.mu.Lock()
 	defer auth.mu.Unlock()
 
-	return auth.CurrentTokens[token]
+	if !auth.CurrentTokens[token] {
+		return "", errors.New("Bad token!")
+	}
+
+	return auth.Username, nil
 }

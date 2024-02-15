@@ -14,11 +14,18 @@ export const makeArr = <T,>(size: number, f: (i: number) => T) =>
 /**
  * Fires an asynchronous function but doesn't wait for the result
  */
-export const discard = <T,>(f: () => Promise<T>) => {
-  return () => {
-    f();
-  };
+export const fire = <T,>(f: () => Promise<T>): void => {
+  f();
 };
+
+/**
+ * Discards the result of an asynchronous function, allowing it to be turned
+ * into an ordinary function (where we don't wait for the result)
+ */
+export const discard =
+  <T,>(f: () => Promise<T>): (() => void) =>
+  () =>
+    fire(f);
 
 export const inlineLog = <T,>(x: T): T => {
   console.log(x);
@@ -42,6 +49,9 @@ export const enumIndex = <E extends EnumDict>(
   Object.fromEntries(enumVals(dict).map((val, i) => [val, i])) as {
     [K in EnumType<E>]: number;
   };
+
+export const instKeys = <T,>(xs: ((k: number) => T)[]): T[] =>
+  xs.map((x, i) => x(i));
 
 enum VTag {
   Success = "Success",
