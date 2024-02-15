@@ -56,7 +56,6 @@ func TestOnboardNoHostname(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader("{}"))
-	req.Header.Add("Authorization", "Bearer 123")
 	req.AddCookie(emptyAuthCookie)
 	w := httptest.NewRecorder()
 
