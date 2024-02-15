@@ -64,6 +64,19 @@ var fakeDataSample = uplink.GPUStatSample{
 	RunningProcesses:  nil,
 }
 
+// helper functions for getting/checking machine info
+func getMachine(groups broadcast.Workstations, host string) (bool, broadcast.Group, broadcast.Workstation) {
+	for _, g := range groups {
+		for _, m := range g.Workstations {
+			if m.Name == host {
+				return true, g, m
+			}
+		}
+	}
+
+	return false, broadcast.Group{}, broadcast.Workstation{}
+}
+
 // functions for approximately comparing floats and data structs
 const margin float64 = 0.01
 
@@ -197,28 +210,20 @@ func appendedDataPointsAreSaved(t *testing.T, db database.Database) {
 
 	// check length of results and whether elk is present
 	if len(results) != 1 {
-		t.Fatalf("'results' is the wrong length. Expected: 1, Was: %d", len(results))
+		t.Fatalf("'results' is the wrong length/has the wrong number of groups. Expected: 1, Was: %d", len(results))
 	}
 
-	var found = false
-	var gpus []broadcast.GPU
-	var foundGroup string
-	for _, group := range results {
-		for _, machine := range group.Workstations {
-			if machine.Name == fakeHost {
-				found = true
-				gpus = machine.Gpus
-				foundGroup = group.Name
-				break
-			}
-		}
-	}
+	found, group, machine := getMachine(results, fakeHost)
+	gpus := machine.Gpus
 
 	if !found {
 		t.Fatalf("'results' didn't contain entry for '%s'", fakeHost)
 	}
+	if group.Name != database.DefaultGroup {
+		t.Fatalf("No group was specified for '%s', it should be in the default group. Expected '%s', Was '%s'", fakeHost, database.DefaultGroup, group.Name)
+	}
 	if len(gpus) != 1 {
-		t.Fatalf("gpus for '%s.%s' is the wrong length. Expected: 1, Was: %d", foundGroup, fakeHost, len(gpus))
+		t.Fatalf("gpus for '%s.%s' is the wrong length. Expected: 1, Was: %d", group.Name, fakeHost, len(gpus))
 	}
 	if !statsNear(gpus[0], fakeDataSample, fakeDataInfo) {
 		t.Fatalf("Appended data doesn't match returned latest data. Expected: %v and %v, Got: %v", fakeDataInfo, fakeDataSample, gpus[0])
