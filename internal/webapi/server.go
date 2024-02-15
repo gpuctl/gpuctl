@@ -109,6 +109,11 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 	// Check if credientals are correct
 	token, err := auth.CreateToken(packet)
 
+	if err == authentication.InvalidCredientalsError || err == authentication.NotAuthenticatedError {
+		slog.Info("HELLLLLLLLLLLLLLLO")
+		return &femto.Response[types.Unit]{Status: http.StatusUnauthorized}, nil
+	}
+
 	if err != nil {
 		return nil, err
 	}
