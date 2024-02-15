@@ -1,0 +1,27 @@
+usbmux:x:18:46:usbmux daemon,,,:/var/lib/usbmux:/usr/sbin/nologin
+dnsmasq:x:19:65534:dnsmasq,,,:/var/lib/misc:/usr/sbin/nologin
+tss:x:20:17:TPM software stack,,,:/var/lib/tpm:/bin/false
+rtkit:x:21:22:RealtimeKit,,,:/proc:/usr/sbin/nologin
+kernoops:x:23:65534:Kernel Oops Tracking Daemon,,,:/:/usr/sbin/nologin
+systemd-oom:x:25:35:systemd Userspace OOM Killer,,,:/run/systemd:/usr/sbin/nologin
+systemd-timesync:x:28:64:systemd Time Synchronization,,,:/run/systemd:/usr/sbin/nologin
+systemd-network:x:29:61:systemd Network Management,,,:/run/systemd:/usr/sbin/nologin
+systemd-resolve:x:30:67:systemd Resolver,,,:/run/systemd:/usr/sbin/nologin
+avahi-autoipd:x:36:57:Avahi autoip daemon,,,:/var/lib/avahi-autoipd:/usr/sbin/nologin
+nm-openvpn:x:40:58:NetworkManager OpenVPN,,,:/var/lib/openvpn/chroot:/usr/sbin/nologin
+swtpm:x:44:65:virtual TPM software stack,,,:/var/lib/swtpm:/bin/false
+avahi:x:45:70:Avahi mDNS daemon,,,:/run/avahi-daemon:/usr/sbin/nologin
+cups-pk-helper:x:46:71:user for cups-pk-helper service,,,:/home/cups-pk-helper:/usr/sbin/nologin
+libvirt-dnsmasq:x:47:73:Libvirt Dnsmasq,,,:/var/lib/libvirt/dnsmasq:/usr/sbin/nologin
+sssd:x:49:76:SSSD system user,,,:/var/lib/sss:/usr/sbin/nologin
+speech-dispatcher:x:50:29:Speech Dispatcher,,,:/run/speech-dispatcher:/bin/false
+colord:x:52:80:colord colour management daemon,,,:/var/lib/colord:/usr/sbin/nologin
+pulse:x:54:82:PulseAudio daemon,,,:/run/pulse:/usr/sbin/nologin
+fwupd-refresh:x:55:86:fwupd-refresh user,,,:/run/systemd:/usr/sbin/nologin
+hplip:x:56:7:HPLIP system user,,,:/run/hplip:/bin/false
+nvidia-persistenced:x:58:85:NVIDIA Persistence Daemon,,,:/nonexistent:/usr/sbin/nologin
+ae321:*:15322:525:Alona Enraght-Moony:/homes/ae321:/bin/bash
+dcw:*:343:100:Duncan C White,huxley 305,48254,48222:/homes/dcw:/bin/tcsh
+bglocker:*:920:1750:Ben Glocker,huxley 377:/homes/bglocker:/bin/tcsh
+svb:*:429:514:Steffen van Bakel,huxley 425,48263:/homes/svb:/bin/tcsh
+sshd:x:31:63::/var/run/sshd:/usr/sbin/nologin
