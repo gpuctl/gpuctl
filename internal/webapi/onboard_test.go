@@ -6,6 +6,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -21,6 +22,8 @@ AAAEDFqhoLXMIqj+C810RJ2oUHLczGxXE9kneJse9y/LeNiWMriviDtpzPQ0xR0d1lHsgx
 1xsHKQosKNUZkDhp/jXKAAAADERlbW8gU1NIIEtleQE=
 -----END OPENSSH PRIVATE KEY-----`
 
+var emptyAuthCookie = &http.Cookie{Name: authentication.TokenCookieName, Value: ""}
+
 // TODO: Figure out how to test the happy path somehow
 
 func TestOnboardNoKey(t *testing.T) {
@@ -31,7 +34,7 @@ func TestOnboardNoKey(t *testing.T) {
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader(`{"hostname": "foo.net"}`))
-	req.Header.Add("Authorization", "Bearer 123")
+	req.AddCookie(emptyAuthCookie)
 	w := httptest.NewRecorder()
 
 	serv.ServeHTTP(w, req)
@@ -54,6 +57,7 @@ func TestOnboardNoHostname(t *testing.T) {
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader("{}"))
 	req.Header.Add("Authorization", "Bearer 123")
+	req.AddCookie(emptyAuthCookie)
 	w := httptest.NewRecorder()
 
 	serv.ServeHTTP(w, req)

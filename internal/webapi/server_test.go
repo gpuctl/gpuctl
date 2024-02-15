@@ -13,6 +13,7 @@ import (
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/gpuctl/gpuctl/internal/webapi"
+	"github.com/stretchr/testify/assert"
 )
 
 func TestAuthenticate(t *testing.T) {
@@ -33,13 +34,50 @@ func TestAuthenticate(t *testing.T) {
 
 	response, err := api.Authenticate(&auth, creds, mockRequest, mockLogger)
 
-	if len(response.Cookies) == 0 {
-		t.Error("Expected an authentication token cookie")
+	found := false
+	for _, cookie := range response.Cookies {
+		if cookie.Name == authentication.TokenCookieName {
+			found = true
+			break
+		}
 	}
+	assert.True(t, found, "Cookies contain auth cookie")
 
 	if err != nil {
 		t.Errorf("Unexpected error: %v", err)
 	}
+}
+
+func TestLogOut(t *testing.T) {
+	mockLogger := slog.Default()
+
+	auth := webapi.ConfigFileAuthenticator{
+		Username:      "joe",
+		Password:      "mama",
+		CurrentTokens: make(map[authentication.AuthToken]bool),
+	}
+	creds := webapi.APIAuthCredientals{Username: "joe", Password: "mama"}
+
+	mockDB := database.InMemory()
+
+	api := &webapi.Api{DB: mockDB}
+
+	token, err := auth.CreateToken(creds)
+	assert.NoError(t, err, "No error in creating auth token")
+
+	// Make new response to revoke the token
+	revokeRequest := httptest.NewRequest(http.MethodGet, "/api/admin/logout", nil)
+	revokeRequest.AddCookie(&http.Cookie{Name: authentication.TokenCookieName, Value: token})
+
+	response, err := api.LogOut(&auth, revokeRequest, mockLogger)
+	assert.NoError(t, err, "No error in logging-out")
+	assert.Equal(t, http.StatusOK, response.Status)
+
+	unauthenticatedRequest := httptest.NewRequest(http.MethodGet, "/api/admin/confirm", nil)
+	unauthenticatedRequest.AddCookie(&http.Cookie{Name: authentication.TokenCookieName, Value: token})
+	resp, err := api.ConfirmAdmin(&auth, unauthenticatedRequest, mockLogger)
+	assert.NoError(t, err, "No error in unauthenticated request")
+	assert.Equal(t, http.StatusUnauthorized, resp.Status)
 }
 
 func TestAllStatistics(t *testing.T) {
