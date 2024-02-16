@@ -474,7 +474,7 @@ func (conn PostgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
 	}
 
 	err = rows.Err()
-	if !errors.Is(sql.ErrNoRows, err) {
+	if err != nil && !errors.Is(sql.ErrNoRows, err) {
 		return errors.Join(err, tx.Rollback())
 	}
 
