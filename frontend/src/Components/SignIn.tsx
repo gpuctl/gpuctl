@@ -34,7 +34,7 @@ export const SignIn = () => {
           onChange={(e) => setPassword(e.target.value)}
           bgColor={"white"}
         ></Input>
-        {authName.tag == VTag.Failure &&
+        {authName.tag === VTag.Failure &&
         (authName as Failure).error.message ===
           "Username or password was incorrect!" ? (
           <Text color="tomato"> Username or password incorrect</Text>
