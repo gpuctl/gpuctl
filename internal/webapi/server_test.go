@@ -207,11 +207,18 @@ func TestServerEndpoints(t *testing.T) {
 			expectedStatus: http.StatusUnauthorized,
 		},
 		{
+			name:           "Test Authentication Fails",
+			method:         http.MethodPost,
+			endpoint:       "/api/admin/auth",
+			body:           []byte(`{"username":"mama","password":"joe"}`),
+			expectedStatus: http.StatusUnauthorized,
+		},
+		{
 			name:           "Test Authentication",
 			method:         http.MethodPost,
 			endpoint:       "/api/admin/auth",
 			body:           []byte(`{"username":"joe","password":"mama"}`),
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusAccepted,
 		},
 		{
 			name:           "Test Confirm Authentication Succeeds",

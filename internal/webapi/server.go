@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -109,8 +110,7 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 	// Check if credientals are correct
 	token, err := auth.CreateToken(packet)
 
-	if err == authentication.InvalidCredientalsError || err == authentication.NotAuthenticatedError {
-		slog.Info("HELLLLLLLLLLLLLLLO")
+	if errors.Is(err, authentication.InvalidCredentialsError) || errors.Is(err, authentication.NotAuthenticatedError) {
 		return &femto.Response[types.Unit]{Status: http.StatusUnauthorized}, nil
 	}
 
