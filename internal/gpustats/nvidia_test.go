@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	testDataRoot            = "_testdata/nvidia"
+	testDataRoot            = "testdata/nvidia"
 	workingDataExtension    = ".xml"
 	faultyCallDataExtension = ".faultycall"
 	corruptedDataExtension  = ".corruptedxml"
