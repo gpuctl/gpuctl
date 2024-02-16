@@ -356,11 +356,11 @@ func machineInfoUpdatesWork(t *testing.T, db database.Database) {
 	fakeMotherboard := "Connect-a-tron"
 	fakeNote := "Has a fan that is very loud!"
 	fakeChange := broadcast.ModifyMachine{
-		Hostname: fakeHost,
-		CPU: &fakeCPU,
+		Hostname:    fakeHost,
+		CPU:         &fakeCPU,
 		Motherboard: &fakeMotherboard,
-		Notes: &fakeNote,
-		Group: &fakeGroup,
+		Notes:       &fakeNote,
+		Group:       &fakeGroup,
 	}
 
 	err = db.UpdateMachine(fakeChange)
