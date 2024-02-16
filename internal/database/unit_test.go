@@ -125,9 +125,9 @@ func statsNear(target broadcast.GPU, stat uplink.GPUStatSample, context uplink.G
 			}
 
 			// do a different comparision based on type
-			if from.CanInt() {
-				if from.Int() != to.Int() {
-					slog.Error("Int comparision mismatch", "field name", field.Name, "expected", from.String(), "actual", to.String())
+			if from.CanUint() {
+				if from.Uint() != to.Uint() {
+					slog.Error("Unsigned int comparision mismatch", "field name", field.Name, "expected", from.String(), "actual", to.String())
 					return false
 				}
 			} else if from.CanFloat() {
