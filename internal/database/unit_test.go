@@ -135,8 +135,14 @@ func statsNear(target broadcast.GPU, stat uplink.GPUStatSample, context uplink.G
 					slog.Error("Float comparision mismatch", "field name", field.Name, "expected", from.String(), "actual", to.String())
 					return false
 				}
+			} else if from.Type().Kind() == reflect.String {
+				if from.String() != to.String() {
+					slog.Error("String comparision mismatch", "field name", field.Name, "expected", from.String(), "actual", to.String())
+					return false
+				}
 			} else {
 				slog.Error("Test case for this type not yet written", "field name", field.Name, "type", field.Type.String())
+				return false
 			}
 		}
 	}
