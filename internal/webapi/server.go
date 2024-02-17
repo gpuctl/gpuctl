@@ -1,6 +1,7 @@
 package webapi
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -108,6 +109,10 @@ func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.Response[br
 func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	// Check if credientals are correct
 	token, err := auth.CreateToken(packet)
+
+	if errors.Is(err, authentication.InvalidCredentialsError) || errors.Is(err, authentication.NotAuthenticatedError) {
+		return &femto.Response[types.Unit]{Status: http.StatusUnauthorized}, nil
+	}
 
 	if err != nil {
 		return nil, err

@@ -33,7 +33,7 @@ func (auth *ConfigFileAuthenticator) CreateToken(packet APIAuthCredientals) (aut
 
 	// TODO write a proper authentication thingy
 	if username != auth.Username || password != auth.Password {
-		return "", authentication.InvalidCredientalsError
+		return "", authentication.InvalidCredentialsError
 	}
 	token := uuid.New().String()
 	auth.CurrentTokens[token] = true

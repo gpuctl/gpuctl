@@ -12,7 +12,7 @@ const TokenCookieName = "token"
 
 var (
 	NotAuthenticatedError   = errors.New("User does not have a valid authentication token")
-	InvalidCredientalsError = errors.New("Invalid credientals for creating an authentication token")
+	InvalidCredentialsError = errors.New("Invalid credentials for creating an authentication token")
 )
 
 // These would probably be safer as newtypes, but exactly where to use the raw

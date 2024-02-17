@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { Box, Button, Heading, Input, VStack } from "@chakra-ui/react";
+import { Box, Button, Heading, Input, Text, VStack } from "@chakra-ui/react";
 import { useAuth } from "../Providers/AuthProvider";
+import { validatedElim } from "../Utils/Utils";
 
 export const SignIn = () => {
-  const { login } = useAuth();
+  const { login, user: authName } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -21,7 +22,6 @@ export const SignIn = () => {
           onChange={(e) => setUsername(e.target.value)}
           bgColor={"white"}
         ></Input>
-
         <Box w="100%">
           <Heading textAlign={"left"} size="l">
             Password
@@ -33,6 +33,16 @@ export const SignIn = () => {
           onChange={(e) => setPassword(e.target.value)}
           bgColor={"white"}
         ></Input>
+        {validatedElim(authName, {
+          success: () => <></>,
+          failure: (e) =>
+            e.message === "Username or password was incorrect!" ? (
+              <Text color="tomato"> Username or password incorrect</Text>
+            ) : (
+              <></>
+            ),
+        })}
+        ;
         <Button
           bgColor={"white"}
           onClick={async () => {

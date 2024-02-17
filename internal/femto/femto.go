@@ -175,6 +175,7 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 		http.SetCookie(w, &data.Cookies[i])
 	}
 
+	w.WriteHeader(data.Status)
 	_, err := w.Write(make([]byte, 0))
 
 	if err != nil {
