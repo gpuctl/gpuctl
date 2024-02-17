@@ -53,7 +53,7 @@ export const enumIndex = <E extends EnumDict>(
 export const instKeys = <T,>(xs: ((k: number) => T)[]): T[] =>
   xs.map((x, i) => x(i));
 
-export enum VTag {
+enum VTag {
   Success = "Success",
   Loading = "Loading",
   Failure = "Failure",

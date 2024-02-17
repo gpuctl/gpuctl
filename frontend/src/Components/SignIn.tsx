@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Box, Button, Heading, Input, Text, VStack } from "@chakra-ui/react";
 import { useAuth } from "../Providers/AuthProvider";
-import { Failure, VTag, validatedElim } from "../Utils/Utils";
+import { validatedElim } from "../Utils/Utils";
 
 export const SignIn = () => {
   const { login, user: authName } = useAuth();
