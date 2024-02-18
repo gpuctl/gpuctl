@@ -8,12 +8,11 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/broadcast"
-	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
+	"github.com/gpuctl/gpuctl/internal/onboard"
 	"github.com/gpuctl/gpuctl/internal/types"
 	"github.com/gpuctl/gpuctl/internal/uplink"
-	"golang.org/x/crypto/ssh"
 )
 
 type Server struct {
@@ -22,7 +21,7 @@ type Server struct {
 }
 type Api struct {
 	DB          database.Database
-	onboardConf OnboardConf
+	onboardConf onboard.Config
 }
 
 type APIAuthCredientals struct {
@@ -30,22 +29,9 @@ type APIAuthCredientals struct {
 	Password string
 }
 
-type OnboardConf struct {
-	// The login to run the satellite on other machines as
-	Username string
-	// The directory to store the satellite binary on remotes as
-	DataDir string
-	// The configuration to install on the remote.
-	RemoteConf config.SatelliteConfiguration
-
-	// SSH Options.
-	Signer      ssh.Signer
-	KeyCallback ssh.HostKeyCallback
-}
-
-func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], onboard OnboardConf) *Server {
+func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], onboardConf onboard.Config) *Server {
 	mux := new(femto.Femto)
-	api := &Api{db, onboard}
+	api := &Api{db, onboardConf}
 
 	femto.OnGet(mux, "/api/stats/all", api.AllStatistics)
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)

@@ -3,18 +3,14 @@ package groundstation
 import (
 	"errors"
 	"log/slog"
-	"net"
 	"os"
 	"testing"
 	"time"
 
-	"crypto/rand"
-	"crypto/rsa"
-
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/database"
+	"github.com/gpuctl/gpuctl/internal/onboard"
 	"github.com/gpuctl/gpuctl/internal/uplink"
-	"golang.org/x/crypto/ssh"
 )
 
 type ErrorDB struct{}
@@ -59,24 +55,6 @@ func (edb *ErrorDB) Drop() error {
 	return nil
 }
 
-func TestSSHRestart_UnreadableKey(t *testing.T) {
-	// Setup
-	logger := slog.Default()
-	sshConfig := SSHConfig{
-		User: "testuser",
-	}
-
-	err := sshRestart("localhost", logger, sshConfig)
-
-	if errors.Is(err, InvalidSignerError) {
-		t.Logf("Expected error occurred: %v", err)
-	} else if err != nil {
-		t.Errorf("Expected sshRestart to fail due to unreadable key, but it failed with a different error: %v", err)
-	} else {
-		t.Error("Expected an error due to unreadable key, but sshRestart did not fail as expected")
-	}
-}
-
 func TestPing(t *testing.T) {
 	logger := slog.Default()
 
@@ -110,12 +88,10 @@ func TestMonitorWithErrorDB(t *testing.T) {
 	db := &ErrorDB{}
 	logger := slog.Default()
 
-	sshConfig := SSHConfig{
-		User: "testuser",
-	}
+	sshConfig := onboard.Config{User: "testuser"}
 
 	currentTime := time.Now()
-	timespanForDeath := time.Duration(24*60*60) * time.Second // 24 hours
+	timespanForDeath := 24 * time.Hour
 
 	err := monitor(db, currentTime, timespanForDeath, logger, sshConfig)
 	if err == nil {
@@ -127,48 +103,16 @@ func TestMonitor(t *testing.T) {
 	db := database.InMemory()
 	logger := slog.Default()
 
-	sshConfig := SSHConfig{
-		User: "testuser",
-	}
+	sshConfig := onboard.Config{User: "testuser"}
 
 	currentTime := time.Now()
 	db.UpdateLastSeen("machineRecent", currentTime.Unix())                 // This machine should not trigger any action
 	db.UpdateLastSeen("machineOld", currentTime.Add(-48*time.Hour).Unix()) // This machine should trigger actions
 
-	timespanForDeath := time.Duration(24*60*60) * time.Second // 24 hours
+	timespanForDeath := 24 * time.Hour
 
 	err := monitor(db, currentTime, timespanForDeath, logger, sshConfig)
 	if err != nil {
 		t.Fatalf("Monitor encountered an error: %v", err)
-	}
-}
-
-func TestSSHRestart_ValidKey(t *testing.T) {
-	logger := slog.Default()
-
-	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
-	if err != nil {
-		t.Fatalf("Failed to generate RSA private key: %v", err)
-	}
-
-	signer, err := ssh.NewSignerFromKey(privateKey)
-	if err != nil {
-		t.Fatalf("Failed to create SSH signer: %v", err)
-	}
-
-	sshConfig := SSHConfig{
-		User:   "dummyUser",
-		Signer: signer,
-	}
-
-	err = sshRestart("invalid.remote.address:22", logger, sshConfig)
-
-	var opError *net.OpError
-	if errors.As(err, &opError) && opError.Err != nil {
-		t.Logf("Expected error occurred: %v", err)
-	} else if err != nil {
-		t.Errorf("Expected sshRestart to fail due to 'no such host', but it failed with a different error: %v", err)
-	} else {
-		t.Error("Expected an error due to invalid setup, but sshRestart did not fail as expected")
 	}
 }
