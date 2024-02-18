@@ -87,8 +87,7 @@ func TestSSHRestart_UnreadableKey(t *testing.T) {
 
 	err := sshRestart("localhost", logger, sshConfig)
 
-	var opError *net.OpError
-	if errors.As(err, &opError) && opError.Err != nil {
+	if errors.Is(err, InvalidSignerError) {
 		t.Logf("Expected error occurred: %v", err)
 	} else if err != nil {
 		t.Errorf("Expected sshRestart to fail due to unreadable key, but it failed with a different error: %v", err)
@@ -178,9 +177,13 @@ func TestSSHRestart_ValidKey(t *testing.T) {
 	}
 
 	err = sshRestart("invalid.remote.address:22", logger, sshConfig)
-	if err == nil {
-		t.Error("Expected SSHRestart to fail due to invalid remote address, but it did not")
+
+	var opError *net.OpError
+	if errors.As(err, &opError) && opError.Err != nil {
+		t.Logf("Expected error occurred: %v", err)
+	} else if err != nil {
+		t.Errorf("Expected sshRestart to fail due to 'no such host', but it failed with a different error: %v", err)
 	} else {
-		t.Log("SSHRestart failed as expected:", err)
+		t.Error("Expected an error due to invalid setup, but sshRestart did not fail as expected")
 	}
 }

@@ -1,12 +1,17 @@
 package groundstation
 
 import (
+	"errors"
 	"log/slog"
 	"os/exec"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/database"
 	"golang.org/x/crypto/ssh"
+)
+
+var (
+	InvalidSignerError = errors.New("signer is nil")
 )
 
 type SSHConfig struct {
@@ -56,6 +61,10 @@ func monitor(database database.Database, t time.Time, timespanForDeath time.Dura
 func sshRestart(remote string, l *slog.Logger, s SSHConfig) error {
 	signer := s.Signer
 	user := s.User
+
+	if signer == nil {
+		return InvalidSignerError
+	}
 
 	config := &ssh.ClientConfig{
 		User: user,
