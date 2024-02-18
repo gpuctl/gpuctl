@@ -41,7 +41,7 @@ func Onboard(
 	defer client.Close()
 
 	// -- Make the data dir --
-	err = runCommand(client, "mkdir -p "+dataDir)
+	err = RunCommand(client, "mkdir -p "+dataDir)
 	if err != nil {
 		return fmt.Errorf("failed to mkdir: %w", err)
 	}
@@ -76,7 +76,7 @@ func Onboard(
 	}
 
 	// -- Start the satellite --
-	err = runCommand(client,
+	err = RunCommand(client,
 		fmt.Sprintf("nohup %s/satellite >> %s/satellite.log 2>> %s/satellite.err < /dev/null &",
 			dataDir, dataDir, dataDir),
 	)
@@ -104,7 +104,7 @@ func Deboard(
 	}
 	defer client.Close()
 
-	err = runCommand(client, "killall satellite")
+	err = RunCommand(client, "killall satellite")
 
 	if err != nil {
 		return fmt.Errorf("failed to kill satellite on remote: %w", err)
@@ -113,7 +113,7 @@ func Deboard(
 	return nil
 }
 
-func runCommand(client *ssh.Client, command string) error {
+func RunCommand(client *ssh.Client, command string) error {
 	sess, err := client.NewSession()
 	if err != nil {
 		return err

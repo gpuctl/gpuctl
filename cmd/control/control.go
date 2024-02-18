@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 
@@ -35,14 +36,14 @@ func main() {
 	var signer ssh.Signer
 	var key []byte
 
-	if conf.Onboard.KeyPath == "" {
+	if conf.SSH.KeyPath == "" {
 		key64 := os.Getenv("GPU_SSH_KEY")
 		key, err = base64.StdEncoding.DecodeString(key64)
 		if err != nil {
 			fatal("failed to decode base64 key: " + err.Error())
 		}
 	} else {
-		key, err = os.ReadFile(conf.Onboard.KeyPath)
+		key, err = os.ReadFile(conf.SSH.KeyPath)
 		if err != nil {
 			fatal("failed to read key file: " + err.Error())
 		}
@@ -61,9 +62,9 @@ func main() {
 
 	authenticator := webapi.AuthenticatorFromConfig(conf)
 	wa := webapi.NewServer(db, &authenticator, webapi.OnboardConf{
-		Username:    conf.Onboard.Username,
-		DataDir:     conf.Onboard.DataDir,
-		RemoteConf:  conf.Onboard.RemoteConf,
+		Username:    conf.SSH.Username,
+		DataDir:     conf.SSH.DataDir,
+		RemoteConf:  conf.SSH.RemoteConf,
 		Signer:      signer,
 		KeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: Be secure here.
 	})
@@ -79,6 +80,14 @@ func main() {
 	}()
 	go func() {
 		errs <- database.DownsampleOverTime(conf.Database.DownsampleInterval, db)
+	}()
+	go func() {
+		c := groundstation.SSHConfig{
+			User:    conf.SSH.Username,
+			Signer:  signer,
+			BinPath: conf.SSH.DataDir,
+		}
+		errs <- groundstation.MonitorForDeadMachines(time.Duration(conf.Timeouts.MonitorInterval)*time.Second, db, time.Duration(conf.Timeouts.DeathTimeout)*time.Second, log, c)
 	}()
 
 	slog.Info("started servers")
