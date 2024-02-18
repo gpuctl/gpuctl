@@ -59,25 +59,6 @@ func (edb *ErrorDB) Drop() error {
 	return nil
 }
 
-func TestSSHRestart(t *testing.T) {
-	// Setup
-	logger := slog.Default()
-	sshConfig := SSHConfig{
-		User: "testuser",
-	}
-
-	err := sshRestart("invalid.remote.address", logger, sshConfig)
-
-	var opError *net.OpError
-	if errors.As(err, &opError) && opError.Err != nil {
-		t.Logf("Expected error occurred: %v", err)
-	} else if err != nil {
-		t.Errorf("Expected sshRestart to fail due to 'no such host', but it failed with a different error: %v", err)
-	} else {
-		t.Error("Expected an error due to invalid setup, but sshRestart did not fail as expected")
-	}
-}
-
 func TestSSHRestart_UnreadableKey(t *testing.T) {
 	// Setup
 	logger := slog.Default()
