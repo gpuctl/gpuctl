@@ -2,7 +2,7 @@ package database
 
 import (
 	"cmp"
-	"errors"
+	"fmt"
 	"slices"
 	"sort"
 	"sync"
@@ -219,16 +219,68 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 }
 
 func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {
-	// TODO: add actual functionality. This was just to make the code compile
-	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	info := uplink.GPUInfo{
+		Uuid:          "dummy-uuid", // hmmmmm
+		Name:          "Dummy GPU",
+		Brand:         "Generic",
+		DriverVersion: "1.0",
+		MemoryTotal:   4096,
+	}
+
+	if _, exists := m.lastSeen[machine.Hostname]; exists {
+		return fmt.Errorf("machine with hostname %s already exists", machine.Hostname)
+	}
+
+	m.lastSeen[machine.Hostname] = time.Now().Unix()
+	m.infos[info.Uuid] = gpuInfo{host: machine.Hostname, context: info}
+
+	return nil
 }
 
-func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) (err error) {
-	// TODO: add actual functionality. This was just to make the code compile
-	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
+func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var uuidToRemove string
+	for uuid, info := range m.infos {
+		if info.host == machine.Hostname {
+			uuidToRemove = uuid
+			break
+		}
+	}
+
+	if uuidToRemove == "" {
+		return fmt.Errorf("machine with hostname %s does not exist", machine.Hostname)
+	}
+
+	delete(m.lastSeen, machine.Hostname)
+	delete(m.infos, uuidToRemove)
+	delete(m.stats, uuidToRemove)
+
+	return nil
 }
 
 func (m *inMemory) UpdateMachine(changes broadcast.ModifyMachine) error {
-	// TODO: add actual functionality. This was just to make the code compile
-	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var uuidToUpdate string
+	for uuid, info := range m.infos {
+		if info.host == changes.Hostname {
+			uuidToUpdate = uuid
+			break
+		}
+	}
+
+	if uuidToUpdate == "" {
+		return fmt.Errorf("machine with hostname %s does not exist", changes.Hostname)
+	}
+
+	/* There are no other sad paths, and update machine side-effects aren't visible through
+	the inmem api as it stands at the moment, no more code is necessary. */
+
+	return nil
 }
