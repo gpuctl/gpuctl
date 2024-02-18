@@ -17,6 +17,7 @@ type Femto struct {
 
 type Response[T any] struct {
 	Headers map[string]string
+	Cookies []http.Cookie
 	Body    T
 	Status  int
 }
@@ -42,14 +43,43 @@ func OnGet[T any](f *Femto, pattern string, handle GetFunc[T]) {
 	})
 }
 
-func Ok[T any](content T) Response[T] {
-	return Response[T]{Status: http.StatusAccepted, Body: content}
+// correctMethod returns whether the request had the given method.
+//
+// If not, it will return a suitable reponce: either No Content for an OPTIONS request,
+// or
+func correctMethod(method string, req *http.Request, w http.ResponseWriter, log *slog.Logger) bool {
+	switch req.Method {
+	case method:
+		return true
+	case http.MethodOptions:
+
+		// We don't set Access-Control-Allow-Origin, as that'd done globally
+		// so it can be enabled for dev, but not prod.
+
+		// https://developer.mozilla.org/en-US/docs/Glossary/Preflight_request
+		// https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/OPTIONS
+
+		w.Header().Set("Allow", method)
+		w.Header().Set("Access-Control-Allow-Methods", method)
+		w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		w.WriteHeader(http.StatusNoContent)
+		return false
+	default:
+		log.Info("Wrong method, returning 405", "expected", method, "got", req.Method)
+		http.Error(w, "Expected "+method, http.StatusMethodNotAllowed)
+		return false
+	}
 }
 
-func generateErrorLogger(l *slog.Logger, w http.ResponseWriter) func(ctx string, status int, e error) {
+// Ok returns a response with 200 OK, and no error.
+func Ok[T any](content T) (*Response[T], error) {
+	return &Response[T]{Status: http.StatusOK, Body: content}, nil
+}
+
+func generateErrorLogger(l *slog.Logger, w *http.ResponseWriter) func(ctx string, status int, e error) {
 	return func(ctx string, status int, e error) {
 		l.Error(ctx, "err", e)
-		http.Error(w, e.Error(), status)
+		http.Error(*w, e.Error(), status)
 	}
 }
 
@@ -59,9 +89,7 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 
 	log.Info("New Request", "method", r.Method, "url", r.URL, "from", r.RemoteAddr)
 
-	if r.Method != http.MethodGet {
-		log.Info("Wanted GET, returned 405")
-		http.Error(w, "Expected GET", http.StatusMethodNotAllowed)
+	if !correctMethod(http.MethodGet, r, w, log) {
 		return
 	}
 
@@ -75,7 +103,7 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 		data.Status = http.StatusInternalServerError
 	}
 
-	ise := generateErrorLogger(log, w)
+	ise := generateErrorLogger(log, &w)
 
 	if err != nil {
 		ise("There was an error in the server when trying to handle the provided request", data.Status, err)
@@ -91,7 +119,11 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 	for key, value := range data.Headers {
 		w.Header().Add(key, value)
 	}
+	for i := range data.Cookies {
+		http.SetCookie(w, &data.Cookies[i])
+	}
 
+	w.WriteHeader(data.Status)
 	_, err = w.Write(jsonb)
 
 	if err != nil {
@@ -105,9 +137,7 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 
 	log.Info("New Request", "method", r.Method, "url", r.URL, "from", r.RemoteAddr)
 
-	if r.Method != http.MethodPost {
-		log.Info("Wanted POST, returned 405")
-		http.Error(w, "Expected POST", http.StatusMethodNotAllowed)
+	if !correctMethod(http.MethodPost, r, w, log) {
 		return
 	}
 
@@ -121,7 +151,7 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 		return
 	}
 
-	ise := generateErrorLogger(log, w)
+	ise := generateErrorLogger(log, &w)
 
 	data, userErr := handle(reqData, r, log)
 
@@ -134,13 +164,15 @@ func doPost[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle Post
 	}
 
 	if userErr != nil {
-
 		ise("There was an error in the server when trying to handle the provided request", data.Status, userErr)
 		return
 	}
 
 	for key, value := range data.Headers {
 		w.Header().Add(key, value)
+	}
+	for i := range data.Cookies {
+		http.SetCookie(w, &data.Cookies[i])
 	}
 
 	_, err := w.Write(make([]byte, 0))

@@ -87,6 +87,32 @@ func Onboard(
 	return nil
 }
 
+func Deboard(
+	hostname string,
+	user string,
+	signer ssh.Signer,
+	keyCallback ssh.HostKeyCallback,
+) error {
+	sshConfig := &ssh.ClientConfig{
+		User:            user,
+		Auth:            []ssh.AuthMethod{ssh.PublicKeys(signer)},
+		HostKeyCallback: keyCallback,
+	}
+	client, err := ssh.Dial("tcp", hostname+":22", sshConfig)
+	if err != nil {
+		return err
+	}
+	defer client.Close()
+
+	err = runCommand(client, "killall satellite")
+
+	if err != nil {
+		return fmt.Errorf("failed to kill satellite on remote: %w", err)
+	}
+
+	return nil
+}
+
 func runCommand(client *ssh.Client, command string) error {
 	sess, err := client.NewSession()
 	if err != nil {

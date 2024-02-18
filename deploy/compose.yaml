@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16.1
+    image: docker.io/postgres:16.1
     environment:
       # TODO: USE PASSWORDS!! REMOVE THIS LINE!!
       POSTGRES_HOST_AUTH_METHOD: trust
@@ -11,7 +11,8 @@ services:
       interval: 10s
   control:
     build:
-      dockerfile: ./control.Dockerfile
+      dockerfile: ./deploy/control.Dockerfile
+      context: ..
     environment:
       GPU_DB_URL: postgres://postgres@postgres/postgres
     depends_on:
@@ -20,9 +21,10 @@ services:
   frontend:
     # secrets/key file needs to contain hetzner dns api key. eg:
     # HETZNER_DNS_API_TOKEN=key_value
-    env_file: ./secrets/keys
+    env_file: ./.env
     build:
-      dockerfile: ./frontend.Dockerfile
+      dockerfile: ./deploy/frontend.Dockerfile
+      context: ..
     ports:
       - "80:80"
       - "443:443"

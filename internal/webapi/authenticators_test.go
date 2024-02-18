@@ -31,7 +31,8 @@ func TestConfigFileAuthenticatorRace(t *testing.T) {
 				return
 			}
 			for c := 0; c < 10; c++ {
-				if !auth.CheckToken(token) {
+				_, err := auth.CheckToken(token)
+				if err != nil {
 					failed = false
 					return
 				}
@@ -64,8 +65,8 @@ func TestAuthenticatorFromConfig(t *testing.T) {
 type alwaysAuth struct{}
 
 // CheckToken implements femto.Authenticator.
-func (alwaysAuth) CheckToken(string) bool {
-	return true
+func (alwaysAuth) CheckToken(string) (authentication.Username, error) {
+	return "admin", nil
 }
 
 // CreateToken implements femto.Authenticator.

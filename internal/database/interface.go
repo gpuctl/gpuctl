@@ -1,8 +1,16 @@
 package database
 
 import (
+	"errors"
+
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+)
+
+// Constant errors for failures in DB
+var (
+	ErrMachineNotPresent = errors.New("adding gpu to non present machine")
+	ErrGpuNotPresent     = errors.New("appending to non present gpu")
 )
 
 // define set of operations on the database that any provider will implement
@@ -24,11 +32,9 @@ type Database interface {
 	LastSeen() ([]uplink.WorkstationSeen, error)
 	// create and modify machines in the database
 	NewMachine(machine broadcast.NewMachine) error
+	RemoveMachine(machine broadcast.RemoveMachine) error
 	UpdateMachine(changes broadcast.ModifyMachine) error
 
 	// downsample since certain unix time
 	Downsample(time int64) error
-
-	// Drop all tables and data in the db and close the connection
-	Drop() error
 }

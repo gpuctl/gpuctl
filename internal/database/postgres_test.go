@@ -21,25 +21,21 @@ func TestPostgres(t *testing.T) {
 
 	for _, test := range UnitTests {
 		t.Run(test.Name, func(t *testing.T) {
-			db, err := database.Postgres(url)
+			dbi, err := database.Postgres(url)
 			if err != nil {
 				t.Fatalf("Failed to open database: %v", err)
 			}
 
-			// TODO: This is a really bad way of doing things, fix this
-
-			/*
-			 * What needs to be fixed here:
-			 * 	- The tests must test the db.Drop() functionality
-			 * 	- Therefore the database must be dropped
-			 * 	- The test cleanup infrastructure must not rely on tested code
-			 * 	- Must find a way to clean-up without using db.Drop() directly
-			 */
+			// We want cast from the interface to the actual type, so we can call
+			// the Drop method, which exists only for this tests, but not the application.
+			db, ok := dbi.(database.PostgresConn)
+			if !ok {
+				t.Fatal("database.Postgres didn't return database.PostgresConn")
+			}
 
 			t.Cleanup(func() {
-				err = db.Drop()
-				if err != nil {
-					t.Logf("Got error on cleanup: %v", err)
+				if err := db.Drop(); err != nil {
+					t.Fatal("Failed to drop database", err)
 				}
 			})
 
@@ -47,3 +43,8 @@ func TestPostgres(t *testing.T) {
 		})
 	}
 }
+
+// STOP!!!
+// Don't add any more tests to this file
+// TestInMemoryUnit runs all the unit tests in unit_test.go
+// Add your new test cases there

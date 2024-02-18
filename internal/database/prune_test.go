@@ -79,6 +79,57 @@ func TestCalculateAverage(t *testing.T) {
 	}
 }
 
+func TestAverageProcess(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		name    string
+		toMerge [][]uplink.GPUProcInfo
+		merged  []uplink.GPUProcInfo
+	}{
+		{"Empty", nil, nil},
+		{"Single Sample",
+			[][]uplink.GPUProcInfo{
+				{{Pid: 1, Name: "foo", MemUsed: 100}, {Pid: 2, Name: "bar", MemUsed: 200}},
+			},
+			[]uplink.GPUProcInfo{{Pid: 1, Name: "foo", MemUsed: 100}, {Pid: 2, Name: "bar", MemUsed: 200}},
+		},
+		{
+			"Three Separate Processes",
+			[][]uplink.GPUProcInfo{
+				{{Pid: 1, Name: "foo", MemUsed: 100}},
+				{{Pid: 2, Name: "bar", MemUsed: 200}},
+				{{Pid: 3, Name: "baz", MemUsed: 300}},
+			},
+			[]uplink.GPUProcInfo{
+				{Pid: 1, Name: "foo", MemUsed: 100},
+				{Pid: 2, Name: "bar", MemUsed: 200},
+				{Pid: 3, Name: "baz", MemUsed: 300},
+			},
+		},
+		// TODO: Test same PID appearing in multiple samples (and decide it's semantics).
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+
+			toMerge := tc.toMerge
+
+			samples := make([]uplink.GPUStatSample, len(toMerge))
+			for i, procs := range tc.toMerge {
+				samples[i].RunningProcesses = procs
+			}
+
+			merged := CalculateAverage(samples).RunningProcesses
+
+			if !reflect.DeepEqual(merged, tc.merged) {
+				t.Errorf("AverageProcesses(%v) = %v, want %v", toMerge, merged, tc.merged)
+			}
+		})
+	}
+
+}
+
 func TestDownsample(t *testing.T) {
 	db := InMemory().(*inMemory)
 

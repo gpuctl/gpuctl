@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"log/slog"
-	"reflect"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -13,9 +12,8 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
-// struct holding database context
-// only holds a pointer, so we can pass it around by value
-type postgresConn struct {
+// PostgresConn represents an open connection to a control database backed by postgres.
+type PostgresConn struct {
 	db *sql.DB
 }
 
@@ -37,7 +35,7 @@ func Postgres(databaseUrl string) (Database, error) {
 		return nil, err
 	}
 
-	return postgresConn{db}, nil
+	return PostgresConn{db}, nil
 }
 
 func createTables(db *sql.DB) error {
@@ -97,7 +95,7 @@ func createTables(db *sql.DB) error {
 }
 
 // implement interface
-func (conn postgresConn) UpdateLastSeen(host string, given_time int64) error {
+func (conn PostgresConn) UpdateLastSeen(host string, given_time int64) error {
 	var err error
 
 	tx, err := conn.db.Begin()
@@ -159,7 +157,7 @@ func updateLastSeen(host string, now time.Time, tx *sql.Tx) (err error) {
 	return
 }
 
-func (conn postgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
+func (conn PostgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 	now := time.Now()
 
 	_, err := conn.db.Exec(`INSERT INTO Stats
@@ -175,10 +173,15 @@ func (conn postgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 		sample.GraphicsClock, sample.MaxGraphicsClock,
 		sample.MemoryClock, sample.MaxMemoryClock)
 
+	// TODO: hacky, untested. Might not work
+	if err != nil {
+		return ErrGpuNotPresent
+	}
+
 	return err
 }
 
-func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
+func (conn PostgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
 	// Insert the new context we've received into the db, overwriting the
 	// existing info
 	_, err := conn.db.Exec(`INSERT INTO GPUs
@@ -194,7 +197,7 @@ func (conn postgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) er
 	return err
 }
 
-func (conn postgresConn) Downsample(int_now int64) error {
+func (conn PostgresConn) Downsample(int_now int64) error {
 	downsample_query := `CREATE TEMPORARY TABLE TempDownsampled AS
 WITH OrderedStats AS (
   SELECT
@@ -306,7 +309,7 @@ FROM TempDownsampled;
 }
 
 // TODO: consider returning workstationGroup
-func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
+func (conn PostgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 	// we pull Uuid twice so we can put one into Stat sample and the other into Info
 	rows, err := conn.db.Query(`SELECT g.Machine, g.Uuid, g.Uuid, g.Name,
 			g.Brand, g.DriverVersion, g.MemoryTotal,
@@ -369,7 +372,7 @@ func (conn postgresConn) LatestData() ([]uplink.GpuStatsUpload, error) {
 }
 
 // Create new machine
-func (conn postgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
+func (conn PostgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
 	_, err = conn.db.Exec(`INSERT INTO Machines (Hostname, GroupName)
 		VALUES ($1, $2)`,
 		machine.Hostname, machine.Group,
@@ -377,42 +380,155 @@ func (conn postgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
 	return
 }
 
-// Update machine info
-func (conn postgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
+func (conn PostgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
 	tx, err := conn.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	v := reflect.ValueOf(machine)
-	for _, field := range reflect.VisibleFields(reflect.TypeOf(machine)) {
-		value := v.FieldByIndex(field.Index)
-		if v.Kind() == reflect.Pointer && !value.IsNil() {
-			_, err = tx.Exec(`UPDATE Machines
-				SET $1=$2
-				WHERE Hostname=$3`,
-				field.Name, reflect.Indirect(value), machine.Hostname,
-			)
+	rows, err := tx.Query(`SELECT Uuid
+		FROM Gpus
+		WHERE Machine=$1`,
+		machine.Hostname,
+	)
+	if err != nil {
+		return err
+	}
 
-			if err != nil {
-				return errors.Join(err, tx.Rollback())
-			}
+	for rows.Next() {
+		var uuid string
+		err = rows.Scan(&uuid)
+		if err != nil {
+			errors.Join(err, tx.Rollback())
+		}
+
+		_, err = tx.Exec(`DELETE FROM Stats
+			WHERE Gpu=$1`,
+			uuid,
+		)
+
+		if err != nil {
+			errors.Join(err, tx.Rollback())
+		}
+	}
+
+	err = rows.Err()
+	if !errors.Is(sql.ErrNoRows, rows.Err()) {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	_, err = tx.Exec(`DELETE FROM GPUs
+		WHERE Machine=$1`,
+		machine.Hostname,
+	)
+	if err != nil {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	_, err = tx.Exec(`DELETE FROM Machines
+		WHERE Hostname=$1`,
+		machine.Hostname,
+	)
+	if err != nil {
+		return errors.Join(err, tx.Rollback())
+	}
+
+	return tx.Commit()
+}
+
+// Update machine info
+func (conn PostgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
+	tx, err := conn.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	//	v := reflect.ValueOf(machine)
+	//	for _, field := range reflect.VisibleFields(reflect.TypeOf(machine)) {
+	//		value := v.FieldByIndex(field.Index)
+	//		if v.Kind() == reflect.Pointer && !value.IsNil() {
+	//			_, err = tx.Exec(`UPDATE Machines
+	//				SET $1=$2
+	//				WHERE Hostname=$3`,
+	//				field.Name, reflect.Indirect(value), machine.Hostname,
+	//			)
+	//
+	//			if err != nil {
+	//				return errors.Join(err, tx.Rollback())
+	//			}
+	//		}
+	//	}
+
+	if machine.CPU != nil {
+		slog.Info("Changing CPU", "Hostname", machine.Hostname, "New CPU", *machine.CPU)
+		_, err = tx.Exec(`UPDATE Machines
+			SET CPU=$1
+			WHERE Hostname=$2`,
+			*machine.CPU, machine.Hostname,
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	if machine.Motherboard != nil {
+		slog.Info("Changing Motherboard", "Hostname", machine.Hostname, "New Motherboard", *machine.Motherboard)
+		_, err = tx.Exec(`UPDATE Machines
+			SET Motherboard=$1
+			WHERE Hostname=$2`,
+			*machine.Motherboard, machine.Hostname,
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	if machine.Notes != nil {
+		slog.Info("Changing Notes", "Hostname", machine.Hostname, "New Notes", *machine.Notes)
+		_, err = tx.Exec(`UPDATE Machines
+			SET Notes=$1
+			WHERE Hostname=$2`,
+			*machine.Notes, machine.Hostname,
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	if machine.Group != nil {
+		slog.Info("Changing Group", "Hostname", machine.Hostname, "New Group", *machine.Group)
+		_, err = tx.Exec(`UPDATE Machines
+			SET GroupName=$1
+			WHERE Hostname=$2`,
+			*machine.Group, machine.Hostname,
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
 		}
 	}
 
 	return tx.Commit()
 }
 
-// drop all tables we create in the database
-func (conn postgresConn) Drop() error {
+// Drop drops all tables on the connected database, then closes the connection.
+//
+// This should only be used for testing purposes
+func (conn PostgresConn) Drop() error {
 	_, err := conn.db.Exec(`DROP TABLE stats;
 		DROP TABLE gpus;
 		DROP TABLE machines`)
+	if err != nil {
+		return err
+	}
 
-	return errors.Join(err, conn.db.Close())
+	return conn.db.Close()
 }
 
-func (conn postgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {
+func (conn PostgresConn) LastSeen() ([]uplink.WorkstationSeen, error) {
 	rows, err := conn.db.Query(`SELECT * FROM Machines`)
 
 	if err != nil {

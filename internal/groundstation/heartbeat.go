@@ -19,7 +19,5 @@ func (gs *groundstation) heartbeat(data uplink.HeartbeatReq, req *http.Request, 
 		return nil, err
 	}
 
-	response := femto.Ok[types.Unit](types.Unit{})
-
-	return &response, nil
+	return femto.Ok(types.Unit{})
 }

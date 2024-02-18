@@ -35,7 +35,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v4
         with:
-          go-version: "1.21.x"
+          go-version: "1.22.x"
       - uses: actions/setup-node@v4
         with:
           node-version: 18
@@ -86,4 +86,20 @@ jobs:
       - name: Check Frontend Formatting
         run: npm run fmt-check
         working-directory: ./frontend
-      
+
+  go-test-short:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: "1.22.x"
+      - run: make    
+      - run: go test ./... -short
+
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cp ./deploy/.env.example ./deploy/.env
+      - run: docker compose -f ./deploy/compose.yaml build --parallel

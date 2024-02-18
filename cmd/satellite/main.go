@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"log/slog"
+	"net/http"
 	"os"
 	"time"
 
@@ -10,6 +12,10 @@ import (
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/gpustats"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+)
+
+var (
+	errSuspectedServerMissingInfo = errors.New("Groundstation could not update it's database with given packet. Likely forgot about this GPU.")
 )
 
 func main() {
@@ -65,17 +71,17 @@ func main() {
 		}
 	}()
 
-	backlog, _ := recoverState(satellite_configuration.Satellite.Cache)
+	// backlog, _ := recoverState(satellite_configuration.Satellite.Cache)
 
-	for stat := range backlog {
-		err := s.sendGPUStatus(backlog[stat])
+	// for stat := range backlog {
+	// 	err := s.sendGPUStatus(backlog[stat])
 
-		if err != nil {
-			log.Error("Failed to send backlogged GPU stat message", "err", err)
-		}
-	}
+	// 	if err != nil {
+	// 		log.Error("Failed to send backlogged GPU stat message", "err", err)
+	// 	}
+	// }
 
-	backlog = make([][]uplink.GPUStatSample, 0)
+	backlog := make([][]uplink.GPUStatSample, 0)
 
 	collectGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval))
 	publishGPUStatTicker := time.NewTicker(time.Duration(satellite_configuration.Satellite.DataInterval))
@@ -87,6 +93,17 @@ func main() {
 		log.Info("Sending status")
 
 		err = s.sendGPUStatus(processStats(backlog))
+
+		if err == errSuspectedServerMissingInfo {
+			// Send context again to try and refresh server
+			log.Info("Server could not handle our sample submission. Resubmitting GPU contextual information.")
+			err = s.sendGPUInfo(hndlr)
+			if err != nil {
+				// Just quit, server is either broken or refuses to acknowledge us
+				log.Error("Server did not accept our resubmittal of contextual information. Quitting...")
+				os.Exit(-1)
+			}
+		}
 
 		if err != nil {
 			log.Error("Failed to publish current GPU stat message", "err", err)
@@ -170,10 +187,19 @@ func setGPUHandler(isFakeGPUs bool) gpustats.GPUDataSource {
 }
 
 func (s *satellite) sendHeartBeat() error {
-	return femto.Post(
+	resp, err := femto.Post(
 		s.gsAddr+uplink.HeartbeatUrl,
 		uplink.HeartbeatReq{Hostname: s.hostname},
 	)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return err // TODO: add errors for each status code
+	}
+	return nil
 }
 
 func (s *satellite) sendGPUInfo(gpuhandler gpustats.GPUDataSource) error {
@@ -182,10 +208,19 @@ func (s *satellite) sendGPUInfo(gpuhandler gpustats.GPUDataSource) error {
 		return err
 	}
 
-	return femto.Post(
+	resp, err := femto.Post(
 		s.gsAddr+uplink.GPUStatsUrl,
 		uplink.GpuStatsUpload{Hostname: s.hostname, GPUInfos: info},
 	)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		return err // TODO: Add errors for each code
+	}
+	return nil
 }
 
 func (s *satellite) sendGPUStatusWithSource(gpuhandler gpustats.GPUDataSource) error {
@@ -194,14 +229,24 @@ func (s *satellite) sendGPUStatusWithSource(gpuhandler gpustats.GPUDataSource) e
 	if err != nil {
 		return err
 	}
-
 	return s.sendGPUStatus(stats)
 
 }
 
 func (s *satellite) sendGPUStatus(stats []uplink.GPUStatSample) error {
-	return femto.Post(
+	resp, err := femto.Post(
 		s.gsAddr+uplink.GPUStatsUrl,
 		uplink.GpuStatsUpload{Hostname: s.hostname, Stats: stats},
 	)
+
+	if err != nil {
+		return err
+	}
+
+	if resp.StatusCode == http.StatusBadRequest {
+		// Could not send status, suspected cause is server does not have context.
+		return errSuspectedServerMissingInfo
+
+	}
+	return err // TODO: Handle errors cases
 }

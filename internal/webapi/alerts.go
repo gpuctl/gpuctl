@@ -20,6 +20,5 @@ func (wa *Api) HandleOfflineMachineRequest(req *http.Request, log *slog.Logger) 
 		names = append(names, machine_data[idx].Hostname)
 	}
 
-	response := femto.Ok(names)
-	return &response, nil
+	return femto.Ok(names)
 }

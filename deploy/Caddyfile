@@ -11,9 +11,17 @@ https://gpuctl.perial.co.uk {
 
 		X-Clacks-Overhead "GNU Terry Pratchett"
 
-		# TODO: allow the API to be accessed from other endpoints
-		# This will need CSRF protection
+		# When serving under the webapi, we only want API requests
+		# from our own origin. So remove the CORS headers that are
+		# to allow cross-origin for local-dev
+
+		# If we want to allow cross-origin api requests, we need
+		# to think carefully about CSRF, but we don't need that for
+		# non-browser stuff, so it's fine.
 		-Access-Control-Allow-Origin
+		-Access-Control-Allow-Methods
+		-Access-Control-Allow-Headers
+		-Access-Control-Allow-Credentials
 	}
 
 	# For api routes, we can lock down the CSP even further
@@ -26,7 +34,13 @@ https://gpuctl.perial.co.uk {
 	reverse_proxy /gs-api/* control:8080
 	reverse_proxy /api/* control:8000
 
-	file_server
+	handle_path /stats/* {
+		try_files {path} /index.html
+		file_server
+	}
+	handle {
+		file_server
+	}
 
 	# use DNS validation because this domain isn't accessible outside the
 	# imperial network. Depending on how you deploy, this could be replaced

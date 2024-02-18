@@ -1,7 +1,6 @@
 package webapi
 
 import (
-	"fmt"
 	"log/slog"
 	"net/http"
 
@@ -42,10 +41,6 @@ type OnboardConf struct {
 	KeyCallback ssh.HostKeyCallback
 }
 
-func makeAuthCookie(token string) string {
-	return fmt.Sprintf("token=%s; Path=/; HttpOnly; Secure; SameSite=Strict", token)
-}
-
 func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], onboard OnboardConf) *Server {
 	mux := new(femto.Femto)
 	api := &Api{db, onboard}
@@ -53,20 +48,26 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnGet(mux, "/api/stats/all", api.AllStatistics)
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
 
-	// Authenticated API endpoints
-
+	// Set up authentication endpoint
 	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 		return api.Authenticate(auth, packet, r, l)
 	})
-	femto.OnPost(mux, "/api/admin/add_workstation", authentication.AuthWrapPost(auth, api.newMachine))
-	femto.OnPost(mux, "/api/machines/addinfo", authentication.AuthWrapPost(auth, api.addInfo))
-	femto.OnPost(mux, "/api/onboard", authentication.AuthWrapPost(auth, api.onboard))
+
+	// Authenticated API endpoints
+	femto.OnPost(mux, "/api/admin/add_workstation", api.addMachine)
+	femto.OnPost(mux, "/api/admin/stats/modify", api.modifyMachineInfo)
+	femto.OnPost(mux, "/api/admin/rm_workstation", api.removeMachine)
+	femto.OnGet(mux, "/api/admin/confirm", func(r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
+		return api.confirmAdmin(auth, r, l)
+	})
 
 	return &Server{mux, api}
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
+	// TODO: Maybe unset in Caddyfile???
+	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	s.mux.ServeHTTP(w, r)
 }
 
@@ -100,9 +101,8 @@ func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.Response[br
 		})
 	}
 
-	result := []broadcast.WorkstationGroup{{Name: "Shared", WorkStations: ws}}
-	response := femto.Ok[broadcast.Workstations](result)
-	return &response, nil
+	result := broadcast.Workstations{{Name: "Shared", WorkStations: ws}}
+	return femto.Ok(result)
 }
 
 func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
@@ -113,23 +113,75 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 		return nil, err
 	}
 
-	headers := make(map[string]string)
-	headers["Set-Cookie"] = makeAuthCookie(token)
-	return &femto.EmptyBodyResponse{Headers: headers, Status: http.StatusAccepted}, nil
+	cookies := []http.Cookie{{
+		Name:     authentication.TokenCookieName,
+		Value:    token,
+		Path:     "/",
+		MaxAge:   3600,
+		HttpOnly: true,
+		Secure:   true,
+		SameSite: http.SameSiteStrictMode,
+	}}
+
+	return &femto.EmptyBodyResponse{Cookies: cookies, Status: http.StatusAccepted}, nil
 }
 
-// Create a new machine
-func (a *Api) newMachine(machine broadcast.NewMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+// TODO
+func (a *Api) addMachine(machine broadcast.NewMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	l.Info("Tried to create machine", "host", machine.Hostname, "group", machine.Group)
-	response := femto.Ok[types.Unit](types.Unit{})
-	return &response, a.DB.NewMachine(machine)
+
+	_, err := a.onboard(broadcast.OnboardReq{Hostname: machine.Hostname}, r, l)
+	if err != nil {
+		return nil, err
+	}
+	modify := broadcast.ModifyMachine{Hostname: machine.Hostname, Group: machine.Group}
+	_, err = a.modifyMachineInfo(modify, r, l)
+	if err != nil {
+		return nil, err
+	}
+
+	return femto.Ok(types.Unit{})
 }
 
-// Modify machine info
-func (a *Api) addInfo(info broadcast.ModifyMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+func (a *Api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+	err := a.deboard(rm, r, l)
+	if err != nil {
+		return nil, err
+	}
+	err = a.DB.RemoveMachine(broadcast.RemoveMachine{Hostname: rm.Hostname})
+	if err != nil {
+		return nil, err
+	}
+	return femto.Ok(types.Unit{})
+}
+
+type UsernameReminder struct {
+	Username string `json:"username"`
+}
+
+func (a *Api) confirmAdmin(auth authentication.Authenticator[APIAuthCredientals], r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
+	c, err := r.Cookie(authentication.TokenCookieName)
+	slog.Info("TEST", "Cookie", c, "Err", err)
+	if err != nil {
+		return &femto.Response[UsernameReminder]{Status: http.StatusUnauthorized}, nil
+	}
+	u, err := auth.CheckToken(c.Value)
+	if err != nil {
+		return &femto.Response[UsernameReminder]{Status: http.StatusUnauthorized}, nil
+	}
+	return femto.Ok(UsernameReminder{Username: u})
+}
+
+// TODO
+func (a *Api) modifyMachineInfo(info broadcast.ModifyMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	l.Info("Tried to modify machine", "host", info.Hostname, "changes", info)
-	response := femto.Ok[types.Unit](types.Unit{})
-	return &response, a.DB.UpdateMachine(info)
+
+	err := a.DB.UpdateMachine(info)
+	if err != nil {
+		return nil, err
+	}
+
+	return femto.Ok(types.Unit{})
 }
 
 // Bodge together stats and contextual data to make OldGpuStats

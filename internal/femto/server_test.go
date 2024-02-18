@@ -54,6 +54,26 @@ func TestWrongMethod(t *testing.T) {
 	assert.Equal(t, w.Code, http.StatusMethodNotAllowed)
 }
 
+func TestOptions(t *testing.T) {
+	t.Parallel()
+
+	mux := new(femto.Femto)
+
+	femto.OnGet(mux, "/api", func(r *http.Request, l *slog.Logger) (*femto.Response[types.Unit], error) {
+		return femto.Ok(types.Unit{})
+	})
+
+	req := httptest.NewRequest(http.MethodOptions, "/api", nil)
+	w := httptest.NewRecorder()
+	mux.ServeHTTP(w, req)
+	defer req.Body.Close()
+
+	assert.Equal(t, http.StatusNoContent, w.Code)
+	assert.Equal(t, http.MethodGet, w.Result().Header.Get("Allow"))
+	assert.Equal(t, http.MethodGet, w.Result().Header.Get("Access-Control-Allow-Methods"))
+
+}
+
 func TestNotJson(t *testing.T) {
 	t.Parallel()
 
@@ -80,7 +100,7 @@ func TestUserError(t *testing.T) {
 
 	mux := new(femto.Femto)
 	femto.OnPost(mux, "/postme", func(s struct{}, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
-		return nil, errors.New("their is no spoon")
+		return nil, errors.New("there is no spoon")
 	})
 
 	req := httptest.NewRequest("POST", "/postme", bytes.NewBufferString("{}"))
@@ -92,7 +112,7 @@ func TestUserError(t *testing.T) {
 
 	data, err := io.ReadAll(w.Body)
 	assert.NoError(t, err)
-	assert.Contains(t, string(data), "their is no spoon")
+	assert.Contains(t, string(data), "there is no spoon")
 }
 
 func TestGetHappyPath(t *testing.T) {
@@ -105,7 +125,7 @@ func TestGetHappyPath(t *testing.T) {
 	}
 
 	femto.OnGet(mux, "/happy", func(r *http.Request, l *slog.Logger) (*femto.Response[Foo], error) {
-		return &femto.Response[Foo]{Body: Foo{101}}, nil
+		return femto.Ok(Foo{101})
 	})
 
 	req := httptest.NewRequest(http.MethodGet, "/happy", nil)
@@ -156,15 +176,18 @@ func TestGetApplicationErr(t *testing.T) {
 type TestAuthenticator struct{}
 
 func (auth TestAuthenticator) CreateToken(unit types.Unit) (authentication.AuthToken, error) {
-	return "token", nil
+	return authentication.TokenCookieName, nil
 }
 
 func (auth TestAuthenticator) RevokeToken(token authentication.AuthToken) error {
 	return nil
 }
 
-func (auth TestAuthenticator) CheckToken(token authentication.AuthToken) bool {
-	return token == "token"
+func (auth TestAuthenticator) CheckToken(token authentication.AuthToken) (authentication.Username, error) {
+	if token != "token" {
+		return "", errors.New("Bad token!")
+	}
+	return "admin", nil
 }
 
 func TestValidAuthentication(t *testing.T) {
@@ -177,7 +200,7 @@ func TestValidAuthentication(t *testing.T) {
 
 	getHandler :=
 		func(r *http.Request, l *slog.Logger) (*femto.Response[string], error) {
-			return &femto.Response[string]{Body: "OKGET"}, nil
+			return femto.Ok("OKGET")
 		}
 
 	authenticatedGetHandler :=
@@ -205,8 +228,8 @@ func TestValidAuthentication(t *testing.T) {
 	defer reqGet.Body.Close()
 	reqPost := httptest.NewRequest("POST", "/auth-post", strings.NewReader("{}"))
 	defer reqPost.Body.Close()
-	reqGet.Header.Set("Authorization", "Bearer token")
-	reqPost.Header.Set("Authorization", "Bearer token")
+	reqGet.Header.Set("Cookie", "token=token")
+	reqPost.Header.Set("Cookie", "token=token")
 
 	mux.ServeHTTP(w, reqGet)
 	assert.Equal(t, http.StatusOK, w.Code)
@@ -264,9 +287,9 @@ func TestInvalidAuthentication(t *testing.T) {
 
 func TestOk(t *testing.T) {
 	{
-		resp := femto.Ok("hello")
-		if resp.Status != http.StatusAccepted {
-			t.Errorf("Expected status %d, got %d", http.StatusAccepted, resp.Status)
+		resp, _ := femto.Ok("hello")
+		if resp.Status != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, resp.Status)
 		}
 		if resp.Body != "hello" {
 			t.Errorf("Expected body %q, got %q", "hello", resp.Body)
@@ -274,9 +297,9 @@ func TestOk(t *testing.T) {
 	}
 
 	{
-		resp := femto.Ok(123)
-		if resp.Status != http.StatusAccepted {
-			t.Errorf("Expected status %d, got %d", http.StatusAccepted, resp.Status)
+		resp, _ := femto.Ok(123)
+		if resp.Status != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, resp.Status)
 		}
 		if resp.Body != 123 {
 			t.Errorf("Expected body %d, got %d", 123, resp.Body)
@@ -289,9 +312,9 @@ func TestOk(t *testing.T) {
 	}
 	{
 		expectedBody := CustomStruct{Name: "John", Age: 30}
-		resp := femto.Ok(expectedBody)
-		if resp.Status != http.StatusAccepted {
-			t.Errorf("Expected status %d, got %d", http.StatusAccepted, resp.Status)
+		resp, _ := femto.Ok(expectedBody)
+		if resp.Status != http.StatusOK {
+			t.Errorf("Expected status %d, got %d", http.StatusOK, resp.Status)
 		}
 		if resp.Body != expectedBody {
 			t.Errorf("Expected body %+v, got %+v", expectedBody, resp.Body)

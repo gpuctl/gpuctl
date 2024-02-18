@@ -1,8 +1,9 @@
 package database
 
 import (
+	"cmp"
 	"errors"
-	"fmt"
+	"slices"
 	"sort"
 	"sync"
 	"time"
@@ -10,10 +11,6 @@ import (
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
-
-var ErrMachineNotPresent = errors.New("adding gpu to non present machine")
-
-var ErrGpuNotPresent = errors.New("appending to non present gpu")
 
 type gpuInfo struct {
 	host    string
@@ -40,7 +37,7 @@ func (m *inMemory) AppendDataPoint(sample uplink.GPUStatSample) error {
 	defer m.mu.Unlock()
 
 	if info, pres := m.infos[sample.Uuid]; !pres {
-		return fmt.Errorf("%w: %s", ErrGpuNotPresent, sample.Uuid)
+		return ErrGpuNotPresent
 	} else {
 		m.stats[sample.Uuid] = append(m.stats[sample.Uuid], sample)
 		m.lastSeen[info.host] = time.Now().Unix()
@@ -161,6 +158,8 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 
 	var sumMemoryUtil, sumGPUUtil, sumMemoryUsed, sumFanSpeed, sumTemp, sumMemoryTemp, sumGraphicsVoltage, sumPowerDraw, sumGraphicsClock, sumMaxGraphicsClock, sumMemoryClock, sumMaxMemoryClock float64
 	var minTime int64 = samples[0].Time
+
+	// Pid -> Process
 	processesMap := make(map[uint64]uplink.GPUProcInfo)
 
 	for _, sample := range samples {
@@ -182,15 +181,21 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 		}
 
 		for _, proc := range sample.RunningProcesses {
+			// TODO: What if multiple samples have a process with the same PID?
 			processesMap[proc.Pid] = proc
 		}
 	}
 
 	n := float64(len(samples))
+
 	aggregatedProcesses := make([]uplink.GPUProcInfo, 0, len(processesMap))
 	for _, proc := range processesMap {
 		aggregatedProcesses = append(aggregatedProcesses, proc)
 	}
+	// Ensure deterministic order.
+	slices.SortFunc(aggregatedProcesses, func(a, b uplink.GPUProcInfo) int {
+		return cmp.Compare(a.Pid, b.Pid)
+	})
 
 	averagedSample := uplink.GPUStatSample{
 		Uuid:              samples[0].Uuid,
@@ -213,19 +218,12 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 	return averagedSample
 }
 
-func (m *inMemory) Drop() error {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	// Reset each map to a new, empty instance.
-	m.infos = make(map[string]gpuInfo)
-	m.stats = make(map[string][]uplink.GPUStatSample)
-	m.lastSeen = make(map[string]int64)
-
-	return nil
+func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {
+	// TODO: add actual functionality. This was just to make the code compile
+	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
 }
 
-func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {
+func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) (err error) {
 	// TODO: add actual functionality. This was just to make the code compile
 	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
 }

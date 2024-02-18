@@ -14,11 +14,18 @@ export const makeArr = <T,>(size: number, f: (i: number) => T) =>
 /**
  * Fires an asynchronous function but doesn't wait for the result
  */
-export const discard = <T,>(f: () => Promise<T>) => {
-  return () => {
-    f();
-  };
+export const fire = <T,>(f: () => Promise<T>): void => {
+  f();
 };
+
+/**
+ * Discards the result of an asynchronous function, allowing it to be turned
+ * into an ordinary function (where we don't wait for the result)
+ */
+export const discard =
+  <T,>(f: () => Promise<T>): (() => void) =>
+  () =>
+    fire(f);
 
 export const inlineLog = <T,>(x: T): T => {
   console.log(x);
@@ -27,6 +34,24 @@ export const inlineLog = <T,>(x: T): T => {
 
 export const mapNullable = <T, U>(x: T | null, f: (x: T) => U): U | null =>
   x == null ? null : f(x);
+
+export type EnumDict = { [key: string]: string | number };
+export type EnumType<E extends EnumDict> = E[Exclude<keyof E, number>];
+
+export const enumVals = <E extends EnumDict>(dict: E): EnumType<E>[] =>
+  Object.values(dict).filter(
+    (val) => typeof val === "number" || typeof dict[val] !== "number",
+  ) as EnumType<E>[];
+
+export const enumIndex = <E extends EnumDict>(
+  dict: E,
+): { [K in EnumType<E>]: number } =>
+  Object.fromEntries(enumVals(dict).map((val, i) => [val, i])) as {
+    [K in EnumType<E>]: number;
+  };
+
+export const instKeys = <T,>(xs: ((k: number) => T)[]): T[] =>
+  xs.map((x, i) => x(i));
 
 enum VTag {
   Success = "Success",
@@ -83,11 +108,15 @@ export const loading = (): Loading => ({
   tag: VTag.Loading,
 });
 
-type ValidationMotive<T, U> = {
+export const isSuccess = <T,>(x: Validation<T>): boolean =>
+  x.tag === VTag.Success;
+
+type ValidatedMotive<T, U> = {
   success: (x: T) => U;
-  loading: () => U;
   failure: (e: Error) => U;
 };
+
+type ValidationMotive<T, U> = ValidatedMotive<T, U> & { loading: () => U };
 
 /**
  * Eliminate a validation
@@ -105,6 +134,20 @@ export function validationElim<T, U>(
     }
     case VTag.Loading: {
       return motive.loading();
+    }
+  }
+}
+
+export function validatedElim<T, U>(
+  v: Validated<T>,
+  motive: ValidatedMotive<T, U>,
+) {
+  switch (v.tag) {
+    case VTag.Success: {
+      return motive.success(v.data);
+    }
+    case VTag.Failure: {
+      return motive.failure(v.error);
     }
   }
 }
