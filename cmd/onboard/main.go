@@ -42,7 +42,7 @@ func main() {
 
 	signer, err := ssh.ParsePrivateKey(key)
 	if err != nil {
-		log.Fatalf("Unable to parse key file", "keypath", *keypath, "error", err)
+		log.Fatalf("Unable to parse key file %s: %v", *keypath, err)
 	}
 
 	err = onboard.Onboard(
