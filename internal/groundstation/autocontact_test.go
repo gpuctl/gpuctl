@@ -91,6 +91,10 @@ func TestPing(t *testing.T) {
 }
 
 func TestPingHappy(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping ping test in short mode")
+	}
+
 	logger := slog.New(slog.NewTextHandler(os.Stderr, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	}))
