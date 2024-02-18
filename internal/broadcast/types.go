@@ -102,3 +102,8 @@ type ModifyInfo struct {
 	Notes       *string `json:"notes"`
 	Group       *string `json:"group"`
 }
+
+type DurationDeltas struct {
+	Hostname string `json:"hostname"`
+	Delta    int64  `json:"seconds_since"`
+}
