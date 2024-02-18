@@ -34,6 +34,6 @@ func DefaultSatelliteConfiguration() SatelliteConfiguration {
 	}
 }
 
-func GetClientConfiguration(filename string) (SatelliteConfiguration, error) {
+func GetSatellite(filename string) (SatelliteConfiguration, error) {
 	return getConfiguration[SatelliteConfiguration](filename, DefaultSatelliteConfiguration)
 }

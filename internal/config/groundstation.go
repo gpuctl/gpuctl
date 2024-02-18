@@ -59,6 +59,6 @@ func DefaultControlConfiguration() ControlConfiguration {
 	}
 }
 
-func GetServerConfiguration(filename string) (ControlConfiguration, error) {
+func GetControl(filename string) (ControlConfiguration, error) {
 	return getConfiguration[ControlConfiguration](filename, DefaultControlConfiguration)
 }

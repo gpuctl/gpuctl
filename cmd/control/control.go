@@ -20,7 +20,7 @@ func main() {
 	log := slog.Default()
 	log.Info("Starting control server")
 
-	conf, err := config.GetServerConfiguration("control.toml")
+	conf, err := config.GetControl("control.toml")
 	if err != nil {
 		fatal("failed to get config: " + err.Error())
 	}
