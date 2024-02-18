@@ -2,11 +2,13 @@ package groundstation
 
 import (
 	"errors"
+	"fmt"
 	"log/slog"
 	"os/exec"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/database"
+	"github.com/gpuctl/gpuctl/internal/onboard"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -61,6 +63,7 @@ func monitor(database database.Database, t time.Time, timespanForDeath time.Dura
 func sshRestart(remote string, l *slog.Logger, s SSHConfig) error {
 	signer := s.Signer
 	user := s.User
+	dataDir := s.BinPath
 
 	if signer == nil {
 		return InvalidSignerError
@@ -75,22 +78,16 @@ func sshRestart(remote string, l *slog.Logger, s SSHConfig) error {
 
 	client, err := ssh.Dial("tcp", remote+":22", config)
 	if err != nil {
-		l.Error("Failed to connect to %s: %v", remote, err)
+		l.Error("Failed to connect to", "remote", remote, "error", err)
 		return err
 	}
 	defer client.Close()
 
-	sess, err := client.NewSession()
-	if err != nil {
-		l.Error("Failed to create session: %v", err)
-		return err
-	}
-	defer sess.Close()
-
-	_, err = sess.Output("nohup ./data/gpuctl/satellite")
+	err = onboard.RunCommand(client, fmt.Sprintf("nohup %s/satellite >> %s/satellite.log 2>> %s/satellite.err < /dev/null &",
+		dataDir, dataDir, dataDir))
 
 	if err != nil {
-		l.Error("Failed to run command on remote: %s", err)
+		l.Error("Failed to run command on remote:", "error", err)
 		return err
 	}
 
