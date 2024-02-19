@@ -138,3 +138,7 @@ func TestNvidiaSmiInvalidDataParse(t *testing.T) {
 		}
 	}
 }
+
+func TestNvidiaCorrectNamePopulation(t *testing.T) {
+
+}

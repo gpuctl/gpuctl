@@ -36,10 +36,16 @@ func (lookup UidLookup) Get(pid uint64) (string, error) {
 	return name, nil
 }
 
-func PasswdToLookup(entries []passwd.Entry) UidLookup {
-	var lookup UidLookup
+func PasswdToLookup(entries passwd.Passwd) UidLookup {
+	lookup := make(UidLookup)
 	for _, entry := range entries {
-		lookup[entry.Uid] = entry.ParseGecos().FullName
+		// Try to assign full name to lookup, otherwise use username
+		fullname := entry.ParseGecos().FullName
+		if len(fullname) < 1 {
+			lookup[entry.Uid] = entry.Name
+		} else {
+			lookup[entry.Uid] = fullname
+		}
 	}
 	return lookup
 }
