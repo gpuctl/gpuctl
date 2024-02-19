@@ -57,7 +57,7 @@ export const SignIn = () => {
             ),
         })}
         ;
-        <Button bgColor={"white"} type="submit" onClick={attemptLogin}>
+        <Button bgColor={"white"} onClick={attemptLogin}>
           Sign In
         </Button>
       </VStack>
