@@ -43,7 +43,7 @@ func TestOnboardNoKey(t *testing.T) {
 	serv.ServeHTTP(w, req)
 
 	assert.Equal(t, 500, w.Code)
-	assert.Contains(t, w.Body.String(), "onboard: invalid config")
+	assert.Contains(t, w.Body.String(), "tunnel: invalid config")
 }
 
 func TestOnboardNoHostname(t *testing.T) {
