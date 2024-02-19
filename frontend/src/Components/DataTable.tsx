@@ -148,43 +148,43 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                         <Td key={id + 5}> {gpu.driver_ver}</Td>
                       ) : null}
                       {shownColumns.memory_total ? (
-                        <Td key={id + 6}> {gpu.memory_total}</Td>
+                        <Td key={id + 6}> {Math.round(gpu.memory_total)}</Td>
                       ) : null}
                       {shownColumns.memory_util ? (
-                        <Td key={id + 7}> {gpu.memory_util}</Td>
+                        <Td key={id + 7}> {Math.round(gpu.memory_util)}</Td>
                       ) : null}
                       {shownColumns.gpu_util ? (
-                        <Td key={id + 8}> {gpu.gpu_util}</Td>
+                        <Td key={id + 8}> {Math.round(gpu.gpu_util)}</Td>
                       ) : null}
                       {shownColumns.memory_used ? (
-                        <Td key={id + 9}> {gpu.memory_used}</Td>
+                        <Td key={id + 9}> {Math.round(gpu.memory_used)}</Td>
                       ) : null}
                       {shownColumns.fan_speed ? (
-                        <Td key={id + 10}> {gpu.fan_speed}</Td>
+                        <Td key={id + 10}> {Math.round(gpu.fan_speed)}</Td>
                       ) : null}
                       {shownColumns.gpu_temp ? (
-                        <Td key={id + 11}> {gpu.gpu_temp}</Td>
+                        <Td key={id + 11}> {Math.round(gpu.gpu_temp)}</Td>
                       ) : null}
                       {shownColumns.memory_temp ? (
-                        <Td key={id + 12}> {gpu.memory_temp}</Td>
+                        <Td key={id + 12}> {Math.round(gpu.memory_temp)}</Td>
                       ) : null}
                       {shownColumns.graphics_voltage ? (
-                        <Td key={id + 13}> {gpu.graphics_voltage}</Td>
+                        <Td key={id + 13}> {Math.round(gpu.graphics_voltage)}</Td>
                       ) : null}
                       {shownColumns.graphics_clock ? (
-                        <Td key={id + 14}> {gpu.graphics_clock}</Td>
+                        <Td key={id + 14}> {Math.round(gpu.graphics_clock)}</Td>
                       ) : null}
                       {shownColumns.graphics_clock ? (
-                        <Td key={id + 15}> {gpu.graphics_clock}</Td>
+                        <Td key={id + 15}> {Math.round(gpu.graphics_clock)}</Td>
                       ) : null}
                       {shownColumns.max_graphics_clock ? (
-                        <Td key={id + 16}> {gpu.max_graphics_clock}</Td>
+                        <Td key={id + 16}> {Math.round(gpu.max_graphics_clock)}</Td>
                       ) : null}
                       {shownColumns.memory_clock ? (
-                        <Td key={id + 17}> {gpu.memory_clock}</Td>
+                        <Td key={id + 17}> {Math.round(gpu.memory_clock)}</Td>
                       ) : null}
                       {shownColumns.max_memory_clock ? (
-                        <Td key={id + 18}> {gpu.max_memory_clock}</Td>
+                        <Td key={id + 18}> {Math.round(gpu.max_memory_clock)}</Td>
                       ) : null}
                     </Tr>
                   );
