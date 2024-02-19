@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/gpuctl/gpuctl/internal/procinfo"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
@@ -293,6 +294,7 @@ func (xml NvidiaSmiLog) ExtractGPUInfo() ([]uplink.GPUInfo, error) {
 func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 	var res []uplink.GPUStatSample
 
+	// Go over gpus in xml
 	for _, gpu := range xml.Gpu {
 		// TODO: add the new information as well
 		fanSpeed, err := parseFloatWithUnit(gpu.FanSpeed, "fan speed")
@@ -408,7 +410,7 @@ func ParseNvidiaSmi(input []byte) (NvidiaSmiLog, error) {
 }
 
 // Get the Nvidia GPU status directly from the computer using `nvidia-smi`
-func GetNvidiaGPUStatus() (NvidiaSmiLog, error) {
+func getNvidiaGPUStatus() (NvidiaSmiLog, error) {
 	output, err := exec.Command("nvidia-smi", "-q", "-x").Output()
 	if err != nil {
 		return NvidiaSmiLog{}, err
@@ -417,21 +419,42 @@ func GetNvidiaGPUStatus() (NvidiaSmiLog, error) {
 	return ParseNvidiaSmi(output)
 }
 
-// Dummy struct to act as our adapter
-type NvidiaGPUHandler struct{}
+// Struct to act as our adapter
+type NvidiaGPUHandler struct {
+	lookup procinfo.UidLookup
+}
+
+func populateNames(samples *[]uplink.GPUStatSample, lookup procinfo.UidLookup) {
+	for i, sample := range *samples {
+		for j, proc := range sample.RunningProcesses {
+			name, err := lookup.Get(proc.Pid)
+			// Intentionally leave unresolved names as zero, don't want to fail
+			if err == nil {
+				(*samples)[i].RunningProcesses[j].Name = name
+			}
+		}
+	}
+}
 
 // Run the whole pipeline of getting GPU information
 func (h NvidiaGPUHandler) GetGPUStatus() ([]uplink.GPUStatSample, error) {
-	smi, err := GetNvidiaGPUStatus()
+	smi, err := getNvidiaGPUStatus()
 	if err != nil {
 		return nil, err
 	}
-	return smi.ExtractGPUStatSample()
+
+	samples, err := smi.ExtractGPUStatSample()
+	if err != nil {
+		return nil, err
+	}
+
+	populateNames(&samples, h.lookup)
+	return samples, nil
 }
 
 // Run the whole pipeline of getting GPU information
 func (h NvidiaGPUHandler) GetGPUInformation() ([]uplink.GPUInfo, error) {
-	smi, err := GetNvidiaGPUStatus()
+	smi, err := getNvidiaGPUStatus()
 	if err != nil {
 		return nil, err
 	}

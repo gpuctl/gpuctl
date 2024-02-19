@@ -41,4 +41,5 @@ type GPUProcInfo struct {
 	Pid     uint64  `json:"pid"`
 	Name    string  `json:"name"`
 	MemUsed float64 `json:"used_memory"`
+	Owner   string  `json:"owner"`
 }
