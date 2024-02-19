@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"reflect"
 
+	_ "embed"
 	"strings"
 	"testing"
 
@@ -19,6 +20,9 @@ const (
 	faultyCallDataExtension = ".faultycall"
 	corruptedDataExtension  = ".corruptedxml"
 )
+
+//go:embed testdata/nvidia/dump_ash04.xml
+var ash04 []byte
 
 func TestNvidiaSmiXMLParsing(t *testing.T) {
 	t.Parallel()
@@ -137,8 +141,4 @@ func TestNvidiaSmiInvalidDataParse(t *testing.T) {
 			continue
 		}
 	}
-}
-
-func TestNvidiaCorrectNamePopulation(t *testing.T) {
-
 }

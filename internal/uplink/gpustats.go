@@ -41,5 +41,5 @@ type GPUProcInfo struct {
 	Pid     uint64  `json:"pid"`
 	Name    string  `json:"name"`
 	MemUsed float64 `json:"used_memory"`
-	Owner   string  `json:"owner"`
+	Owner   string  `json:"owner"` // NOTE: This is the user that owns the process
 }

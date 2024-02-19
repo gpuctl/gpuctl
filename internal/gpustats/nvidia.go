@@ -424,13 +424,13 @@ type NvidiaGPUHandler struct {
 	Lookup procinfo.UidLookup
 }
 
-func populateNames(samples *[]uplink.GPUStatSample, lookup procinfo.UidLookup) {
-	for i, sample := range *samples {
+func PopulateNames(samples []uplink.GPUStatSample, lookup procinfo.UidLookup) {
+	for i, sample := range samples {
 		for j, proc := range sample.RunningProcesses {
-			name, err := lookup.Get(proc.Pid)
+			name, err := lookup.UserForPid(proc.Pid)
 			// Intentionally leave unresolved names as zero, don't want to fail
 			if err == nil {
-				(*samples)[i].RunningProcesses[j].Name = name
+				samples[i].RunningProcesses[j].Name = name
 			}
 		}
 	}
@@ -448,7 +448,7 @@ func (h NvidiaGPUHandler) GetGPUStatus() ([]uplink.GPUStatSample, error) {
 		return nil, err
 	}
 
-	populateNames(&samples, h.Lookup)
+	PopulateNames(samples, h.Lookup)
 	return samples, nil
 }
 
