@@ -352,7 +352,7 @@ func (conn PostgresConn) LatestData() (broadcast.Workstations, error) {
 
 	// check for error whilst iterating, continuing if it's "no results"
 	err = machines.Err()
-	if err != nil && !errors.Is(sql.ErrNoRows, err) {
+	if err != nil {
 		return nil, errors.Join(err, tx.Rollback())
 	}
 
@@ -425,11 +425,10 @@ func getGpus(host string, tx *sql.Tx) ([]broadcast.GPU, error) {
 	}
 
 	err = gpus.Err()
-	if err == nil || errors.Is(err, sql.ErrNoRows) {
-		return result, nil
-	} else {
+	if err != nil {
 		return nil, err
 	}
+	return result, nil
 }
 
 // Create new machine
@@ -474,7 +473,7 @@ func (conn PostgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
 	}
 
 	err = rows.Err()
-	if err != nil && !errors.Is(sql.ErrNoRows, err) {
+	if err != nil {
 		return errors.Join(err, tx.Rollback())
 	}
 
