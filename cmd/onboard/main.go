@@ -45,13 +45,11 @@ func main() {
 		log.Fatalf("Unable to parse key file %s: %v", *keypath, err)
 	}
 
-	err = onboard.Onboard(
-		*user,
-		*remote,
-		dataDir,
-		signer,
-		ssh.InsecureIgnoreHostKey(),
-		config.SatelliteConfiguration{
+	conf := onboard.Config{
+		User:    *user,
+		DataDir: dataDir,
+		Signer:  signer,
+		RemoteConf: config.SatelliteConfiguration{
 			Groundstation: config.Groundstation{"https://", "gpuctl.perial.co.uk", 80},
 			Satellite: config.Satellite{
 				DataInterval:      int(10 * time.Second),
@@ -60,7 +58,9 @@ func main() {
 				Cache:             "/data/gpuctl/cache",
 			},
 		},
-	)
+	}
+
+	err = onboard.Onboard(*remote, conf)
 
 	if err != nil {
 		log.Fatal(err)

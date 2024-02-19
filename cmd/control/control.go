@@ -13,6 +13,7 @@ import (
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
+	"github.com/gpuctl/gpuctl/internal/onboard"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 )
 
@@ -60,14 +61,16 @@ func main() {
 		log.Warn("No SSH key given, will not be able to handle onboard requests")
 	}
 
-	authenticator := webapi.AuthenticatorFromConfig(conf)
-	wa := webapi.NewServer(db, &authenticator, webapi.OnboardConf{
-		Username:    conf.SSH.Username,
+	onboardConf := onboard.Config{
+		User:        conf.SSH.Username,
 		DataDir:     conf.SSH.DataDir,
 		RemoteConf:  conf.SSH.RemoteConf,
 		Signer:      signer,
 		KeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: Be secure here.
-	})
+	}
+
+	authenticator := webapi.AuthenticatorFromConfig(conf)
+	wa := webapi.NewServer(db, &authenticator, onboardConf)
 	waPort := config.PortToAddress(conf.Server.WAPort)
 
 	errs := make(chan (error), 1)
@@ -82,12 +85,9 @@ func main() {
 		errs <- database.DownsampleOverTime(conf.Database.DownsampleInterval, db)
 	}()
 	go func() {
-		c := groundstation.SSHConfig{
-			User:    conf.SSH.Username,
-			Signer:  signer,
-			BinPath: conf.SSH.DataDir,
-		}
-		errs <- groundstation.MonitorForDeadMachines(time.Duration(conf.Timeouts.MonitorInterval)*time.Second, db, time.Duration(conf.Timeouts.DeathTimeout)*time.Second, log, c)
+		monitorInterval := time.Duration(conf.Timeouts.MonitorInterval) * time.Second
+		deathTimeOut := time.Duration(conf.Timeouts.DeathTimeout) * time.Second
+		errs <- groundstation.MonitorForDeadMachines(monitorInterval, db, deathTimeOut, log, onboardConf)
 	}()
 
 	slog.Info("started servers")
