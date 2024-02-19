@@ -9,7 +9,7 @@ import {
   useColorModeValue,
 } from "@chakra-ui/react";
 import { WorkStationData } from "../Data";
-import { CheckCircleIcon } from "@chakra-ui/icons";
+import { TimeIcon } from "@chakra-ui/icons";
 import { cropString } from "../Utils/Utils";
 
 const LAST_SEEN_WARN_THRESH = 60 * 5;
@@ -49,11 +49,8 @@ export const WorkstationCardMin = ({
           <Heading size="lg" color={textCol}>
             {lastSeen !== undefined && lastSeen <= LAST_SEEN_WARN_THRESH ? (
               <HStack>
-                <Tooltip
-                  placement="right-start"
-                  label={`Last seen ~${Math.round(lastSeen / 60)} minutes ago!`}
-                >
-                  <CheckCircleIcon color="#25D36B" />
+                <Tooltip placement="right-start" label={`Last seen recently!`}>
+                  <TimeIcon color="#25D36B" />
                 </Tooltip>
                 <Box>{" " + cropString(name, 15)}</Box>
               </HStack>
