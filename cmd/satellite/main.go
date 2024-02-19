@@ -185,8 +185,11 @@ func setGPUHandler(log *slog.Logger, isFakeGPUs bool) gpustats.GPUDataSource {
 		return gpustats.FakeGPU{}
 	} else {
 		passwdfile, err := os.Open("/etc/passwd")
-		passwd, err1 := passwd.Parse(passwdfile)
-		err = errors.Join(err, err1)
+		if err != nil {
+			log.Error("Could not open passwd file, will not be able to report users' names", "err", err)
+			return gpustats.NvidiaGPUHandler{}
+		}
+		passwd, err := passwd.Parse(passwdfile)
 		if err != nil {
 			log.Error("Could not read passwd file, will not be able to report users' names", "err", err)
 			return gpustats.NvidiaGPUHandler{}
