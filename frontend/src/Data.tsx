@@ -35,6 +35,11 @@ export type GPUStats = {
   max_memory_clock: number;
 };
 
+export type DurationDeltas = {
+  hostname: string;
+  seconds_since: number;
+};
+
 export const EXAMPLE_DATA_1: WorkStationGroup[] = [
   {
     name: "Shared",

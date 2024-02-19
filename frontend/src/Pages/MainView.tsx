@@ -1,6 +1,6 @@
 import { Box, Heading, VStack } from "@chakra-ui/react";
 import { API_URL, DEFAULT_VIEW, REFRESH_INTERVAL, ViewPage } from "../App";
-import { WorkStationGroup } from "../Data";
+import { DurationDeltas, WorkStationGroup } from "../Data";
 import { Validated, Validation, success, validationElim } from "../Utils/Utils";
 import { ColumnGrid } from "../Components/ColumnGrid";
 import { TableTab } from "../Components/DataTable";
@@ -13,6 +13,7 @@ import { AdminPanel } from "./AdminPanel";
 import { Navigate } from "react-router-dom";
 
 const API_ALL_STATS_PATH = "/stats/all";
+const API_LAST_SEEN_PATH = "/stats/since_last_seen";
 
 // Currently does not attempt to do any validation of the returned GPU stats,
 // or indeed handle errors that might be thrown by the Promises
@@ -30,7 +31,13 @@ const sortData = (gs: WorkStationGroup[]) =>
     ),
   }));
 
-const cardView = (stats: WorkStationGroup[]) => (
+const retrieveLastSeen: () => Promise<Validated<DurationDeltas[]>> = async () =>
+  success(await (await fetch(API_URL + API_LAST_SEEN_PATH)).json());
+
+const cardView = (
+  stats: WorkStationGroup[],
+  lastSeen: Record<string, number>,
+) => (
   <VStack spacing={20}>
     {stats.map((l, i) => (
       <Box
@@ -76,13 +83,22 @@ const adminView = (stats: WorkStationGroup[]) => (
 
 const displayPartial = (
   stats: Validation<WorkStationGroup[]>,
-  cont: (gs: WorkStationGroup[]) => JSX.Element,
-): JSX.Element =>
-  validationElim(stats, {
-    success: (l: WorkStationGroup[]) => cont(l),
+  lastSeen: Validation<DurationDeltas[]>,
+  cont: (gs: WorkStationGroup[], ls: Record<string, number>) => JSX.Element,
+): JSX.Element => {
+  const ls = Object.fromEntries(
+    validationElim(lastSeen, {
+      success: (ls) => ls,
+      failure: () => [],
+      loading: () => [],
+    }).map(({ hostname, seconds_since }) => [hostname, seconds_since]),
+  );
+  return validationElim(stats, {
+    success: (gs: WorkStationGroup[]) => cont(gs, ls),
     loading: () => <p>Retrieving data from API server...</p>,
     failure: (_) => <p>Something has gone wrong!</p>,
   });
+};
 
 export const MainView = ({ page }: { page: ViewPage }) => {
   const { isSignedIn } = useAuth();
@@ -94,16 +110,21 @@ export const MainView = ({ page }: { page: ViewPage }) => {
 
 export const ConfirmedMainView = ({ initial }: { initial: ViewPage }) => {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
+  const [lastSeen, updateLastSeen] = useJarJar(retrieveLastSeen);
 
   useOnce(() => {
     setInterval(updateStats, REFRESH_INTERVAL);
   });
 
+  useOnce(() => {
+    setInterval(updateLastSeen, REFRESH_INTERVAL);
+  });
+
   return (
     <Navbar initial={initial}>
-      {displayPartial(stats, cardView)}
-      {displayPartial(stats, tableView)}
-      {displayPartial(stats, (s) => adminView(s))}
+      {displayPartial(stats, lastSeen, cardView)}
+      {displayPartial(stats, lastSeen, tableView)}
+      {displayPartial(stats, lastSeen, adminView)}
     </Navbar>
   );
 };

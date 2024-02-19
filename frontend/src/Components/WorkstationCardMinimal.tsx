@@ -3,10 +3,10 @@ import { WorkStationData } from "../Data";
 
 export const WorkstationCardMin = ({
   width,
-  data: { name, gpus },
+  data: { name, gpus, lastSeen },
 }: {
   width: number;
-  data: WorkStationData;
+  data: WorkStationData & { lastSeen: number | undefined };
 }) => {
   const textCol = useColorModeValue("black", "white");
   return (
