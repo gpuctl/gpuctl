@@ -9,7 +9,7 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"github.com/gpuctl/gpuctl/internal/authentication"
-	"github.com/gpuctl/gpuctl/internal/onboard"
+	"github.com/gpuctl/gpuctl/internal/tunnel"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -31,7 +31,7 @@ var emptyAuthCookie = &http.Cookie{Name: authentication.TokenCookieName, Value: 
 func TestOnboardNoKey(t *testing.T) {
 	t.Parallel()
 
-	serv := webapi.NewServer(nil, alwaysAuth{}, onboard.Config{
+	serv := webapi.NewServer(nil, alwaysAuth{}, tunnel.Config{
 		DataDir: "/foo",
 		User:    "JFK",
 	})
@@ -52,7 +52,7 @@ func TestOnboardNoHostname(t *testing.T) {
 	sign, err := ssh.ParsePrivateKey([]byte(demoPrivKey))
 	require.NoError(t, err)
 
-	serv := webapi.NewServer(nil, alwaysAuth{}, onboard.Config{
+	serv := webapi.NewServer(nil, alwaysAuth{}, tunnel.Config{
 		DataDir: "/foo",
 		User:    "root",
 		Signer:  sign,

@@ -7,7 +7,7 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/femto"
-	"github.com/gpuctl/gpuctl/internal/onboard"
+	"github.com/gpuctl/gpuctl/internal/tunnel"
 	"github.com/gpuctl/gpuctl/internal/types"
 )
 
@@ -21,7 +21,7 @@ func (a *Api) onboard(data broadcast.OnboardReq, _ *http.Request, log *slog.Logg
 		return nil, errors.New("hostname cannot be empty")
 	}
 
-	err := onboard.Onboard(hostname, conf)
+	err := tunnel.Onboard(hostname, conf)
 	if err != nil {
 		return nil, err
 	}
@@ -41,5 +41,5 @@ func (a *Api) deboard(data broadcast.RemoveMachineInfo,
 		return errors.New("hostname cannot be empty")
 	}
 
-	return onboard.Deboard(hostname, conf)
+	return tunnel.Deboard(hostname, conf)
 }

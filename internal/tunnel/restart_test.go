@@ -1,4 +1,4 @@
-package onboard_test
+package tunnel_test
 
 import (
 	"crypto/rand"
@@ -9,18 +9,18 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/gpuctl/gpuctl/internal/onboard"
+	"github.com/gpuctl/gpuctl/internal/tunnel"
 )
 
 func TestSSHRestart_UnreadableKey(t *testing.T) {
 	t.Parallel()
 
 	// Setup
-	sshConfig := onboard.Config{User: "testuser"}
+	sshConfig := tunnel.Config{User: "testuser"}
 
-	err := onboard.RestartSatellite("localhost", sshConfig)
+	err := tunnel.RestartSatellite("localhost", sshConfig)
 
-	if !errors.Is(err, onboard.InvalidConfigError) {
+	if !errors.Is(err, tunnel.InvalidConfigError) {
 		t.Errorf("expected InvalidConfigError, but got %v", err)
 	}
 }
@@ -36,13 +36,13 @@ func TestSSHRestart_ValidKey(t *testing.T) {
 		t.Fatalf("Failed to create SSH signer: %v", err)
 	}
 
-	sshConfig := onboard.Config{
+	sshConfig := tunnel.Config{
 		User:        "dummyUser",
 		Signer:      signer,
 		KeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	err = onboard.RestartSatellite("invalid.remote.address", sshConfig)
+	err = tunnel.RestartSatellite("invalid.remote.address", sshConfig)
 
 	var opError *net.OpError
 	if errors.As(err, &opError) && opError.Err != nil {

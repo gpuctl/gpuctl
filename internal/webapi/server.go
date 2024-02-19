@@ -10,7 +10,7 @@ import (
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/femto"
-	"github.com/gpuctl/gpuctl/internal/onboard"
+	"github.com/gpuctl/gpuctl/internal/tunnel"
 	"github.com/gpuctl/gpuctl/internal/types"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
@@ -21,7 +21,7 @@ type Server struct {
 }
 type Api struct {
 	DB          database.Database
-	onboardConf onboard.Config
+	onboardConf tunnel.Config
 }
 
 type APIAuthCredientals struct {
@@ -29,7 +29,7 @@ type APIAuthCredientals struct {
 	Password string
 }
 
-func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], onboardConf onboard.Config) *Server {
+func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], onboardConf tunnel.Config) *Server {
 	mux := new(femto.Femto)
 	api := &Api{db, onboardConf}
 

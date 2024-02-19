@@ -13,7 +13,7 @@ import (
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/groundstation"
-	"github.com/gpuctl/gpuctl/internal/onboard"
+	"github.com/gpuctl/gpuctl/internal/tunnel"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 )
 
@@ -61,7 +61,7 @@ func main() {
 		log.Warn("No SSH key given, will not be able to handle onboard requests")
 	}
 
-	onboardConf := onboard.Config{
+	onboardConf := tunnel.Config{
 		User:        conf.SSH.Username,
 		DataDir:     conf.SSH.DataDir,
 		RemoteConf:  conf.SSH.RemoteConf,

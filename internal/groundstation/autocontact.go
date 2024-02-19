@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/database"
-	"github.com/gpuctl/gpuctl/internal/onboard"
+	"github.com/gpuctl/gpuctl/internal/tunnel"
 )
 
-func MonitorForDeadMachines(interval time.Duration, database database.Database, timespanForDeath time.Duration, l *slog.Logger, s onboard.Config) error {
+func MonitorForDeadMachines(interval time.Duration, database database.Database, timespanForDeath time.Duration, l *slog.Logger, s tunnel.Config) error {
 	downsampleTicker := time.NewTicker(interval)
 
 	for t := range downsampleTicker.C {
@@ -23,7 +23,7 @@ func MonitorForDeadMachines(interval time.Duration, database database.Database, 
 	return nil
 }
 
-func monitor(database database.Database, t time.Time, timespanForDeath time.Duration, l *slog.Logger, s onboard.Config) error {
+func monitor(database database.Database, t time.Time, timespanForDeath time.Duration, l *slog.Logger, s tunnel.Config) error {
 	lastSeens, err := database.LastSeen()
 
 	if err != nil {
@@ -35,7 +35,7 @@ func monitor(database database.Database, t time.Time, timespanForDeath time.Dura
 
 		if seen.LastSeen < t.Add(-1*timespanForDeath*time.Second).Unix() {
 			if ping(seen.Hostname, l) {
-				err := onboard.RestartSatellite(seen.Hostname, s)
+				err := tunnel.RestartSatellite(seen.Hostname, s)
 
 				if err != nil {
 					return err
