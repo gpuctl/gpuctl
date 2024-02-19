@@ -421,7 +421,7 @@ func getNvidiaGPUStatus() (NvidiaSmiLog, error) {
 
 // Struct to act as our adapter
 type NvidiaGPUHandler struct {
-	lookup procinfo.UidLookup
+	Lookup procinfo.UidLookup
 }
 
 func populateNames(samples *[]uplink.GPUStatSample, lookup procinfo.UidLookup) {
@@ -448,7 +448,7 @@ func (h NvidiaGPUHandler) GetGPUStatus() ([]uplink.GPUStatSample, error) {
 		return nil, err
 	}
 
-	populateNames(&samples, h.lookup)
+	populateNames(&samples, h.Lookup)
 	return samples, nil
 }
 
