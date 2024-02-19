@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log/slog"
 	//	"reflect"
 	"strings"
@@ -47,15 +48,15 @@ func createTables(db *sql.DB) error {
 	// into a Go variable
 
 	var err error
-	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Machines (
+	_, err = db.Exec(fmt.Sprintf(`CREATE TABLE IF NOT EXISTS Machines (
 		Hostname text NOT NULL,
-		GroupName text,
+		GroupName text NOT NULL DEFAULT '%s',
 		CPU text,
 		Motherboard text,
 		Notes text,
 		LastSeen timestamp,
 		PRIMARY KEY (Hostname)
-	);`)
+	);`, DefaultGroup))
 
 	if err != nil {
 		return err
@@ -328,7 +329,7 @@ func (conn PostgresConn) LatestData() (broadcast.Workstations, error) {
 	}
 
 	for machines.Next() {
-		var groupName *string
+		var groupName string
 		var machine broadcast.Workstation
 		var lastSeen time.Time
 
@@ -339,15 +340,14 @@ func (conn PostgresConn) LatestData() (broadcast.Workstations, error) {
 		}
 
 		// coalesce null and empty group names to default
-		if groupName == nil || strings.TrimSpace(*groupName) == "" {
-			fallback := DefaultGroup
-			groupName = &fallback
+		if strings.TrimSpace(groupName) == "" {
+			groupName = DefaultGroup
 		}
 
 		machine.LastSeen = time.Since(lastSeen)
 		machine.Gpus = nil
 
-		groups[*groupName] = append(groups[*groupName], machine)
+		groups[groupName] = append(groups[groupName], machine)
 	}
 
 	// check for error whilst iterating, continuing if it's "no results"
