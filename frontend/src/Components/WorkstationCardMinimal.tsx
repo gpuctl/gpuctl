@@ -3,6 +3,7 @@ import {
   AlertIcon,
   Box,
   Center,
+  HStack,
   Heading,
   Tooltip,
   useColorModeValue,
@@ -47,17 +48,17 @@ export const WorkstationCardMin = ({
         <Box padding={2}>
           <Heading size="lg" color={textCol}>
             {lastSeen !== undefined && lastSeen <= LAST_SEEN_WARN_THRESH ? (
-              <>
+              <HStack>
                 <Tooltip
                   placement="right-start"
                   label={`Last seen ~${Math.round(lastSeen / 60)} minutes ago!`}
                 >
                   <CheckCircleIcon color="#25D36B" />
                 </Tooltip>
-                {cropString(name, 15)}
-              </>
+                <Box>{" " + cropString(name, 15)}</Box>
+              </HStack>
             ) : (
-              <p>{cropString(name, 17)}</p>
+              <>{cropString(name, 17)}</>
             )}
           </Heading>
           {gpus.map((s, i) => {
