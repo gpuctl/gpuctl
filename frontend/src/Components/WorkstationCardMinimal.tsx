@@ -13,6 +13,7 @@ import { TimeIcon } from "@chakra-ui/icons";
 import { cropString } from "../Utils/Utils";
 
 const LAST_SEEN_WARN_THRESH = 60 * 5;
+const GREEN = "#25D36B";
 
 export const WorkstationCardMin = ({
   width,
@@ -49,8 +50,8 @@ export const WorkstationCardMin = ({
           <Heading size="lg" color={textCol}>
             {lastSeen !== undefined && lastSeen <= LAST_SEEN_WARN_THRESH ? (
               <HStack>
-                <Tooltip placement="right-start" label={`Last seen recently!`}>
-                  <TimeIcon color="#25D36B" />
+                <Tooltip placement="right-start" label={`Seen recently!`}>
+                  <TimeIcon color={GREEN} />
                 </Tooltip>
                 <Box>{" " + cropString(name, 15)}</Box>
               </HStack>
