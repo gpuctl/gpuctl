@@ -4,9 +4,12 @@ import {
   Box,
   Center,
   Heading,
+  Tooltip,
   useColorModeValue,
 } from "@chakra-ui/react";
 import { WorkStationData } from "../Data";
+import { CheckCircleIcon } from "@chakra-ui/icons";
+import { cropString } from "../Utils/Utils";
 
 const LAST_SEEN_WARN_THRESH = 60 * 5;
 
@@ -26,18 +29,36 @@ export const WorkstationCardMin = ({
         rounded={"md"}
         bg={useColorModeValue("white", "gray.900")}
       >
-        <Alert
-          roundedTopLeft="md"
-          roundedTopRight="md"
-          fontSize={11}
-          status="warning"
-        >
-          <AlertIcon></AlertIcon>
-          {`Last update from this machine was >${Math.floor(529 / 60)} minutes ago!`}
-        </Alert>
+        {lastSeen !== undefined && lastSeen > LAST_SEEN_WARN_THRESH ? (
+          <Alert
+            roundedTopLeft="md"
+            roundedTopRight="md"
+            textAlign="center"
+            status="warning"
+          >
+            <AlertIcon></AlertIcon>
+            {lastSeen === undefined
+              ? "Missing provenance data!"
+              : `Last seen over ${Math.floor(lastSeen / 60)} minutes ago!`}
+          </Alert>
+        ) : (
+          <></>
+        )}
         <Box padding={2}>
           <Heading size="lg" color={textCol}>
-            {name}
+            {lastSeen !== undefined && lastSeen <= LAST_SEEN_WARN_THRESH ? (
+              <>
+                <Tooltip
+                  placement="right-start"
+                  label={`Last seen ~${Math.round(lastSeen / 60)} minutes ago!`}
+                >
+                  <CheckCircleIcon color="#25D36B" />
+                </Tooltip>
+                {cropString(name, 15)}
+              </>
+            ) : (
+              <p>{cropString(name, 17)}</p>
+            )}
           </Heading>
           {gpus.map((s, i) => {
             return (
