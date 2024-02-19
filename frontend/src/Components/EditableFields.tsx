@@ -1,4 +1,11 @@
-import { Editable, EditableInput, EditablePreview, Td } from "@chakra-ui/react";
+import {
+  Editable,
+  EditableInput,
+  EditablePreview,
+  IconButton,
+  Td,
+} from "@chakra-ui/react";
+import { EditIcon } from "@chakra-ui/icons";
 import { useModifyInfo, FieldKey } from "../Hooks/Hooks";
 import { WorkStationData } from "../Data";
 import { GS } from "../Pages/AdminPanel";
@@ -31,6 +38,25 @@ export const EditableField = ({
     });
   };
 
+  const EditableButton = ({
+    isEditing,
+    onEdit,
+  }: {
+    isEditing: boolean;
+    onEdit: () => void;
+  }) => {
+    return isEditing ? (
+      <> </>
+    ) : (
+      <IconButton
+        size="sm"
+        icon={<EditIcon />}
+        aria-label="edit"
+        onClick={onEdit}
+      />
+    );
+  };
+
   // Given we now are not using GroupSelect, there is a bit of code duplication
   // here, but be careful if you want to refactor it! 'group' (unlike the other
   // fields) is NOT stored in the workstation JSON!
@@ -49,8 +75,13 @@ export const EditableField = ({
             handleSubmit(a);
           }}
         >
-          <EditablePreview />
-          <EditableInput />
+          {(props) => (
+            <>
+              <EditablePreview />
+              <EditableInput />
+              <EditableButton {...props} />
+            </>
+          )}
         </Editable>
       ) : (
         <Editable
@@ -65,8 +96,13 @@ export const EditableField = ({
             handleSubmit(a);
           }}
         >
-          <EditablePreview />
-          <EditableInput />
+          {(props) => (
+            <>
+              <EditablePreview />
+              <EditableInput />
+              <EditableButton {...props} />
+            </>
+          )}
         </Editable>
       )}
     </Td>
