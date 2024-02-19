@@ -61,7 +61,7 @@ func main() {
 		log.Warn("No SSH key given, will not be able to handle onboard requests")
 	}
 
-	onboardConf := tunnel.Config{
+	tunnelConf := tunnel.Config{
 		User:        conf.SSH.Username,
 		DataDir:     conf.SSH.DataDir,
 		RemoteConf:  conf.SSH.RemoteConf,
@@ -70,7 +70,7 @@ func main() {
 	}
 
 	authenticator := webapi.AuthenticatorFromConfig(conf)
-	wa := webapi.NewServer(db, &authenticator, onboardConf)
+	wa := webapi.NewServer(db, &authenticator, tunnelConf)
 	waPort := config.PortToAddress(conf.Server.WAPort)
 
 	errs := make(chan (error), 1)
@@ -87,7 +87,7 @@ func main() {
 	go func() {
 		monitorInterval := time.Duration(conf.Timeouts.MonitorInterval) * time.Second
 		deathTimeOut := time.Duration(conf.Timeouts.DeathTimeout) * time.Second
-		errs <- groundstation.MonitorForDeadMachines(monitorInterval, db, deathTimeOut, log, onboardConf)
+		errs <- groundstation.MonitorForDeadMachines(monitorInterval, db, deathTimeOut, log, tunnelConf)
 	}()
 
 	slog.Info("started servers")

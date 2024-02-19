@@ -14,7 +14,7 @@ import (
 func (a *Api) onboard(data broadcast.OnboardReq, _ *http.Request, log *slog.Logger) (*femto.EmptyBodyResponse, error) {
 
 	hostname := data.Hostname
-	conf := a.onboardConf
+	conf := a.tunnelConf
 
 	if hostname == "" {
 		// TODO: return 400 bad request
@@ -34,7 +34,7 @@ func (a *Api) deboard(data broadcast.RemoveMachineInfo,
 	log *slog.Logger) error {
 	hostname := data.Hostname
 
-	conf := a.onboardConf
+	conf := a.tunnelConf
 
 	if hostname == "" {
 		// TODO: return 400 bad request
