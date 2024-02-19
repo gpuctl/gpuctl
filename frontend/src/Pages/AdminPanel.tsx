@@ -17,7 +17,7 @@ import { WorkStationGroup } from "../Data";
 import { STATS_PATH } from "../Config/Paths";
 import { Box, HStack, Heading, VStack } from "@chakra-ui/layout";
 import { Button } from "@chakra-ui/button";
-import React, { PropsWithChildren, useState } from "react";
+import { PropsWithChildren, useState } from "react";
 import {
   AutoComplete,
   AutoCompleteInput,
