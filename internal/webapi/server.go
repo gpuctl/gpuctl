@@ -51,18 +51,21 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
 	femto.OnGet(mux, "/api/stats/since_last_seen", api.durationDelta)
 
-	// Set up authentication endpoint
+	// Set up authentication and logging-out endpoint
 	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 		return api.Authenticate(auth, packet, r, l)
 	})
+	femto.OnGet(mux, "/api/admin/logout", func(r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+		return api.LogOut(auth, r, l)
+	})
 
 	// Authenticated API endpoints
-	femto.OnPost(mux, "/api/admin/add_workstation", api.addMachine)
-	femto.OnPost(mux, "/api/admin/stats/modify", api.modifyMachineInfo)
-	femto.OnPost(mux, "/api/admin/rm_workstation", api.removeMachine)
-	femto.OnGet(mux, "/api/admin/confirm", func(r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
-		return api.confirmAdmin(auth, r, l)
-	})
+	femto.OnPost(mux, "/api/admin/add_workstation", authentication.AuthWrapPost(auth, api.addMachine))
+	femto.OnPost(mux, "/api/admin/stats/modify", authentication.AuthWrapPost(auth, api.modifyMachineInfo))
+	femto.OnPost(mux, "/api/admin/rm_workstation", authentication.AuthWrapPost(auth, api.removeMachine))
+	femto.OnGet(mux, "/api/admin/confirm", authentication.AuthWrapGet(auth, func(r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
+		return api.ConfirmAdmin(auth, r, l)
+	}))
 
 	return &Server{mux, api}
 }
@@ -133,6 +136,15 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 	return &femto.EmptyBodyResponse{Cookies: cookies, Status: http.StatusAccepted}, nil
 }
 
+func (a *Api) LogOut(auth authentication.Authenticator[APIAuthCredientals], r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+	token, err := r.Cookie(authentication.TokenCookieName)
+	if err != nil {
+		return nil, err
+	}
+	auth.RevokeToken(token.Value)
+	return femto.Ok(types.Unit{})
+}
+
 // TODO
 func (a *Api) addMachine(machine broadcast.NewMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	l.Info("Tried to create machine", "host", machine.Hostname, "group", machine.Group)
@@ -166,9 +178,8 @@ type UsernameReminder struct {
 	Username string `json:"username"`
 }
 
-func (a *Api) confirmAdmin(auth authentication.Authenticator[APIAuthCredientals], r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
+func (a *Api) ConfirmAdmin(auth authentication.Authenticator[APIAuthCredientals], r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
 	c, err := r.Cookie(authentication.TokenCookieName)
-	slog.Info("TEST", "Cookie", c, "Err", err)
 	if err != nil {
 		return &femto.Response[UsernameReminder]{Status: http.StatusUnauthorized}, nil
 	}
