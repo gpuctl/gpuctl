@@ -169,7 +169,10 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                         <Td key={id + 12}> {Math.round(gpu.memory_temp)}</Td>
                       ) : null}
                       {shownColumns.graphics_voltage ? (
-                        <Td key={id + 13}> {Math.round(gpu.graphics_voltage)}</Td>
+                        <Td key={id + 13}>
+                          {" "}
+                          {Math.round(gpu.graphics_voltage)}
+                        </Td>
                       ) : null}
                       {shownColumns.graphics_clock ? (
                         <Td key={id + 14}> {Math.round(gpu.graphics_clock)}</Td>
@@ -178,13 +181,19 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                         <Td key={id + 15}> {Math.round(gpu.graphics_clock)}</Td>
                       ) : null}
                       {shownColumns.max_graphics_clock ? (
-                        <Td key={id + 16}> {Math.round(gpu.max_graphics_clock)}</Td>
+                        <Td key={id + 16}>
+                          {" "}
+                          {Math.round(gpu.max_graphics_clock)}
+                        </Td>
                       ) : null}
                       {shownColumns.memory_clock ? (
                         <Td key={id + 17}> {Math.round(gpu.memory_clock)}</Td>
                       ) : null}
                       {shownColumns.max_memory_clock ? (
-                        <Td key={id + 18}> {Math.round(gpu.max_memory_clock)}</Td>
+                        <Td key={id + 18}>
+                          {" "}
+                          {Math.round(gpu.max_memory_clock)}
+                        </Td>
                       ) : null}
                     </Tr>
                   );
