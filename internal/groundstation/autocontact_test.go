@@ -9,7 +9,7 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/database"
-	"github.com/gpuctl/gpuctl/internal/onboard"
+	"github.com/gpuctl/gpuctl/internal/tunnel"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
@@ -88,7 +88,7 @@ func TestMonitorWithErrorDB(t *testing.T) {
 	db := &ErrorDB{}
 	logger := slog.Default()
 
-	sshConfig := onboard.Config{User: "testuser"}
+	sshConfig := tunnel.Config{User: "testuser"}
 
 	currentTime := time.Now()
 	timespanForDeath := 24 * time.Hour
@@ -103,7 +103,7 @@ func TestMonitor(t *testing.T) {
 	db := database.InMemory()
 	logger := slog.Default()
 
-	sshConfig := onboard.Config{User: "testuser"}
+	sshConfig := tunnel.Config{User: "testuser"}
 
 	currentTime := time.Now()
 	db.UpdateLastSeen("machineRecent", currentTime.Unix())                 // This machine should not trigger any action

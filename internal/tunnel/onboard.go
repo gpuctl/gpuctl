@@ -1,4 +1,4 @@
-package onboard
+package tunnel
 
 import (
 	"bytes"
@@ -14,7 +14,7 @@ import (
 	"github.com/gpuctl/gpuctl/internal/config"
 )
 
-var InvalidConfigError = errors.New("onboard: invalid config")
+var InvalidConfigError = errors.New("tunnel: invalid config")
 
 type Config struct {
 	// The login to run the satellite on other machines as

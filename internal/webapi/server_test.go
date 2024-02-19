@@ -11,7 +11,7 @@ import (
 	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/database"
-	"github.com/gpuctl/gpuctl/internal/onboard"
+	"github.com/gpuctl/gpuctl/internal/tunnel"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 	"github.com/stretchr/testify/assert"
@@ -217,7 +217,7 @@ func TestServerEndpoints(t *testing.T) {
 		CurrentTokens: map[authentication.AuthToken]bool{"example_token": true},
 	}
 
-	server := webapi.NewServer(mockDB, &auth, onboard.Config{})
+	server := webapi.NewServer(mockDB, &auth, tunnel.Config{})
 
 	tests := []struct {
 		name           string
