@@ -6,7 +6,7 @@ import {
   AutoCompleteItem,
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
-import { useAddMachine } from "../Hooks/hooks";
+import { useAddMachine } from "../Hooks/Hooks";
 import { WorkStationGroup } from "../Data";
 
 type AddMachineFormProps = {

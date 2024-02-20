@@ -40,12 +40,12 @@ export type ModifyData = {
 export const useModifyInfo = () => {
   const { useAuthFetch } = useAuth();
   const [, addMachineAuth] = useAuthFetch(STATS_PATH + "/modify");
-  return (hostname: string, mod: ModifyData) =>
+  return (hostname: string, modification: ModifyData) =>
     addMachineAuth({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ hostname, ...mod }),
+      body: JSON.stringify({ hostname, ...modification }),
     });
 };

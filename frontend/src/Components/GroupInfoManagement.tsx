@@ -12,7 +12,7 @@ import {
   Tr,
 } from "@chakra-ui/react";
 import { EditableField } from "./EditableFields";
-import { useRemoveMachine } from "../Hooks/hooks";
+import { useRemoveMachine } from "../Hooks/Hooks";
 import { WorkStationGroup } from "../Data";
 
 type GroupInfoManagementProps = {
