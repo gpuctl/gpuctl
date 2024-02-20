@@ -40,4 +40,4 @@ export const EditableField = ({
       </Editable>
     </Td>
   );
-}
+};
