@@ -8,11 +8,11 @@ type EditableFieldProps = {
   placeholder: string;
 };
 
-export function EditableField({
+export const EditableField = ({
   workstation,
   fieldKey,
   placeholder,
-}: EditableFieldProps) {
+}: EditableFieldProps) => {
   const pickCol = (value: string) => (value ? "gray.600" : "gray.300");
   const modifyInfo = useModifyInfo();
 
