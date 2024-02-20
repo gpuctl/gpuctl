@@ -2,10 +2,11 @@ package procinfo
 
 import (
 	"errors"
-	"github.com/gpuctl/gpuctl/internal/passwd"
-	"os"
 	"strconv"
-	"syscall"
+
+	"golang.org/x/sys/unix"
+
+	"github.com/gpuctl/gpuctl/internal/passwd"
 )
 
 var (
@@ -15,20 +16,15 @@ var (
 type UidLookup map[uint32]string
 
 func (lookup UidLookup) UserForPid(pid uint64) (string, error) {
-
-	// get uid
+	// get uid for running process, from procFS
 	filename := "/proc/" + strconv.FormatUint(pid, 10)
-	statcall, err := os.Stat(filename)
+	var stat unix.Stat_t
+	err := unix.Stat(filename, &stat)
 	if err != nil {
 		return "", err
 	}
-	stat, ok := statcall.Sys().(*syscall.Stat_t)
-	if !ok {
-		return "", err
-	}
-	uid := uint32(stat.Uid)
 
-	name := lookup[uid]
+	name := lookup[stat.Uid]
 	if name == "" {
 		return "", ErrorNoUserFound
 	}
