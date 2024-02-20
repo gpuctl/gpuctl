@@ -27,11 +27,11 @@ func (edb *ErrorDB) UpdateGPUContext(host string, info uplink.GPUInfo) error {
 	return nil
 }
 
-func (edb *ErrorDB) LatestData() ([]uplink.GpuStatsUpload, error) {
+func (edb *ErrorDB) LatestData() (broadcast.Workstations, error) {
 	return nil, nil
 }
 
-func (edb *ErrorDB) LastSeen() ([]uplink.WorkstationSeen, error) {
+func (edb *ErrorDB) LastSeen() ([]broadcast.WorkstationSeen, error) {
 	return nil, errors.New("database error")
 }
 

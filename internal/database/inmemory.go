@@ -3,8 +3,10 @@ package database
 import (
 	"cmp"
 	"errors"
+	"reflect"
 	"slices"
 	"sort"
+	"strings"
 	"sync"
 	"time"
 
@@ -18,14 +20,16 @@ type gpuInfo struct {
 }
 
 type inMemory struct {
-	infos    map[string]gpuInfo                // maps from uuids to context info
-	stats    map[string][]uplink.GPUStatSample // maps from uuids to slices of stats, allowing tracking of multiple datapoints
-	lastSeen map[string]int64                  // map from hostname to last seen time
-	mu       sync.Mutex                        // mutex
+	machines map[string]broadcast.ModifyMachine // maps from hostname to machine info
+	infos    map[string]gpuInfo                 // maps from uuids to context info
+	stats    map[string][]uplink.GPUStatSample  // maps from uuids to slices of stats, allowing tracking of multiple datapoints
+	lastSeen map[string]int64                   // map from hostname to last seen time
+	mu       sync.Mutex                         // mutex
 }
 
 func InMemory() Database {
 	return &inMemory{
+		machines: make(map[string]broadcast.ModifyMachine),
 		infos:    make(map[string]gpuInfo),
 		stats:    make(map[string][]uplink.GPUStatSample),
 		lastSeen: make(map[string]int64),
@@ -61,37 +65,69 @@ func (m *inMemory) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
 	return nil
 }
 
-func (m *inMemory) LatestData() ([]uplink.GpuStatsUpload, error) {
+func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	var uploads []uplink.GpuStatsUpload
-	grouped := make(map[string]*uplink.GpuStatsUpload)
-
-	for uuid, samples := range m.stats {
-		if len(samples) == 0 {
-			continue
+	// make mapping from machine->gpu, then make group heirarchy
+	var gpus = make(map[string][]broadcast.GPU)
+	for uuid, info := range m.infos {
+		gpu := broadcast.GPU{
+			Uuid:          uuid,
+			Name:          info.context.Name,
+			Brand:         info.context.Brand,
+			DriverVersion: info.context.DriverVersion,
+			MemoryTotal:   info.context.MemoryTotal,
 		}
-		info := m.infos[uuid]
 
-		if _, exists := grouped[info.host]; !exists {
-			grouped[info.host] = &uplink.GpuStatsUpload{
-				Hostname: info.host,
-				GPUInfos: []uplink.GPUInfo{info.context},
-				Stats:    []uplink.GPUStatSample{samples[len(samples)-1]}, // Latest sample
+		// most recent stat is at the end
+		stats := m.stats[uuid]
+		stat := stats[len(stats)-1]
+		// reflect on stat to get all the fields
+		for _, field := range reflect.VisibleFields(reflect.TypeOf(stat)) {
+			// uuid already set, skip
+			if field.Name == "Uuid" {
+				continue
 			}
-		} else {
-			upload := grouped[info.host]
-			upload.GPUInfos = append(upload.GPUInfos, info.context)
-			upload.Stats = append(upload.Stats, samples[len(samples)-1])
+
+			// we need a reference to gpu, not a copy so it's settable
+			target := reflect.ValueOf(&gpu).Elem().FieldByName(field.Name)
+			if target.CanSet() {
+				target.Set(reflect.ValueOf(stat).FieldByIndex(field.Index))
+			}
 		}
+
+		gpus[info.host] = append(gpus[info.host], gpu)
 	}
 
-	for _, upload := range grouped {
-		uploads = append(uploads, *upload)
+	var groups = make(map[string][]broadcast.Workstation)
+
+	for machine, info := range m.machines {
+		group := info.Group
+		if group == nil || strings.TrimSpace(*group) == "" {
+			fallback := DefaultGroup
+			group = &fallback
+		}
+
+		var workstation = broadcast.Workstation{
+			Name:        machine,
+			CPU:         info.CPU,
+			Motherboard: info.Motherboard,
+			Notes:       info.Notes,
+			LastSeen:    time.Since(time.Unix(m.lastSeen[machine], 0)),
+			Gpus:        gpus[machine],
+		}
+
+		groups[*group] = append(groups[*group], workstation)
 	}
 
-	return uploads, nil
+	// flatten map
+	var result broadcast.Workstations = nil
+	for group, machines := range groups {
+		result = append(result, broadcast.Group{Name: group, Workstations: machines})
+	}
+
+	return result, nil
 }
 
 func (m *inMemory) UpdateLastSeen(host string, time int64) error {
@@ -99,16 +135,23 @@ func (m *inMemory) UpdateLastSeen(host string, time int64) error {
 	defer m.mu.Unlock()
 
 	m.lastSeen[host] = time
+
+	// make sure it's present in the machine list
+	_, found := m.machines[host]
+	if !found {
+		m.machines[host] = broadcast.ModifyMachine{Hostname: host}
+	}
+
 	return nil
 }
 
-func (m *inMemory) LastSeen() ([]uplink.WorkstationSeen, error) {
+func (m *inMemory) LastSeen() ([]broadcast.WorkstationSeen, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	var seen []uplink.WorkstationSeen
-	for name, time := range m.lastSeen {
-		seen = append(seen, uplink.WorkstationSeen{Hostname: name, LastSeen: time})
+	var seen []broadcast.WorkstationSeen
+	for name, lastSeen := range m.lastSeen {
+		seen = append(seen, broadcast.WorkstationSeen{Hostname: name, LastSeen: lastSeen})
 	}
 
 	return seen, nil

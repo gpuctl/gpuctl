@@ -13,6 +13,9 @@ var (
 	ErrGpuNotPresent     = errors.New("appending to non present gpu")
 )
 
+// default group to give to machines with a null or empty group
+const DefaultGroup string = "Shared"
+
 // define set of operations on the database that any provider will implement
 type Database interface {
 	// update the last seen time for a satellite to the current time
@@ -26,10 +29,11 @@ type Database interface {
 	UpdateGPUContext(host string, info uplink.GPUInfo) error
 
 	// get the latest metrics for all approved machines
-	LatestData() ([]uplink.GpuStatsUpload, error)
+	LatestData() (broadcast.Workstations, error)
 
 	// get last seen online metric for all machines
-	LastSeen() ([]uplink.WorkstationSeen, error)
+	LastSeen() ([]broadcast.WorkstationSeen, error)
+
 	// create and modify machines in the database
 	NewMachine(machine broadcast.NewMachine) error
 	RemoveMachine(machine broadcast.RemoveMachine) error

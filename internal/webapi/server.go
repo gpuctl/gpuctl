@@ -12,7 +12,6 @@ import (
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/tunnel"
 	"github.com/gpuctl/gpuctl/internal/types"
-	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 type Server struct {
@@ -72,29 +71,7 @@ func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.Response[br
 		return nil, err
 	}
 
-	var ws []broadcast.WorkstationData
-	for _, machine := range data {
-		if len(machine.Stats) == 0 {
-			continue
-		}
-
-		gpus := make([]broadcast.OldGPUStatSample, 0)
-		for i := range machine.Stats {
-			gpus = append(gpus, ZipStats(
-				machine.Hostname,
-				machine.GPUInfos[i],
-				machine.Stats[i],
-			))
-		}
-
-		ws = append(ws, broadcast.WorkstationData{
-			Name: machine.Hostname,
-			Gpus: gpus,
-		})
-	}
-
-	result := broadcast.Workstations{{Name: "Shared", WorkStations: ws}}
-	return femto.Ok(result)
+	return femto.Ok(data)
 }
 
 func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
@@ -210,30 +187,4 @@ func (a *Api) modifyMachineInfo(info broadcast.ModifyMachine, r *http.Request, l
 	}
 
 	return femto.Ok(types.Unit{})
-}
-
-// Bodge together stats and contextual data to make OldGpuStats
-func ZipStats(host string, info uplink.GPUInfo, stat uplink.GPUStatSample) broadcast.OldGPUStatSample {
-	return broadcast.OldGPUStatSample{
-		Hostname: host,
-		// info from GPUInfo
-		Uuid:          info.Uuid,
-		Name:          info.Name,
-		Brand:         info.Brand,
-		DriverVersion: info.DriverVersion,
-		MemoryTotal:   info.MemoryTotal,
-		// info from GPUStatSample
-		MemoryUtilisation: stat.MemoryUtilisation,
-		GPUUtilisation:    stat.GPUUtilisation,
-		MemoryUsed:        stat.MemoryUsed,
-		FanSpeed:          stat.FanSpeed,
-		Temp:              stat.Temp,
-		MemoryTemp:        stat.MemoryTemp,
-		GraphicsVoltage:   stat.GraphicsVoltage,
-		PowerDraw:         stat.PowerDraw,
-		GraphicsClock:     stat.GraphicsClock,
-		MaxGraphicsClock:  stat.MaxGraphicsClock,
-		MemoryClock:       stat.MemoryClock,
-		MaxMemoryClock:    stat.MaxMemoryClock,
-	}
 }

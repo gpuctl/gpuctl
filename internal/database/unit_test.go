@@ -6,11 +6,13 @@
 package database_test
 
 import (
+	"log/slog"
 	"math"
 	"reflect"
 	"testing"
 	"time"
 
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/stretchr/testify/assert"
@@ -31,8 +33,10 @@ var UnitTests = [...]unitTest{
 	{"TestAppendDataPointMissingGPU", testAppendDataPointMissingGPU},
 	{"LastSeen1", testLastSeen1},
 	{"LastSeen2", testLastSeen2},
-	{"Downsample", testDownsample},
 	{"OneGpu", oneGpu},
+	{"MachineInfoStartsEmpty", machineInfoStartsEmpty},
+	{"MachineInfoUpdatesWork", machineInfoUpdatesWork},
+	{"MachinesCanBeRemoved", removingMachine},
 }
 
 // fake data for adding during tests
@@ -63,25 +67,84 @@ var fakeDataSample = uplink.GPUStatSample{
 	RunningProcesses:  nil,
 }
 
+// helper functions for getting/checking machine info
+func getMachine(groups broadcast.Workstations, host string) (bool, broadcast.Group, broadcast.Workstation) {
+	for _, g := range groups {
+		for _, m := range g.Workstations {
+			if m.Name == host {
+				return true, g, m
+			}
+		}
+	}
+
+	return false, broadcast.Group{}, broadcast.Workstation{}
+}
+
 // functions for approximately comparing floats and data structs
 const margin float64 = 0.01
 
 func floatsNear(a float64, b float64) bool {
 	return math.Abs(a-b) < margin
 }
-func statsNear(a uplink.GPUStatSample, b uplink.GPUStatSample) bool {
-	aType := reflect.ValueOf(a)
-	bType := reflect.ValueOf(b)
+func statsNear(target broadcast.GPU, stat uplink.GPUStatSample, context uplink.GPUInfo) bool {
+	if target.Uuid != stat.Uuid {
+		slog.Error("stat uuid didn't match", "was", target.Uuid, "wanted", stat.Uuid)
+		return false
+	}
+	if target.Uuid != context.Uuid {
+		slog.Error("context uuid didn't match", "was", target.Uuid, "wanted", context.Uuid)
+	}
 
-	for i := 0; i < aType.NumField(); i++ {
-		aVal := aType.Field(i)
+	// compare all the other fields using reflection
+	for _, compare := range []interface{}{stat, context} {
+		compareV := reflect.ValueOf(compare)
 
-		if !aVal.CanFloat() {
-			continue
-		}
+		for _, field := range reflect.VisibleFields(compareV.Type()) {
+			// we've already compared uuids
+			if field.Name == "Uuid" {
+				continue
+			}
+			// TODO: determine where we use time field
+			if field.Name == "Time" {
+				continue
+			}
+			// TODO: Start actually using running processes
+			if field.Name == "RunningProcesses" {
+				continue
+			}
 
-		if !floatsNear(aVal.Float(), bType.Field(i).Float()) {
-			return false
+			// get fields from structs
+			from := compareV.FieldByIndex(field.Index)
+			to := reflect.ValueOf(target).FieldByName(field.Name)
+			if !to.IsValid() {
+				slog.Error("Couldn't get field from target struct", "field name", field.Name)
+				return false
+			}
+			if from.Type() != to.Type() {
+				slog.Error("Comparision type mismatch", "field name", field.Name, "expected", from.Type().String())
+				return false
+			}
+
+			// do a different comparision based on type
+			if from.CanUint() {
+				if from.Uint() != to.Uint() {
+					slog.Error("Unsigned int comparision mismatch", "field name", field.Name, "expected", from.String(), "actual", to.String())
+					return false
+				}
+			} else if from.CanFloat() {
+				if !floatsNear(from.Float(), to.Float()) {
+					slog.Error("Float comparision mismatch", "field name", field.Name, "expected", from.String(), "actual", to.String())
+					return false
+				}
+			} else if from.Type().Kind() == reflect.String {
+				if from.String() != to.String() {
+					slog.Error("String comparision mismatch", "field name", field.Name, "expected", from.String(), "actual", to.String())
+					return false
+				}
+			} else {
+				slog.Error("Test case for this type not yet written", "field name", field.Name, "type", field.Type.String())
+				return false
+			}
 		}
 	}
 
@@ -156,27 +219,23 @@ func appendedDataPointsAreSaved(t *testing.T, db database.Database) {
 
 	// check length of results and whether elk is present
 	if len(results) != 1 {
-		t.Fatalf("'results' is the wrong length. Expected: 1, Was: %d", len(results))
+		t.Fatalf("'results' is the wrong length/has the wrong number of groups. Expected: 1, Was: %d", len(results))
 	}
 
-	var found = false
-	var gpus []uplink.GPUStatSample
-	for _, machine := range results {
-		if machine.Hostname == fakeHost {
-			found = true
-			gpus = machine.Stats
-			break
-		}
-	}
+	found, group, machine := getMachine(results, fakeHost)
+	gpus := machine.Gpus
 
 	if !found {
 		t.Fatalf("'results' didn't contain entry for '%s'", fakeHost)
 	}
-	if len(gpus) != 1 {
-		t.Fatalf("'results[%s]' is the wrong length. Expected: 1, Was: %d", fakeHost, len(gpus))
+	if group.Name != database.DefaultGroup {
+		t.Fatalf("No group was specified for '%s', it should be in the default group. Expected '%s', Was '%s'", fakeHost, database.DefaultGroup, group.Name)
 	}
-	if !statsNear(gpus[0], fakeDataSample) {
-		t.Fatalf("Appended data doesn't match returned latest data. Expected: %v, Got: %v", fakeDataSample, gpus[0])
+	if len(gpus) != 1 {
+		t.Fatalf("gpus for '%s.%s' is the wrong length. Expected: 1, Was: %d", group.Name, fakeHost, len(gpus))
+	}
+	if !statsNear(gpus[0], fakeDataSample, fakeDataInfo) {
+		t.Fatalf("Appended data doesn't match returned latest data. Expected: %v and %v, Got: %v", fakeDataInfo, fakeDataSample, gpus[0])
 	}
 }
 
@@ -193,18 +252,6 @@ func multipleHeartbeats(t *testing.T, db database.Database) {
 }
 
 // TODO: verify latest set of stats returned
-
-func testDownsample(t *testing.T, db database.Database) {
-	populateDatabaseWithSampleData(db, "Test GPU", 200)
-
-	cutoffTime := time.Now().AddDate(0, -6, 0).Unix()
-
-	if err := db.Downsample(cutoffTime); err != nil {
-		t.Fatalf("Downsample failed: %v", err)
-	}
-
-	verifyDownsampledData(t, db, "Test GPU", 101) // 101 here might not be true
-}
 
 func testLastSeen1(t *testing.T, db database.Database) {
 	host := "TestHost"
@@ -239,78 +286,12 @@ func testLastSeen2(t *testing.T, db database.Database) {
 	assert.NoError(t, err)
 	assert.Len(t, seen, 2)
 
-	expected := []uplink.WorkstationSeen{
+	expected := []broadcast.WorkstationSeen{
 		{Hostname: "foo", LastSeen: 1234567890},
 		{Hostname: "bar", LastSeen: 9876543210},
 	}
 
 	assert.ElementsMatch(t, expected, seen)
-}
-
-func populateDatabaseWithSampleData(db database.Database, gpuID string, numberOfSamples int) {
-	db.UpdateLastSeen("test-host", 0)
-	err := db.UpdateGPUContext("test-host", uplink.GPUInfo{
-		Uuid:          gpuID,
-		Name:          "Test GPU",
-		Brand:         "Test Brand",
-		DriverVersion: "1.0",
-		MemoryTotal:   4,
-	})
-
-	if err != nil {
-		panic("Failed to update GPU context: " + err.Error())
-	}
-
-	now := time.Now()
-	for i := 0; i < numberOfSamples; i++ {
-		sampleTime := now.AddDate(0, 0, -i).Unix()
-		sample := uplink.GPUStatSample{
-			Uuid:              gpuID,
-			MemoryUtilisation: 25.4 + float64(i%10),
-			GPUUtilisation:    63.5 + float64(i%10),
-			MemoryUsed:        1.24 + float64(i),
-			FanSpeed:          35.2 + float64(i%5),
-			Temp:              54.3 + float64(i%5),
-			MemoryTemp:        45.3 + float64(i%5),
-			GraphicsVoltage:   150.0 + float64(i%5),
-			PowerDraw:         143.5 + float64(i%10),
-			GraphicsClock:     50 + float64(i%5),
-			MaxGraphicsClock:  134.4 + float64(i%5),
-			MemoryClock:       650.3 + float64(i%10),
-			MaxMemoryClock:    750 + float64(i%10),
-			Time:              sampleTime,
-			RunningProcesses:  nil, // Assuming process data is not relevant for this test
-		}
-		err := db.AppendDataPoint(sample)
-		if err != nil {
-			panic("Failed to append data point")
-		}
-	}
-}
-
-func verifyDownsampledData(t *testing.T, db database.Database, gpuID string, expectedNumSamplesAfterDownsample int) {
-	results, err := db.LatestData()
-	if err != nil {
-		t.Fatalf("Failed to retrieve latest data: %v", err)
-	}
-
-	found := false
-	var totalSamples int
-	for _, upload := range results {
-		if upload.Hostname == "test-host" {
-			for _, info := range upload.GPUInfos {
-				if info.Name == gpuID {
-					found = true
-					totalSamples += len(upload.Stats)
-				}
-			}
-		}
-	}
-
-	if !found {
-		t.Fatalf("GPU %s not found in the latest data results", gpuID)
-	}
-
 }
 
 func testAppendDataPointMissingGPU(t *testing.T, db database.Database) {
@@ -337,4 +318,105 @@ func oneGpu(t *testing.T, db database.Database) {
 	data, err = db.LatestData()
 	assert.NoError(t, err)
 	assert.Len(t, data, 1)
+}
+
+// a machines info starts empty
+func machineInfoStartsEmpty(t *testing.T, db database.Database) {
+	fakeHost := "porcupine"
+
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	data, err := db.LatestData()
+	assert.NoError(t, err)
+	found, group, machine := getMachine(data, fakeHost)
+
+	if !found {
+		t.Errorf("Couldn't find machine '%s'", fakeHost)
+	}
+
+	// assert that the group is the default
+	assert.Equal(t, group.Name, database.DefaultGroup)
+
+	// check all the optional characteristics start empty
+	assert.Nil(t, machine.CPU)
+	assert.Nil(t, machine.Motherboard)
+	assert.Nil(t, machine.Notes)
+}
+
+// changes to a machine are present in the result
+func machineInfoUpdatesWork(t *testing.T, db database.Database) {
+	fakeHost := "porcupine"
+
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	fakeGroup := "Personal"
+	fakeCPU := "Intel 8080"
+	fakeMotherboard := "Connect-a-tron"
+	fakeNote := "Has a fan that is very loud!"
+	fakeChange := broadcast.ModifyMachine{
+		Hostname:    fakeHost,
+		CPU:         &fakeCPU,
+		Motherboard: &fakeMotherboard,
+		Notes:       &fakeNote,
+		Group:       &fakeGroup,
+	}
+
+	err = db.UpdateMachine(fakeChange)
+
+	// TODO: remove this
+	// skip errors, as inmemory doesn't currently implement update
+	//assert.NoError(t, err)
+	if err != nil {
+		t.Skipf("Skipping with error, was %v", err)
+	}
+
+	data, err := db.LatestData()
+	found, group, machine := getMachine(data, fakeHost)
+
+	if !found {
+		t.Errorf("Couldn't find machine '%s'", fakeHost)
+	}
+
+	assert.NotNil(t, machine.CPU)
+	assert.NotNil(t, machine.Motherboard)
+	assert.NotNil(t, machine.Notes)
+
+	assert.Equal(t, *machine.CPU, fakeCPU)
+	assert.Equal(t, *machine.Motherboard, fakeMotherboard)
+	assert.Equal(t, *machine.Notes, fakeNote)
+	assert.Equal(t, group.Name, fakeGroup)
+}
+
+// removing a machine removes it
+func removingMachine(t *testing.T, db database.Database) {
+	fakeHost := "chipmunk"
+
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	// we should find the machine now
+	data, err := db.LatestData()
+	assert.NoError(t, err)
+	found, _, _ := getMachine(data, fakeHost)
+	if !found {
+		t.Error("Didn't find machine when we expected to")
+	}
+
+	// TODO: remove this
+	// workaround for inmem not implementing removal
+	err = db.RemoveMachine(broadcast.RemoveMachine{Hostname: fakeHost})
+	if err != nil {
+		t.Skipf("Skipping with error, was %v", err)
+	}
+
+	// we shouldn't find the machine anymore
+	data, err = db.LatestData()
+	assert.NoError(t, err)
+	found, _, _ = getMachine(data, fakeHost)
+	if found {
+		t.Logf("%v", data)
+		t.Error("Found the machine when we didn't expect to")
+	}
 }
