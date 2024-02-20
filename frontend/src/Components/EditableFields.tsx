@@ -1,13 +1,10 @@
-import React from "react";
 import {
-  Button,
   Editable,
   EditableInput,
   EditablePreview,
   Td,
-  Tr,
 } from "@chakra-ui/react";
-import { useModifyInfo, useRemoveMachine } from "../Hooks/hooks";
+import { useModifyInfo} from "../Hooks/hooks";
 import { WorkStationData } from "../Data";
 
 type EditableFieldProps = {
@@ -26,7 +23,7 @@ export function EditableField({
 
   const handleSubmit = (newValue: string) => {
     modifyInfo(workstation.name, {
-      group: fieldKey == "group" ? newValue : null,
+      group: fieldKey === "group" ? newValue : null,
       motherboard: fieldKey === "motherboard" ? newValue : null,
       cpu: fieldKey === "cpu" ? newValue : null,
       notes: fieldKey === "notes" ? newValue : null,
