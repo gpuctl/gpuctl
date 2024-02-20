@@ -21,14 +21,17 @@ const retrieveAllStats: () => Promise<
   Validated<WorkStationGroup[]>
 > = async () =>
   success(sortData(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()));
-//success(foo);
 
-const sortData = (gs: WorkStationGroup[]) =>
+const sortData = (gs: WorkStationGroup[]): WorkStationGroup[] =>
   gs.map(({ name, workstations }) => ({
     name: name,
-    workstations: workstations.sort((ws1, ws2) =>
-      ws1.name.localeCompare(ws2.name),
-    ),
+    workstations: workstations
+      .map(({ name, gpus, ...rest }) => ({
+        name,
+        gpus: gpus.sort((g1, g2) => g1.uuid.localeCompare(g2.uuid)),
+        ...rest,
+      }))
+      .sort((ws1, ws2) => ws1.name.localeCompare(ws2.name)),
   }));
 
 const retrieveLastSeen: () => Promise<Validated<DurationDeltas[]>> = async () =>

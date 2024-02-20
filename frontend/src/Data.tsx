@@ -16,6 +16,7 @@ export type WorkStationData = {
 
 // This needs to be kept in sync with `internal/uplink/
 export type GPUStats = {
+  uuid: string;
   gpu_name: string;
   gpu_brand: string;
   driver_ver: string;
@@ -51,6 +52,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         notes: "noisy fan",
         gpus: [
           {
+            uuid: "AAAAA",
             gpu_name: "NVIDIA GeForce GT 1030",
             gpu_brand: "GeForce",
             driver_ver: "535.146.02",
@@ -77,6 +79,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         notes: "",
         gpus: [
           {
+            uuid: "BBBBB",
             gpu_name: "NVIDIA TITAN Xp",
             gpu_brand: "Titan",
             driver_ver: "535.146.02",
@@ -95,6 +98,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_memory_clock: 14,
           },
           {
+            uuid: "CCCCC",
             gpu_name: "NVIDIA TITAN Xp",
             gpu_brand: "Titan",
             driver_ver: "535.146.02",
@@ -121,6 +125,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         notes: "scheduled for replacement 2024",
         gpus: [
           {
+            uuid: "DDDDD",
             gpu_name: "NVIDIA GeForce GT 730",
             gpu_brand: "GeForce",
             driver_ver: "470.223.02",
@@ -148,6 +153,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
           "We don't particularly like this one, but it always works and we can't really bin it",
         gpus: [
           {
+            uuid: "EEEEE",
             gpu_name: "NVIDIA TITAN Xp",
             gpu_brand: "Titan",
             driver_ver: "535.146.02",
@@ -166,6 +172,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_memory_clock: 35,
           },
           {
+            uuid: "FFFFF",
             gpu_name: "NVIDIA TITAN Xp",
             gpu_brand: "Titan",
             driver_ver: "535.146.02",
@@ -192,6 +199,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         notes: "Please don't use this unless you absolutely have to",
         gpus: [
           {
+            uuid: "GGGGG",
             gpu_name: "NVIDIA GeForce GT 1030",
             gpu_brand: "GeForce",
             driver_ver: "535.146.02",
@@ -219,6 +227,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         notes: "",
         gpus: [
           {
+            uuid: "HHHHH",
             gpu_name: "NVIDIA GeForce GT 730",
             gpu_brand: "GeForce",
             driver_ver: "470.223.02",
