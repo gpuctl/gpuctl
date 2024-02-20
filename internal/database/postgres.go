@@ -165,12 +165,7 @@ func updateLastSeen(host string, now time.Time, tx *sql.Tx) (err error) {
 func (conn PostgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 	now := time.Now()
 
-	user := "" // user defaults to blank when not in use
-	// determine inUse
-	inUse := len(sample.RunningProcesses) > 0
-	if inUse {
-		user = sample.RunningProcesses[0].Owner
-	}
+	inUse, user := sample.RunningProcesses.Summarise()
 
 	_, err := conn.db.Exec(`INSERT INTO Stats
 		(Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed,

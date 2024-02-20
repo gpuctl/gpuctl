@@ -85,15 +85,7 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 		stat := stats[len(stats)-1]
 
 		// add on in-use info
-		// can't be done with reflection because types are different
-		user := "" // user defaults to blank when not in use
-		// determine inUse
-		inUse := len(stat.RunningProcesses) > 0
-		if inUse {
-			user = stat.RunningProcesses[0].Owner
-		}
-		gpu.InUse = inUse
-		gpu.User = user
+		gpu.InUse, gpu.User = stat.RunningProcesses.Summarise()
 
 		// reflect on stat to get all the fields
 		for _, field := range reflect.VisibleFields(reflect.TypeOf(stat)) {
