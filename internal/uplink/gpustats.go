@@ -1,5 +1,9 @@
 package uplink
 
+import (
+	"github.com/gpuctl/gpuctl/internal/procinfo"
+)
+
 // TODO: change to "/gs-api/gpu-stats"
 const GPUStatsUrl = "/gs-api/status/"
 
@@ -42,4 +46,32 @@ type GPUProcInfo struct {
 	Name    string  `json:"name"`
 	MemUsed float64 `json:"used_memory"`
 	Owner   string  `json:"owner"` // NOTE: This is the user that owns the process
+}
+
+func PopulateNames(samples []GPUStatSample, lookup procinfo.UidLookup) {
+	for i, sample := range samples {
+		for j, proc := range sample.RunningProcesses {
+			name, err := lookup.UserForPid(proc.Pid)
+			// Intentionally leave unresolved names as zero, don't want to fail
+			if err == nil {
+				samples[i].RunningProcesses[j].Owner = name
+			}
+		}
+	}
+}
+
+func FilterProcesses(samples []GPUStatSample, filter func(GPUProcInfo) bool) {
+	if filter == nil {
+		return
+	}
+
+	for i, sample := range samples {
+		filtered := []GPUProcInfo{}
+		for _, e := range sample.RunningProcesses {
+			if filter(e) {
+				filtered = append(filtered, e)
+			}
+		}
+		samples[i].RunningProcesses = filtered
+	}
 }
