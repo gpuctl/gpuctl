@@ -37,6 +37,7 @@ var UnitTests = [...]unitTest{
 	{"MachineInfoStartsEmpty", machineInfoStartsEmpty},
 	{"MachineInfoUpdatesWork", machineInfoUpdatesWork},
 	{"MachinesCanBeRemoved", removingMachine},
+	{"InUseInformation", inUseInformation},
 }
 
 // fake data for adding during tests
@@ -97,6 +98,30 @@ func statsNear(target broadcast.GPU, stat uplink.GPUStatSample, context uplink.G
 		return false
 	}
 
+	// compare running processes
+	if len(stat.RunningProcesses) > 0 {
+		// in_use should be set if there's at least one running process
+		// user is set if in_use set and is the user from first process
+		if !target.InUse {
+			slog.Error("InUse didn't match", "was", target.InUse, "wanted", "True")
+			return false
+		}
+		if target.User != stat.RunningProcesses[0].Owner {
+			slog.Error("User didn't match", "was", target.User, "wanted", stat.RunningProcesses[0].Owner)
+			return false
+		}
+	} else {
+		// otherwise, in_use should be false and user the empty string
+		if target.InUse {
+			slog.Error("InUse didn't match", "was", target.InUse, "wanted", "False")
+			return false
+		}
+		if target.User != "" {
+			slog.Error("User didn't match", "was", target.User, "wanted", "Empty string")
+			return false
+		}
+	}
+
 	// compare all the other fields using reflection
 	for _, compare := range []interface{}{stat, context} {
 		compareV := reflect.ValueOf(compare)
@@ -110,7 +135,7 @@ func statsNear(target broadcast.GPU, stat uplink.GPUStatSample, context uplink.G
 			if field.Name == "Time" {
 				continue
 			}
-			// TODO: Start actually using running processes
+			// we've already checked running processes
 			if field.Name == "RunningProcesses" {
 				continue
 			}
@@ -420,5 +445,69 @@ func removingMachine(t *testing.T, db database.Database) {
 	if found {
 		t.Logf("%v", data)
 		t.Error("Found the machine when we didn't expect to")
+	}
+}
+
+// db layer handles process information
+func inUseInformation(t *testing.T, db database.Database) {
+	fakeHost := "hamster"
+	fakeUuid := "jeff's phone no."
+
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	context := uplink.GPUInfo{
+		Uuid: fakeUuid,
+		Name: "jeff",
+	}
+	noProcesses := uplink.GPUStatSample{
+		Uuid:             fakeUuid,
+		RunningProcesses: make([]uplink.GPUProcInfo, 0),
+	}
+
+	oneProcess := uplink.GPUStatSample{
+		Uuid: fakeUuid,
+		RunningProcesses: []uplink.GPUProcInfo{
+			{
+				Pid:     5678,
+				Name:    "python",
+				MemUsed: 45.2,
+				Owner:   "jeff",
+			},
+		},
+	}
+
+	multipleProcesses := uplink.GPUStatSample{
+		Uuid: fakeUuid,
+		RunningProcesses: []uplink.GPUProcInfo{
+			{
+				Pid:     5678,
+				Name:    "python",
+				MemUsed: 6.2,
+				Owner:   "brenda",
+			},
+			{
+				Pid:     53935,
+				Name:    "python",
+				MemUsed: 103.7,
+				Owner:   "james",
+			},
+		},
+	}
+
+	err = db.UpdateGPUContext(fakeHost, context)
+	assert.NoError(t, err)
+
+	// send with no process information, one process and multiple processes
+	for i, stat := range []uplink.GPUStatSample{noProcesses, oneProcess, multipleProcesses} {
+		slog.Info("Trying user process stat sample", "index", i)
+		err = db.AppendDataPoint(stat)
+		assert.NoError(t, err)
+		data, err := db.LatestData()
+		assert.NoError(t, err)
+		found, _, machine := getMachine(data, fakeHost)
+		assert.True(t, found)
+		assert.Len(t, machine.Gpus, 1)
+		assert.True(t, statsNear(machine.Gpus[0], stat, context))
 	}
 }
