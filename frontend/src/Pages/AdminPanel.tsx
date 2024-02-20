@@ -1,11 +1,10 @@
-import React from 'react';
-import { VStack } from '@chakra-ui/react';
-import { AddMachineForm } from '../Components/AddMachineForm';
-import { GroupInfoManagement } from '../Components/GroupInfoManagement';
-import { WorkStationGroup } from '../Data';
+import React from "react";
+import { VStack } from "@chakra-ui/react";
+import { AddMachineForm } from "../Components/AddMachineForm";
+import { GroupInfoManagement } from "../Components/GroupInfoManagement";
+import { WorkStationGroup } from "../Data";
 
 export const ADMIN_PATH = "/admin";
-
 
 type AdminPanelProps = {
   groups: WorkStationGroup[];

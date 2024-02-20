@@ -1,16 +1,21 @@
-import React, { useState } from 'react';
-import { Box, Button, Heading, HStack, Input } from '@chakra-ui/react';
-import { AutoComplete, AutoCompleteInput, AutoCompleteItem, AutoCompleteList } from '@choc-ui/chakra-autocomplete';
-import { useAddMachine } from '../Hooks/hooks';
-import { WorkStationGroup } from '../Data';
+import React, { useState } from "react";
+import { Box, Button, Heading, HStack, Input } from "@chakra-ui/react";
+import {
+  AutoComplete,
+  AutoCompleteInput,
+  AutoCompleteItem,
+  AutoCompleteList,
+} from "@choc-ui/chakra-autocomplete";
+import { useAddMachine } from "../Hooks/hooks";
+import { WorkStationGroup } from "../Data";
 
 type AddMachineFormProps = {
   groups: WorkStationGroup[];
 };
 
 export const AddMachineForm: React.FC<AddMachineFormProps> = ({ groups }) => {
-  const [hostname, setHostname] = useState<string>('');
-  const [group, setGroup] = useState<string>('');
+  const [hostname, setHostname] = useState<string>("");
+  const [group, setGroup] = useState<string>("");
   const addMachine = useAddMachine();
 
   return (
@@ -34,11 +39,7 @@ export const AddMachineForm: React.FC<AddMachineFormProps> = ({ groups }) => {
             ))}
           </AutoCompleteList>
         </AutoComplete>
-        <Button
-          onClick={() => addMachine(hostname, group)}
-        >
-          Add
-        </Button>
+        <Button onClick={() => addMachine(hostname, group)}>Add</Button>
       </HStack>
     </Box>
   );

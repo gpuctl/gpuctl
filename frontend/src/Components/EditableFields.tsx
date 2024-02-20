@@ -17,7 +17,9 @@ type EditableFieldProps = {
 };
 
 export function EditableField({
-  workstation, fieldKey, placeholder
+  workstation,
+  fieldKey,
+  placeholder,
 }: EditableFieldProps) {
   const pickCol = (value: string) => (value ? "gray.600" : "gray.300");
   const modifyInfo = useModifyInfo();
@@ -36,7 +38,9 @@ export function EditableField({
       <Editable
         defaultValue={workstation[fieldKey as keyof WorkStationData] as string}
         placeholder={placeholder}
-        textColor={pickCol(workstation[fieldKey as keyof WorkStationData] as string)}
+        textColor={pickCol(
+          workstation[fieldKey as keyof WorkStationData] as string,
+        )}
         onSubmit={handleSubmit}
       >
         <EditablePreview />
