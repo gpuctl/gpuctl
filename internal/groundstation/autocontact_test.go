@@ -51,6 +51,10 @@ func (edb *ErrorDB) RemoveMachine(changes broadcast.RemoveMachine) error {
 	return nil
 }
 
+func (edb *ErrorDB) AttachFile(attach broadcast.AttachFile) error {
+	return nil
+}
+
 func (edb *ErrorDB) Drop() error {
 	return nil
 }

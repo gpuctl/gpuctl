@@ -622,3 +622,8 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 
 	return seens, nil
 }
+
+func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
+	// TODO: do this
+	return errors.New("NOT YET IMPLEMENTED")
+}

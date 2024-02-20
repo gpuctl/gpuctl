@@ -279,3 +279,8 @@ func (m *inMemory) UpdateMachine(changes broadcast.ModifyMachine) error {
 	// TODO: add actual functionality. This was just to make the code compile
 	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
 }
+
+func (m *inMemory) AttachFile(file broadcast.AttachFile) error {
+	// TODO: add in memory implementation
+	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
+}
