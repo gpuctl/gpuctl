@@ -1,10 +1,5 @@
-import {
-  Editable,
-  EditableInput,
-  EditablePreview,
-  Td,
-} from "@chakra-ui/react";
-import { useModifyInfo} from "../Hooks/hooks";
+import { Editable, EditableInput, EditablePreview, Td } from "@chakra-ui/react";
+import { useModifyInfo } from "../Hooks/hooks";
 import { WorkStationData } from "../Data";
 
 type EditableFieldProps = {
