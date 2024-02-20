@@ -1,5 +1,4 @@
 import { Input } from "@chakra-ui/input";
-import { API_URL } from "../App";
 import {
   Editable,
   EditableInput,
@@ -25,43 +24,36 @@ import {
   AutoCompleteList,
 } from "@choc-ui/chakra-autocomplete";
 import { instKeys } from "../Utils/Utils";
+import { useAuth } from "../Providers/AuthProvider";
 
 export const ADMIN_PATH = "/admin";
 const ADD_MACHINE_URL = "/add_workstation";
 const REMOVE_MACHINE_URL = "/rm_workstation";
 
-const addMachine = async (hostname: string, group: string) => {
-  const resp = await fetch(API_URL + ADMIN_PATH + ADD_MACHINE_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ hostname, group }),
-  });
-  if (resp.ok) {
-    console.log("Success!");
-  } else if (resp.status === 401) {
-    console.log("Auth Error!");
-  } else {
-    console.log("Unknown Error!");
-  }
+const useAddMachine = () => {
+  const { useAuthFetch } = useAuth();
+  const [, addMachineAuth] = useAuthFetch(ADD_MACHINE_URL);
+  return (hostname: string, group: string) =>
+    addMachineAuth({
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ hostname, group }),
+    });
 };
 
-const removeMachine = async (hostname: string) => {
-  const resp = await fetch(API_URL + ADMIN_PATH + REMOVE_MACHINE_URL, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ hostname }),
-  });
-  if (resp.ok) {
-    console.log("Success!");
-  } else if (resp.status === 401) {
-    console.log("Auth Error!");
-  } else {
-    console.log("Unknown Error!");
-  }
+const useRemoveMachine = () => {
+  const { useAuthFetch } = useAuth();
+  const [, addMachineAuth] = useAuthFetch(REMOVE_MACHINE_URL);
+  return (hostname: string) =>
+    addMachineAuth({
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ hostname }),
+    });
 };
 
 type ModifyData = {
@@ -71,14 +63,17 @@ type ModifyData = {
   notes: string | null;
 };
 
-const modifyInfo = (hostname: string, mod: ModifyData) => {
-  fetch(API_URL + ADMIN_PATH + STATS_PATH + "/modify", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ hostname, ...mod }),
-  });
+const useModifyInfo = () => {
+  const { useAuthFetch } = useAuth();
+  const [, addMachineAuth] = useAuthFetch(STATS_PATH + "/modify");
+  return (hostname: string, mod: ModifyData) =>
+    addMachineAuth({
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ hostname, ...mod }),
+    });
 };
 
 export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
@@ -86,6 +81,10 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
   const [group, setGroup] = useState("");
 
   const pickCol = (value: string) => (value ? "gray.600" : "gray.300");
+
+  const addMachine = useAddMachine();
+  const removeMachine = useRemoveMachine();
+  const modifyInfo = useModifyInfo();
 
   return (
     <VStack padding={10} spacing={10}>
