@@ -87,12 +87,14 @@ func floatsNear(a float64, b float64) bool {
 	return math.Abs(a-b) < margin
 }
 func statsNear(target broadcast.GPU, stat uplink.GPUStatSample, context uplink.GPUInfo) bool {
+	// compare uuids
 	if target.Uuid != stat.Uuid {
 		slog.Error("stat uuid didn't match", "was", target.Uuid, "wanted", stat.Uuid)
 		return false
 	}
 	if target.Uuid != context.Uuid {
 		slog.Error("context uuid didn't match", "was", target.Uuid, "wanted", context.Uuid)
+		return false
 	}
 
 	// compare all the other fields using reflection
