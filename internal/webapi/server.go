@@ -48,8 +48,7 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnPost(mux, "/api/admin/add_workstation", authentication.AuthWrapPost(auth, api.addMachine))
 	femto.OnPost(mux, "/api/admin/stats/modify", authentication.AuthWrapPost(auth, api.modifyMachineInfo))
 	femto.OnPost(mux, "/api/admin/rm_workstation", authentication.AuthWrapPost(auth, api.removeMachine))
-	//femto.OnPost(mux, "/api/admin/attach_file", authentication.AuthWrapPost(auth, api.attachFile))
-	femto.OnPost(mux, "/api/admin/attach_file", api.attachFile)
+	femto.OnPost(mux, "/api/admin/attach_file", authentication.AuthWrapPost(auth, api.attachFile))
 	femto.OnGet(mux, "/api/admin/confirm", authentication.AuthWrapGet(auth, func(r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
 		return api.ConfirmAdmin(auth, r, l)
 	}))
