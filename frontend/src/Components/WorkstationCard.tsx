@@ -9,7 +9,7 @@ import {
   Tr,
 } from "@chakra-ui/react";
 import { WorkStationData } from "../Data";
-import { isFree } from "../Utils/Utils";
+import { isFree } from "../Utils/Stats";
 
 export const WorkstationCard = ({ name, gpus }: WorkStationData) => {
   const textCol = useColorModeValue("black", "white");

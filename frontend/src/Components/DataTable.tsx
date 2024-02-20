@@ -15,8 +15,8 @@ import {
 } from "@chakra-ui/react";
 import { WorkStationGroup } from "../Data";
 import { useState } from "react";
-import { isFree } from "../Utils/Utils";
 import { useForceUpdate } from "framer-motion";
+import { isFree } from "../Utils/Stats";
 
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   // default to show group, machine_name, gpu_name, isFree, brand, and memory_total

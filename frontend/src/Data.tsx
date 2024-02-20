@@ -1,9 +1,8 @@
 // These types need to be kept in sync with `internal/webapi/types.go`
 
-export type WorkStationGroup = {
+export type WorkStationGroup<E = {}> = {
   name: string;
-  // TODO: Consistant cases here
-  workstations: WorkStationData[];
+  workstations: (WorkStationData & E)[];
 };
 
 export type WorkStationData = {
