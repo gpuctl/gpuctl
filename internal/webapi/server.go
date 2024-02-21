@@ -1,8 +1,8 @@
 package webapi
 
 import (
-	"errors"
 	"encoding/base64"
+	"errors"
 	"log/slog"
 	"net/http"
 	"time"
@@ -146,15 +146,31 @@ func (a *Api) GetFile(r *http.Request, l *slog.Logger) (*femto.Response[[]byte],
 	if hostname == "" {
 		return &femto.Response[[]byte]{Status: http.StatusBadRequest}, nil
 	}
+
 	dbresp, err := a.DB.GetFile(hostname)
-	if err != nil {
+
+	if errors.Is(err, database.ErrFileNotPresent) {
+		// Handle the error of not finding a file gracefully
+		return &femto.Response[[]byte]{Status: http.StatusNotFound}, nil
+	} else if err != nil {
 		return nil, err
 	}
+
+	// Decode the stored file
 	respbytes, err := base64.StdEncoding.DecodeString(dbresp.EncodedFile)
 	if err != nil {
 		return nil, err
 	}
-	return &femto.Response[[]byte]{Status: http.StatusOK, Body: respbytes}, nil
+
+	// Respond with the file
+	return &femto.Response[[]byte]{
+		Status: http.StatusOK,
+		Body:   respbytes,
+		Headers: map[string]string{
+			"Content-Type":        dbresp.Mime,
+			"Content-Disposition": "attachment; filename=attachment",
+		},
+	}, nil
 }
 
 func (a *Api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {

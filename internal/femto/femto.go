@@ -2,6 +2,7 @@
 package femto
 
 import (
+	"encoding/binary"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -73,7 +74,8 @@ func correctMethod(method string, req *http.Request, w http.ResponseWriter, log 
 
 // Ok returns a response with 200 OK, and no error.
 func Ok[T any](content T) (*Response[T], error) {
-	return &Response[T]{Status: http.StatusOK, Body: content}, nil
+	// we assume the content is going to be json by default
+	return &Response[T]{Status: http.StatusOK, Body: content, Headers: map[string]string{"Content-Type": "application/json"}}, nil
 }
 
 func generateErrorLogger(l *slog.Logger, w http.ResponseWriter) func(ctx string, status int, e error) {
@@ -110,21 +112,33 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 		return
 	}
 
-	jsonb, err := json.Marshal(data.Body)
-	if err != nil {
-		ise("There was an error in trying to serialise the handler's response into JSON", data.Status, err)
-		return
-	}
-
+	// Set headers and cookies properly
 	for key, value := range data.Headers {
-		w.Header().Add(key, value)
+		// NOTE: this used to be `Add()`. Should not affect anything?
+		w.Header().Set(key, value)
 	}
 	for i := range data.Cookies {
 		http.SetCookie(w, &data.Cookies[i])
 	}
 
+	// Write the response data
 	w.WriteHeader(data.Status)
-	_, err = w.Write(jsonb)
+	if w.Header().Get("Content-Type") == "application/json" {
+		jsonb, err := json.Marshal(data.Body)
+		if err != nil {
+			ise("There was an error in trying to serialise the handler's response into JSON", data.Status, err)
+			return
+		}
+		w.Write(jsonb)
+	} else {
+		// Just dump the thing to the response
+		err = binary.Write(w, binary.LittleEndian, data.Body)
+		if err != nil {
+			ise("There was an error in trying to serialise the handler's response into bytes", data.Status, err)
+			return
+		}
+	}
+
 
 	if err != nil {
 		ise("There was an error in trying to write to the user", data.Status, err)

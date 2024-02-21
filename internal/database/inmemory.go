@@ -3,6 +3,7 @@ package database
 import (
 	"cmp"
 	"errors"
+	"fmt"
 	"reflect"
 	"slices"
 	"sort"
@@ -24,6 +25,7 @@ type inMemory struct {
 	infos    map[string]gpuInfo                 // maps from uuids to context info
 	stats    map[string][]uplink.GPUStatSample  // maps from uuids to slices of stats, allowing tracking of multiple datapoints
 	lastSeen map[string]int64                   // map from hostname to last seen time
+	files    map[string]broadcast.AttachFile    // maps from hostname to attached files
 	mu       sync.Mutex                         // mutex
 }
 
@@ -33,6 +35,7 @@ func InMemory() Database {
 		infos:    make(map[string]gpuInfo),
 		stats:    make(map[string][]uplink.GPUStatSample),
 		lastSeen: make(map[string]int64),
+		files: make(map[string]broadcast.AttachFile),
 	}
 }
 
@@ -281,12 +284,15 @@ func (m *inMemory) UpdateMachine(changes broadcast.ModifyMachine) error {
 }
 
 func (m *inMemory) AttachFile(file broadcast.AttachFile) error {
-	// TODO: add in memory implementation
-	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
+	m.files[file.Hostname] = file
+	return nil
 }
 
 func (m *inMemory) GetFile(hostname string) (broadcast.AttachFile, error) {
-	// TODO: do this
-	var file broadcast.AttachFile
-	return file, errors.New("NOT YET IMPLEMENTED")
+	var zero broadcast.AttachFile
+	file := m.files[hostname]
+	if file == zero {
+		return zero, fmt.Errorf("%s: %w", hostname, ErrFileNotPresent)
+	}
+	return file, nil
 }

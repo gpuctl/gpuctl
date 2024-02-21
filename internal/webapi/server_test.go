@@ -18,7 +18,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-// go:embed testdata/uploadtest.pdf
+//go:embed testdata/uploadtest.pdf
 var uploadPdfBytes []byte
 
 var uploadPdfEnc = base64.StdEncoding.EncodeToString(uploadPdfBytes)
@@ -188,7 +188,6 @@ func TestAttachingFile(t *testing.T) {
 		return
 	}
 	assert.Equal(t, http.StatusOK, getresp.Status)
-
 	// Compare bytes of the files
 	assert.Equal(t, uploadPdfBytes, getresp.Body)
 }
@@ -269,7 +268,7 @@ func TestServerEndpoints(t *testing.T) {
 		{
 			name:           "Test downloading file rejects faulty request",
 			method:         http.MethodGet,
-			endpoint:       "/api/admin/get_file?foobar=garbage",
+			endpoint:       "/api/admin/get_file?machine=wrong",
 			expectedStatus: http.StatusBadRequest,
 			headers:        map[string]string{"Cookie": "token=example_token"},
 		},
@@ -285,9 +284,7 @@ func TestServerEndpoints(t *testing.T) {
 
 			server.ServeHTTP(recorder, request)
 
-			if status := recorder.Code; status != tc.expectedStatus {
-				t.Errorf("%s: expected status code %d, got %d", tc.name, tc.expectedStatus, status)
-			}
+			assert.Equal(t, tc.expectedStatus, recorder.Code, tc.name)
 		})
 	}
 }
