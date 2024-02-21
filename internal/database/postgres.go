@@ -76,6 +76,17 @@ func createTables(db *sql.DB) error {
 		return err
 	}
 
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Files (
+		Hostname text NOT NULL REFERENCES Machines (Hostname),
+		Mime text NOT NULL,
+		File text NOT NULL,
+		PRIMARY KEY (Hostname)
+	);`)
+
+	if err != nil {
+		return err
+	}
+
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Stats (
 		Gpu text REFERENCES GPUs (Uuid) NOT NULL,
 		Received timestamp NOT NULL,
@@ -586,6 +597,7 @@ func (conn PostgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 func (conn PostgresConn) Drop() error {
 	_, err := conn.db.Exec(`DROP TABLE stats;
 		DROP TABLE gpus;
+		DROP TABLE files;
 		DROP TABLE machines`)
 	if err != nil {
 		return err
@@ -624,12 +636,37 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 }
 
 func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
-	// TODO: do this
-	return errors.New("NOT YET IMPLEMENTED")
+	_, err := conn.db.Exec(`INSERT INTO Files (Hostname, Mime, File)
+		VALUES ($1, $2, $3);`,
+		attach.Hostname, attach.Mime, attach.EncodedFile,
+	)
+	return err
 }
 
 func (conn PostgresConn) GetFile(hostname string) (broadcast.AttachFile, error) {
-	// TODO: do this
-	var file broadcast.AttachFile
-	return file, errors.New("NOT YET IMPLEMENTED")
+	file := broadcast.AttachFile{Hostname: hostname}
+
+	tx, err := conn.db.Begin()
+	if err != nil {
+		return file, err
+	}
+
+	row := tx.QueryRow(`SELECT Mime, File
+		FROM Files
+		WHERE Hostname=$1`,
+		hostname)
+	err = row.Scan(&file.Mime, &file.EncodedFile)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		// Did not find in db, return standard error
+		return file, ErrFileNotPresent
+	} else if err != nil {
+		// Unknown error
+		return file, errors.Join(err, tx.Rollback())
+	}
+
+	if err = tx.Commit(); err != nil {
+		return file, err
+	}
+	return file, nil
 }

@@ -20,7 +20,6 @@ import (
 
 //go:embed testdata/uploadtest.pdf
 var uploadPdfBytes []byte
-
 var uploadPdfEnc = base64.StdEncoding.EncodeToString(uploadPdfBytes)
 
 var (

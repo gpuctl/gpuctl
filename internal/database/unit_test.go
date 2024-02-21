@@ -508,6 +508,8 @@ func inUseInformation(t *testing.T, db database.Database) {
 
 func attachAndGetFile(t *testing.T, db database.Database) {
 	fakeHost := "chipmunk"
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
 	payload := broadcast.AttachFile{
 		Hostname:    fakeHost,
 		Mime:        "application/pdf",
@@ -515,7 +517,7 @@ func attachAndGetFile(t *testing.T, db database.Database) {
 	}
 
 	// Put file in db
-	err := db.AttachFile(payload)
+	err = db.AttachFile(payload)
 	assert.NoError(t, err)
 
 	// Now get file
