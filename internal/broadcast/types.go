@@ -27,6 +27,7 @@ type ModifyMachine struct {
 
 type AttachFile struct {
 	Hostname    string `json:"hostname"`
+	Mime        string `json:"mime"`
 	EncodedFile string `json:"file_enc"`
 }
 

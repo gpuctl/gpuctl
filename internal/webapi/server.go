@@ -48,7 +48,8 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 	femto.OnPost(mux, "/api/admin/add_workstation", authentication.AuthWrapPost(auth, api.addMachine))
 	femto.OnPost(mux, "/api/admin/stats/modify", authentication.AuthWrapPost(auth, api.modifyMachineInfo))
 	femto.OnPost(mux, "/api/admin/rm_workstation", authentication.AuthWrapPost(auth, api.removeMachine))
-	femto.OnPost(mux, "/api/admin/attach_file", authentication.AuthWrapPost(auth, api.attachFile))
+	femto.OnPost(mux, "/api/admin/attach_file", authentication.AuthWrapPost(auth, api.AttachFile))
+	femto.OnGet(mux, "/api/admin/get_file", authentication.AuthWrapGet(auth, api.GetFile))
 	femto.OnGet(mux, "/api/admin/confirm", authentication.AuthWrapGet(auth, func(r *http.Request, l *slog.Logger) (*femto.Response[UsernameReminder], error) {
 		return api.ConfirmAdmin(auth, r, l)
 	}))
@@ -131,12 +132,24 @@ func (a *Api) addMachine(machine broadcast.NewMachine, r *http.Request, l *slog.
 	return femto.Ok(types.Unit{})
 }
 
-func (a *Api) attachFile(attach broadcast.AttachFile, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+func (a *Api) AttachFile(attach broadcast.AttachFile, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	err := a.DB.AttachFile(attach)
 	if err != nil {
 		return nil, err
 	}
 	return femto.Ok(types.Unit{})
+}
+
+func (a *Api) GetFile(r *http.Request, l *slog.Logger) (*femto.Response[[]byte], error) {
+	hostname := r.URL.Query().Get("hostname")
+	if hostname == "" {
+		return &femto.Response[[]byte]{Status: http.StatusBadRequest}, nil
+	}
+	_, err := a.DB.GetFile(hostname)
+	if err != nil {
+		return nil, err
+	}
+	return femto.Ok([]byte{})
 }
 
 func (a *Api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {

@@ -55,6 +55,11 @@ func (edb *ErrorDB) AttachFile(attach broadcast.AttachFile) error {
 	return nil
 }
 
+func (edb *ErrorDB) GetFile(hostname string) (broadcast.AttachFile, error) {
+	var file broadcast.AttachFile
+	return file, nil
+}
+
 func (edb *ErrorDB) Drop() error {
 	return nil
 }

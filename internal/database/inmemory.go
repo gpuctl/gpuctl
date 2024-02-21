@@ -284,3 +284,9 @@ func (m *inMemory) AttachFile(file broadcast.AttachFile) error {
 	// TODO: add in memory implementation
 	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
 }
+
+func (m *inMemory) GetFile(hostname string) (broadcast.AttachFile, error) {
+	// TODO: do this
+	var file broadcast.AttachFile
+	return file, errors.New("NOT YET IMPLEMENTED")
+}

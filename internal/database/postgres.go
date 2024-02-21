@@ -627,3 +627,9 @@ func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
 	// TODO: do this
 	return errors.New("NOT YET IMPLEMENTED")
 }
+
+func (conn PostgresConn) GetFile(hostname string) (broadcast.AttachFile, error) {
+	// TODO: do this
+	var file broadcast.AttachFile
+	return file, errors.New("NOT YET IMPLEMENTED")
+}

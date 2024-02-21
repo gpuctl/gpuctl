@@ -42,6 +42,7 @@ type Database interface {
 	// downsample since certain unix time
 	Downsample(time int64) error
 
-	// Attach a file
+	// methods for interacting with files
 	AttachFile(broadcast.AttachFile) error
+	GetFile(hostname string) (broadcast.AttachFile, error)
 }
