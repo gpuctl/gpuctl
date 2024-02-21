@@ -11,7 +11,7 @@ import (
 var (
 	ErrMachineNotPresent = errors.New("adding gpu to non present machine")
 	ErrGpuNotPresent     = errors.New("appending to non present gpu")
-	ErrFileNotPresent = errors.New("no file found")
+	ErrFileNotPresent    = errors.New("no file found")
 )
 
 // default group to give to machines with a null or empty group

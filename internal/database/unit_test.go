@@ -509,8 +509,8 @@ func inUseInformation(t *testing.T, db database.Database) {
 func attachAndGetFile(t *testing.T, db database.Database) {
 	fakeHost := "chipmunk"
 	payload := broadcast.AttachFile{
-		Hostname: fakeHost,
-		Mime: "application/pdf",
+		Hostname:    fakeHost,
+		Mime:        "application/pdf",
 		EncodedFile: uploadPdfEnc,
 	}
 

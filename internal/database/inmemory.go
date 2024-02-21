@@ -35,7 +35,7 @@ func InMemory() Database {
 		infos:    make(map[string]gpuInfo),
 		stats:    make(map[string][]uplink.GPUStatSample),
 		lastSeen: make(map[string]int64),
-		files: make(map[string]broadcast.AttachFile),
+		files:    make(map[string]broadcast.AttachFile),
 	}
 }
 

@@ -139,7 +139,6 @@ func doGet[T any](f *Femto, w http.ResponseWriter, r *http.Request, handle GetFu
 		}
 	}
 
-
 	if err != nil {
 		ise("There was an error in trying to write to the user", data.Status, err)
 	}
