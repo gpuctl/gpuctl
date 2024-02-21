@@ -2,6 +2,7 @@ package webapi
 
 import (
 	"errors"
+	"encoding/base64"
 	"log/slog"
 	"net/http"
 	"time"
@@ -145,11 +146,15 @@ func (a *Api) GetFile(r *http.Request, l *slog.Logger) (*femto.Response[[]byte],
 	if hostname == "" {
 		return &femto.Response[[]byte]{Status: http.StatusBadRequest}, nil
 	}
-	_, err := a.DB.GetFile(hostname)
+	dbresp, err := a.DB.GetFile(hostname)
 	if err != nil {
 		return nil, err
 	}
-	return femto.Ok([]byte{})
+	respbytes, err := base64.StdEncoding.DecodeString(dbresp.EncodedFile)
+	if err != nil {
+		return nil, err
+	}
+	return &femto.Response[[]byte]{Status: http.StatusOK, Body: respbytes}, nil
 }
 
 func (a *Api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
