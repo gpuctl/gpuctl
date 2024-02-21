@@ -21,12 +21,12 @@ type gpuInfo struct {
 }
 
 type inMemory struct {
-	machines map[string]broadcast.ModifyMachine // maps from hostname to machine info
-	infos    map[string]gpuInfo                 // maps from uuids to context info
-	stats    map[string][]uplink.GPUStatSample  // maps from uuids to slices of stats, allowing tracking of multiple datapoints
-	lastSeen map[string]int64                   // map from hostname to last seen time
-	files    map[string]broadcast.AttachFile    // maps from hostname to attached files
-	mu       sync.Mutex                         // mutex
+	machines map[string]broadcast.ModifyMachine         // maps from hostname to machine info
+	infos    map[string]gpuInfo                         // maps from uuids to context info
+	stats    map[string][]uplink.GPUStatSample          // maps from uuids to slices of stats, allowing tracking of multiple datapoints
+	lastSeen map[string]int64                           // map from hostname to last seen time
+	files    map[string]map[string]broadcast.AttachFile // maps from hostname to attached files
+	mu       sync.Mutex                                 // mutex
 }
 
 func InMemory() Database {
@@ -35,7 +35,7 @@ func InMemory() Database {
 		infos:    make(map[string]gpuInfo),
 		stats:    make(map[string][]uplink.GPUStatSample),
 		lastSeen: make(map[string]int64),
-		files:    make(map[string]broadcast.AttachFile),
+		files:    make(map[string]map[string]broadcast.AttachFile),
 	}
 }
 
@@ -289,21 +289,64 @@ func (m *inMemory) AttachFile(file broadcast.AttachFile) error {
 
 	var zero broadcast.ModifyMachine
 	if m.machines[file.Hostname] == zero {
-		return fmt.Errorf("%s: %w", file.Hostname, ErrAddingFileToNonPresentMachine)
+		return fmt.Errorf("%s: %w", file.Hostname, ErrNoSuchMachine)
 	}
 
-	m.files[file.Hostname] = file
+	if m.files[file.Hostname] == nil {
+		m.files[file.Hostname] = make(map[string]broadcast.AttachFile)
+	}
+	m.files[file.Hostname][file.Filename] = file
 	return nil
 }
 
-func (m *inMemory) GetFile(hostname string) (broadcast.AttachFile, error) {
+func (m *inMemory) GetFile(hostname string, filename string) (broadcast.AttachFile, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	var zero broadcast.AttachFile
-	file := m.files[hostname]
-	if file == zero {
-		return zero, fmt.Errorf("%s: %w", hostname, ErrFileNotPresent)
+	var zerofile broadcast.AttachFile
+	filedir := m.files[hostname]
+	if filedir == nil {
+		return zerofile, fmt.Errorf("%s: %w", hostname, ErrFileNotPresent)
 	}
+
+	file := filedir[filename]
+	if file == zerofile {
+		return zerofile, fmt.Errorf("%s: %w", hostname, ErrFileNotPresent)
+	}
+
 	return file, nil
+}
+
+func (m *inMemory) ListFiles(hostname string) ([]string, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var zero broadcast.ModifyMachine
+	if m.machines[hostname] == zero {
+		return []string{}, ErrNoSuchMachine
+	}
+
+	if m.files[hostname] == nil {
+		return []string{}, nil
+	}
+	res := []string{}
+	for k, _ := range m.files[hostname] {
+		res = append(res, k)
+	}
+	return res, nil
+}
+
+func (m *inMemory) RemoveFile(remove broadcast.RemoveFile) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var zero broadcast.ModifyMachine
+	if m.machines[remove.Hostname] == zero {
+		return ErrNoSuchMachine
+	}
+	if m.files[remove.Hostname] == nil {
+		return ErrFileNotPresent
+	}
+	delete(m.files[remove.Hostname], remove.Filename)
+	return nil
 }

@@ -78,6 +78,7 @@ func createTables(db *sql.DB) error {
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Files (
 		Hostname text NOT NULL REFERENCES Machines (Hostname),
+		Filename text NOT NULL,
 		Mime text NOT NULL,
 		File text NOT NULL,
 		PRIMARY KEY (Hostname)
@@ -636,23 +637,23 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 }
 
 func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
-	_, err := conn.db.Exec(`INSERT INTO Files (Hostname, Mime, File)
-		VALUES ($1, $2, $3);`,
-		attach.Hostname, attach.Mime, attach.EncodedFile,
+	_, err := conn.db.Exec(`INSERT INTO Files (Hostname, Mime, Filename, File)
+		VALUES ($1, $2, $3, $4);`,
+		attach.Hostname, attach.Mime, attach.Filename, attach.EncodedFile,
 	)
 	if err != nil {
-		return ErrAddingFileToNonPresentMachine
+		return ErrNoSuchMachine
 	}
 	return nil
 }
 
-func (conn PostgresConn) GetFile(hostname string) (broadcast.AttachFile, error) {
-	file := broadcast.AttachFile{Hostname: hostname}
+func (conn PostgresConn) GetFile(hostname string, filename string) (broadcast.AttachFile, error) {
+	file := broadcast.AttachFile{Hostname: hostname, Filename: filename}
 
 	rows, err := conn.db.Query(`SELECT Mime, File
 		FROM Files
-		WHERE Hostname=$1`,
-		hostname)
+		WHERE Hostname=$1 AND Filename=$2`,
+		hostname, filename)
 	if err != nil {
 		return file, err
 	}
@@ -671,4 +672,12 @@ func (conn PostgresConn) GetFile(hostname string) (broadcast.AttachFile, error) 
 	}
 
 	return file, nil
+}
+
+func (conn PostgresConn) ListFiles(hostname string) ([]string, error) {
+	return []string{}, errors.New("NOT IMPLT")
+}
+
+func (conn PostgresConn) RemoveFile(remove broadcast.RemoveFile) error {
+	return errors.New("Not impl")
 }

@@ -9,10 +9,10 @@ import (
 
 // Constant errors for failures in DB
 var (
-	ErrMachineNotPresent             = errors.New("adding gpu to non present machine")
-	ErrGpuNotPresent                 = errors.New("appending to non present gpu")
-	ErrAddingFileToNonPresentMachine = errors.New("attaching a file to a machine that does not exist")
-	ErrFileNotPresent                = errors.New("no file found")
+	ErrMachineNotPresent = errors.New("adding gpu to non present machine")
+	ErrGpuNotPresent     = errors.New("appending to non present gpu")
+	ErrNoSuchMachine     = errors.New("could not find given machine")
+	ErrFileNotPresent    = errors.New("no file found")
 )
 
 // default group to give to machines with a null or empty group
@@ -46,5 +46,7 @@ type Database interface {
 
 	// methods for interacting with files
 	AttachFile(broadcast.AttachFile) error
-	GetFile(hostname string) (broadcast.AttachFile, error)
+	GetFile(hostname string, filename string) (broadcast.AttachFile, error)
+	RemoveFile(broadcast.RemoveFile) error
+	ListFiles(hostname string) ([]string, error)
 }

@@ -166,8 +166,9 @@ func TestAttachingFile(t *testing.T) {
 	cookie := http.Cookie{Name: authentication.TokenCookieName, Value: token}
 	payload := broadcast.AttachFile{
 		Hostname:    "testmachine",
-		EncodedFile: uploadPdfEnc,
+		Filename:    "testfile",
 		Mime:        "application/pdf",
+		EncodedFile: uploadPdfEnc,
 	}
 
 	// request for adding file
@@ -181,7 +182,7 @@ func TestAttachingFile(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.Status)
 
 	// request for getting file
-	req = httptest.NewRequest(http.MethodGet, "/api/admin/get_file?hostname=testmachine", nil)
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/get_file?hostname=testmachine&file=testfile", nil)
 	req.AddCookie(&cookie)
 	getresp, err := api.GetFile(req, mockLogger)
 	assert.NoError(t, err, "No error in valid request to download file")
@@ -272,6 +273,20 @@ func TestServerEndpoints(t *testing.T) {
 			endpoint:       "/api/admin/get_file?machine=wrong",
 			expectedStatus: http.StatusBadRequest,
 			headers:        map[string]string{"Cookie": "token=example_token"},
+		},
+		{
+			name:           "Test listing files is autheticated",
+			method:         http.MethodGet,
+			endpoint:       "/api/admin/list_files?machine=notauth",
+			expectedStatus: http.StatusUnauthorized,
+			headers:        map[string]string{"Cookie": "token=wrongtoken"},
+		},
+		{
+			name:           "Test removing files is autheticated",
+			method:         http.MethodPost,
+			endpoint:       "/api/admin/remove_file",
+			expectedStatus: http.StatusUnauthorized,
+			headers:        map[string]string{"Cookie": "token=wrongtoken"},
 		},
 	}
 
