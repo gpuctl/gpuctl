@@ -636,7 +636,23 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 }
 
 func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
-	_, err := conn.db.Exec(`INSERT INTO Files (Hostname, Mime, Filename, File)
+	// Make sure we delete duplicates. Somewhat hacky
+	var exists bool
+	err := conn.db.QueryRow(`SELECT COUNT(* )
+		FROM Files WHERE Hostname = $1 AND Filename = $2`,
+		attach.Hostname, attach.Filename).Scan(&exists)
+	if err != nil {
+		return err
+	}
+	if exists {
+		err = conn.RemoveFile(broadcast.RemoveFile{Hostname: attach.Hostname, Filename: attach.Filename})
+		if err != nil {
+			return err
+		}
+	}
+
+	// Insert into db
+	_, err = conn.db.Exec(`INSERT INTO Files (Hostname, Mime, Filename, File)
 		VALUES ($1, $2, $3, $4);`,
 		attach.Hostname, attach.Mime, attach.Filename, attach.EncodedFile,
 	)
@@ -699,6 +715,9 @@ func (conn PostgresConn) RemoveFile(remove broadcast.RemoveFile) error {
 		WHERE Hostname=$1 AND Filename=$2
 		RETURNING Filename;`,
 		remove.Hostname, remove.Filename)
+	if err != nil {
+		return err
+	}
 
 	found := false
 	for rows.Next() {

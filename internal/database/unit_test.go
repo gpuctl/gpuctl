@@ -633,3 +633,33 @@ func removeWrongFile(t *testing.T, db database.Database) {
 	err = db.RemoveFile(broadcast.RemoveFile{Hostname: "real", Filename: "doesnt exist"})
 	assert.ErrorIs(t, err, database.ErrFileNotPresent)
 }
+
+func additionRemoveOldFile(t *testing.T, db database.Database) {
+	fakeHost := "chestnut"
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	pdf1 := broadcast.AttachFile{
+		Hostname:    fakeHost,
+		Mime:        "application/pdf",
+		Filename:    "filename",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	text := broadcast.AttachFile{
+		Hostname:    fakeHost,
+		Mime:        "plain/text",
+		Filename:    "filename",
+		EncodedFile: uploadTxtEnc,
+	}
+
+	err = db.AttachFile(pdf1)
+	assert.NoError(t, err)
+	err = db.AttachFile(text)
+	assert.NoError(t, err)
+	files, err := db.ListFiles(fakeHost)
+	assert.Equal(t, 1, len(files))
+
+	file, err := db.GetFile(fakeHost, files[0])
+	assert.Equal(t, text, file)
+}

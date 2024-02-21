@@ -22,6 +22,10 @@ import (
 var uploadPdfBytes []byte
 var uploadPdfEnc = base64.StdEncoding.EncodeToString(uploadPdfBytes)
 
+//go:embed testdata/more.txt
+var uploadTxtBytes []byte
+var uploadTxtEnc = base64.StdEncoding.EncodeToString(uploadTxtBytes)
+
 var (
 	joeAuth = webapi.ConfigFileAuthenticator{
 		Username:      "joe",
@@ -152,6 +156,89 @@ func TestAllStatistics(t *testing.T) {
 			// ! Somebody will need to write the tests for what we expect as output data
 		})
 	}
+}
+
+func TestListFiles(t *testing.T) {
+	mockDB := database.InMemory()
+	mockLogger := slog.Default()
+	api := &webapi.Api{DB: mockDB}
+	hostname := "machine01"
+	mockDB.UpdateLastSeen(hostname, 0)
+
+	token, err := joeAuth.CreateToken(joeCreds)
+	assert.NoError(t, err, "No error in creating auth token")
+	cookie := http.Cookie{Name: authentication.TokenCookieName, Value: token}
+
+	pdf1 := broadcast.AttachFile{
+		Hostname:    hostname,
+		Filename:    "file1",
+		Mime:        "application/pdf",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	pdf2 := broadcast.AttachFile{
+		Hostname:    hostname,
+		Filename:    "file2",
+		Mime:        "application/pdf",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/attach_file", nil)
+	req.AddCookie(&cookie)
+	api.AttachFile(pdf1, req, mockLogger)
+	resp, err := api.AttachFile(pdf2, req, mockLogger)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.Status)
+
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/list_files?hostname="+hostname, nil)
+	req.AddCookie(&cookie)
+
+	listresp, err := api.ListFiles(req, mockLogger)
+	assert.Equal(t, http.StatusOK, listresp.Status)
+	list := listresp.Body
+	assert.EqualValues(t, list, []string{pdf1.Filename, pdf2.Filename})
+}
+
+func TestRemovingFile(t *testing.T) {
+	mockDB := database.InMemory()
+	mockLogger := slog.Default()
+	api := &webapi.Api{DB: mockDB}
+	hostname := "machine09"
+
+	token, err := joeAuth.CreateToken(joeCreds)
+	assert.NoError(t, err, "No error in creating auth token")
+	cookie := http.Cookie{Name: authentication.TokenCookieName, Value: token}
+
+	mockDB.UpdateLastSeen(hostname, 0)
+
+	pdf := broadcast.AttachFile{
+		Hostname:    hostname,
+		Filename:    "verycoolfile",
+		Mime:        "application/pdf",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	// Add file
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/attach_file", nil)
+	req.AddCookie(&cookie)
+	_, err = api.AttachFile(pdf, req, mockLogger)
+	assert.NoError(t, err)
+
+	// Remove file
+	remreq := httptest.NewRequest(http.MethodPost, "/api/admin/remove_file", nil)
+	req.AddCookie(&cookie)
+	res, err := api.RemoveFile(broadcast.RemoveFile{Hostname: hostname, Filename: pdf.Filename}, remreq, mockLogger)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, res.Status)
+
+	// Confirm from list
+	listreq := httptest.NewRequest(http.MethodGet, "/api/admin/list_files?hostname="+hostname, nil)
+	listreq.AddCookie(&cookie)
+	listresp, err := api.ListFiles(listreq, mockLogger)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, listresp.Status)
+	list := listresp.Body
+	assert.Equal(t, list, []string{})
 }
 
 func TestAttachingFile(t *testing.T) {
