@@ -588,18 +588,7 @@ func listFiles(t *testing.T, db database.Database) {
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(files))
 
-	flag1 := false
-	flag2 := false
-	for _, f := range files {
-		if f == pdf.Filename {
-			flag1 = true
-		}
-		if f == txt.Filename {
-			flag2 = true
-		}
-	}
-	assert.True(t, flag1, "PDF file exists")
-	assert.True(t, flag2, "Text file exists")
+	assert.ElementsMatch(t, files, []string{pdf.Filename, txt.Filename})
 }
 
 func removeFile(t *testing.T, db database.Database) {
