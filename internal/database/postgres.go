@@ -636,14 +636,11 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 }
 
 func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
-	fmt.Printf("GOT HERE !")
 	_, err := conn.db.Exec(`INSERT INTO Files (Hostname, Mime, File)
 		VALUES ($1, $2, $3);`,
 		attach.Hostname, attach.Mime, attach.EncodedFile,
 	)
-	fmt.Printf("GOT HERE 2")
 	if err != nil {
-	fmt.Printf("GOT HERE 3")
 		return ErrAddingFileToNonPresentMachine
 	}
 	return nil
@@ -652,27 +649,26 @@ func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
 func (conn PostgresConn) GetFile(hostname string) (broadcast.AttachFile, error) {
 	file := broadcast.AttachFile{Hostname: hostname}
 
-	tx, err := conn.db.Begin()
+	rows, err := conn.db.Query(`SELECT Mime, File
+		FROM Files
+		WHERE Hostname=$1`,
+		hostname)
 	if err != nil {
 		return file, err
 	}
 
-	row := tx.QueryRow(`SELECT Mime, File
-		FROM Files
-		WHERE Hostname=$1`,
-		hostname)
-	err = row.Scan(&file.Mime, &file.EncodedFile)
+	found := false
+	for rows.Next() {
+		found = true
+		err = rows.Scan(&file.Mime, &file.EncodedFile)
+		if err != nil {
+			return file, err
+		}
+	}
 
-	if errors.Is(err, sql.ErrNoRows) {
-		// Did not find in db, return standard error
+	if !found {
 		return file, ErrFileNotPresent
-	} else if err != nil {
-		// Unknown error
-		return file, errors.Join(err, tx.Rollback())
 	}
 
-	if err = tx.Commit(); err != nil {
-		return file, err
-	}
 	return file, nil
 }
