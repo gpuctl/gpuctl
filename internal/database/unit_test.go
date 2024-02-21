@@ -6,6 +6,8 @@
 package database_test
 
 import (
+	_ "embed"
+	"encoding/base64"
 	"log/slog"
 	"math"
 	"reflect"
@@ -17,6 +19,10 @@ import (
 	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/stretchr/testify/assert"
 )
+
+//go:embed testdata/uploadtest.pdf
+var uploadPdfBytes []byte
+var uploadPdfEnc = base64.StdEncoding.EncodeToString(uploadPdfBytes)
 
 type unitTest struct {
 	Name string
@@ -36,6 +42,7 @@ var UnitTests = [...]unitTest{
 	{"OneGpu", oneGpu},
 	{"MachineInfoStartsEmpty", machineInfoStartsEmpty},
 	{"MachineInfoUpdatesWork", machineInfoUpdatesWork},
+	{"AttachingFiles", attachAndGetFile},
 	{"MachinesCanBeRemoved", removingMachine},
 	{"InUseInformation", inUseInformation},
 }
@@ -497,4 +504,24 @@ func inUseInformation(t *testing.T, db database.Database) {
 		assert.Len(t, machine.Gpus, 1)
 		assert.True(t, statsNear(machine.Gpus[0], stat, context))
 	}
+}
+
+func attachAndGetFile(t *testing.T, db database.Database) {
+	fakeHost := "chipmunk"
+	payload := broadcast.AttachFile{
+		Hostname: fakeHost,
+		Mime: "application/pdf",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	// Put file in db
+	err := db.AttachFile(payload)
+	assert.NoError(t, err)
+
+	// Now get file
+	resp, err := db.GetFile(fakeHost)
+	assert.NoError(t, err)
+	assert.Equal(t, uploadPdfEnc, resp.EncodedFile)
+	assert.Equal(t, "application/pdf", resp.Mime)
+	assert.Equal(t, fakeHost, resp.Hostname)
 }
