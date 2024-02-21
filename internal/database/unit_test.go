@@ -99,27 +99,14 @@ func statsNear(target broadcast.GPU, stat uplink.GPUStatSample, context uplink.G
 	}
 
 	// compare running processes
-	if len(stat.RunningProcesses) > 0 {
-		// in_use should be set if there's at least one running process
-		// user is set if in_use set and is the user from first process
-		if !target.InUse {
-			slog.Error("InUse didn't match", "was", target.InUse, "wanted", "True")
-			return false
-		}
-		if target.User != stat.RunningProcesses[0].Owner {
-			slog.Error("User didn't match", "was", target.User, "wanted", stat.RunningProcesses[0].Owner)
-			return false
-		}
-	} else {
-		// otherwise, in_use should be false and user the empty string
-		if target.InUse {
-			slog.Error("InUse didn't match", "was", target.InUse, "wanted", "False")
-			return false
-		}
-		if target.User != "" {
-			slog.Error("User didn't match", "was", target.User, "wanted", "Empty string")
-			return false
-		}
+	inUse, user := stat.RunningProcesses.Summarise()
+	if target.InUse != inUse {
+		slog.Error("InUse didn't match", "was", target.InUse, "wanted", inUse)
+		return false
+	}
+	if target.User != user {
+		slog.Error("User didn't match", "was", target.User, "wanted", user)
+		return false
 	}
 
 	// compare all the other fields using reflection
