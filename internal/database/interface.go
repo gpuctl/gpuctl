@@ -9,9 +9,10 @@ import (
 
 // Constant errors for failures in DB
 var (
-	ErrMachineNotPresent = errors.New("adding gpu to non present machine")
-	ErrGpuNotPresent     = errors.New("appending to non present gpu")
-	ErrFileNotPresent    = errors.New("no file found")
+	ErrMachineNotPresent             = errors.New("adding gpu to non present machine")
+	ErrGpuNotPresent                 = errors.New("appending to non present gpu")
+	ErrAddingFileToNonPresentMachine = errors.New("attaching a file to a machine that does not exist")
+	ErrFileNotPresent                = errors.New("no file found")
 )
 
 // default group to give to machines with a null or empty group

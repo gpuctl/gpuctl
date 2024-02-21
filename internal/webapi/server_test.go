@@ -159,6 +159,8 @@ func TestAttachingFile(t *testing.T) {
 	mockLogger := slog.Default()
 	api := &webapi.Api{DB: mockDB}
 
+	mockDB.UpdateLastSeen("testmachine", 0)
+
 	token, err := joeAuth.CreateToken(joeCreds)
 	assert.NoError(t, err, "No error in creating auth token")
 	cookie := http.Cookie{Name: authentication.TokenCookieName, Value: token}

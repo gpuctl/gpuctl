@@ -43,6 +43,8 @@ var UnitTests = [...]unitTest{
 	{"MachineInfoStartsEmpty", machineInfoStartsEmpty},
 	{"MachineInfoUpdatesWork", machineInfoUpdatesWork},
 	{"AttachingFiles", attachAndGetFile},
+	{"AttachingFilesNonexistentHost", attachFileToNonExistentHost},
+	{"GetFilesNoExist", gettingNonExistentFile},
 	{"MachinesCanBeRemoved", removingMachine},
 	{"InUseInformation", inUseInformation},
 }
@@ -526,4 +528,27 @@ func attachAndGetFile(t *testing.T, db database.Database) {
 	assert.Equal(t, uploadPdfEnc, resp.EncodedFile)
 	assert.Equal(t, "application/pdf", resp.Mime)
 	assert.Equal(t, fakeHost, resp.Hostname)
+}
+
+func gettingNonExistentFile(t *testing.T, db database.Database) {
+	fakeHost1 := "chipmunk"
+	fakeHost2 := "porcupine"
+	err := db.UpdateLastSeen(fakeHost1, time.Now().Unix())
+	assert.NoError(t, err)
+
+	_, err = db.GetFile(fakeHost1)
+	assert.ErrorIs(t, err, database.ErrFileNotPresent)
+
+	_, err = db.GetFile(fakeHost2)
+	assert.ErrorIs(t, err, database.ErrFileNotPresent)
+}
+
+func attachFileToNonExistentHost(t *testing.T, db database.Database) {
+	payload := broadcast.AttachFile{
+		Hostname:    "mystery",
+		Mime:        "application/pdf",
+		EncodedFile: uploadPdfEnc,
+	}
+	err := db.AttachFile(payload)
+	assert.ErrorIs(t, err, database.ErrAddingFileToNonPresentMachine)
 }

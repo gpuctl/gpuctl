@@ -284,11 +284,22 @@ func (m *inMemory) UpdateMachine(changes broadcast.ModifyMachine) error {
 }
 
 func (m *inMemory) AttachFile(file broadcast.AttachFile) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	var zero broadcast.ModifyMachine
+	if m.machines[file.Hostname] == zero {
+		return fmt.Errorf("%s: %w", file.Hostname, ErrAddingFileToNonPresentMachine)
+	}
+
 	m.files[file.Hostname] = file
 	return nil
 }
 
 func (m *inMemory) GetFile(hostname string) (broadcast.AttachFile, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
 	var zero broadcast.AttachFile
 	file := m.files[hostname]
 	if file == zero {

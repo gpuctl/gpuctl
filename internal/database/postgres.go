@@ -636,11 +636,17 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 }
 
 func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
+	fmt.Printf("GOT HERE !")
 	_, err := conn.db.Exec(`INSERT INTO Files (Hostname, Mime, File)
 		VALUES ($1, $2, $3);`,
 		attach.Hostname, attach.Mime, attach.EncodedFile,
 	)
-	return err
+	fmt.Printf("GOT HERE 2")
+	if err != nil {
+	fmt.Printf("GOT HERE 3")
+		return ErrAddingFileToNonPresentMachine
+	}
+	return nil
 }
 
 func (conn PostgresConn) GetFile(hostname string) (broadcast.AttachFile, error) {
