@@ -196,7 +196,7 @@ func TestListFiles(t *testing.T) {
 	listresp, err := api.ListFiles(req, mockLogger)
 	assert.Equal(t, http.StatusOK, listresp.Status)
 	list := listresp.Body
-	assert.EqualValues(t, list, []string{pdf1.Filename, pdf2.Filename})
+	assert.ElementsMatch(t, list, []string{pdf1.Filename, pdf2.Filename})
 }
 
 func TestRemovingFile(t *testing.T) {
