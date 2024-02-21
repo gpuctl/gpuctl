@@ -194,7 +194,7 @@ func (a *Api) GetFile(r *http.Request, l *slog.Logger) (*femto.Response[[]byte],
 		Body:   respbytes,
 		Headers: map[string]string{
 			"Content-Type":        dbresp.Mime,
-			"Content-Disposition": "attachment; filename=attachment",
+			"Content-Disposition": "attachment; filename=" + dbresp.Hostname + "_" + dbresp.Filename,
 		},
 	}, nil
 }
