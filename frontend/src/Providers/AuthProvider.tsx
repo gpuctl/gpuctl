@@ -36,7 +36,9 @@ type AuthCtx = {
   isSignedIn: () => boolean;
   login: (username: string, password: string) => void;
   logout: () => void;
-  useAuthFetch: (path: string, init?: RequestInit) => Validation<Response>;
+  useAuthFetch: (
+    path: string,
+  ) => [Validation<Response>, (init?: RequestInit) => void];
 };
 
 type UsernameReminder = { username: string };
@@ -46,7 +48,7 @@ const AuthContext = createContext<AuthCtx>({
   isSignedIn: () => false,
   login: () => {},
   logout: () => {},
-  useAuthFetch: () => failure(Error("No auth context provided")),
+  useAuthFetch: () => [failure(Error("No auth context provided")), () => {}],
 });
 
 const authFetch = (path: string, init?: RequestInit) => {
@@ -130,18 +132,20 @@ export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
     setUser(failure(Error("Logged out!")));
   };
 
-  const useAuthFetch = (path: string, init?: RequestInit | undefined) => {
+  // This maybe should return the firing function...
+  const useAuthFetch = (path: string): [Validation<Response>, () => void] => {
     const [resp, setResp] = useState<Validation<Response>>(loading());
 
-    fire(async () => {
-      const r = await authFetch(path, init);
-      if (!r.ok && r.status === 403) {
-        logout();
-      }
-      setResp(success(r));
-    });
+    const f = (init?: RequestInit | undefined) =>
+      fire(async () => {
+        const r = await authFetch(path, init);
+        if (!r.ok && r.status === 403) {
+          logout();
+        }
+        setResp(success(r));
+      });
 
-    return resp;
+    return [resp, f];
   };
 
   const isSignedIn = () => isSuccess(user);

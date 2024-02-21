@@ -84,24 +84,24 @@ func TestAverageProcess(t *testing.T) {
 
 	testCases := []struct {
 		name    string
-		toMerge [][]uplink.GPUProcInfo
-		merged  []uplink.GPUProcInfo
+		toMerge []uplink.Processes
+		merged  uplink.Processes
 	}{
 		{"Empty", nil, nil},
 		{"Single Sample",
-			[][]uplink.GPUProcInfo{
+			[]uplink.Processes{
 				{{Pid: 1, Name: "foo", MemUsed: 100}, {Pid: 2, Name: "bar", MemUsed: 200}},
 			},
 			[]uplink.GPUProcInfo{{Pid: 1, Name: "foo", MemUsed: 100}, {Pid: 2, Name: "bar", MemUsed: 200}},
 		},
 		{
 			"Three Separate Processes",
-			[][]uplink.GPUProcInfo{
+			[]uplink.Processes{
 				{{Pid: 1, Name: "foo", MemUsed: 100}},
 				{{Pid: 2, Name: "bar", MemUsed: 200}},
 				{{Pid: 3, Name: "baz", MemUsed: 300}},
 			},
-			[]uplink.GPUProcInfo{
+			uplink.Processes{
 				{Pid: 1, Name: "foo", MemUsed: 100},
 				{Pid: 2, Name: "bar", MemUsed: 200},
 				{Pid: 3, Name: "baz", MemUsed: 300},
