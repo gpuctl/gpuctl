@@ -341,10 +341,7 @@ func (m *inMemory) RemoveFile(remove broadcast.RemoveFile) error {
 	defer m.mu.Unlock()
 
 	var zero broadcast.ModifyMachine
-	if m.machines[remove.Hostname] == zero {
-		return ErrNoSuchMachine
-	}
-	if m.files[remove.Hostname] == nil {
+	if m.machines[remove.Hostname] == zero || m.files[remove.Hostname] == nil {
 		return ErrFileNotPresent
 	}
 	delete(m.files[remove.Hostname], remove.Filename)

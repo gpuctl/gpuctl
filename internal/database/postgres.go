@@ -80,8 +80,7 @@ func createTables(db *sql.DB) error {
 		Hostname text NOT NULL REFERENCES Machines (Hostname),
 		Filename text NOT NULL,
 		Mime text NOT NULL,
-		File text NOT NULL,
-		PRIMARY KEY (Hostname)
+		File text NOT NULL
 	);`)
 
 	if err != nil {
@@ -675,9 +674,40 @@ func (conn PostgresConn) GetFile(hostname string, filename string) (broadcast.At
 }
 
 func (conn PostgresConn) ListFiles(hostname string) ([]string, error) {
-	return []string{}, errors.New("NOT IMPLT")
+	rows, err := conn.db.Query(`SELECT Filename
+		FROM Files
+		WHERE Hostname=$1`,
+		hostname)
+	if err != nil {
+		return []string{}, err
+	}
+
+	res := []string{}
+	for rows.Next() {
+		val := ""
+		err = rows.Scan(&val)
+		if err != nil {
+			return res, err
+		}
+		res = append(res, val)
+	}
+	return res, nil
 }
 
 func (conn PostgresConn) RemoveFile(remove broadcast.RemoveFile) error {
-	return errors.New("Not impl")
+	rows, err := conn.db.Query(`DELETE FROM Files
+		WHERE Hostname=$1 AND Filename=$2
+		RETURNING Filename;`,
+		remove.Hostname, remove.Filename)
+
+	found := false
+	for rows.Next() {
+		found = true
+		rows.Scan()
+	}
+
+	if !found {
+		return ErrFileNotPresent
+	}
+	return err
 }

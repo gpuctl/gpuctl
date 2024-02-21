@@ -626,7 +626,7 @@ func removeFile(t *testing.T, db database.Database) {
 
 func removeWrongFile(t *testing.T, db database.Database) {
 	err := db.RemoveFile(broadcast.RemoveFile{Hostname: "mystery", Filename: "doesnt exist"})
-	assert.ErrorIs(t, err, database.ErrNoSuchMachine)
+	assert.ErrorIs(t, err, database.ErrFileNotPresent)
 
 	err = db.UpdateLastSeen("real", time.Now().Unix())
 	assert.NoError(t, err)

@@ -286,6 +286,7 @@ func TestServerEndpoints(t *testing.T) {
 			method:         http.MethodPost,
 			endpoint:       "/api/admin/remove_file",
 			expectedStatus: http.StatusUnauthorized,
+			body:			[]byte(`{"hostname":"bogus", "filename":"bogus"}`),
 			headers:        map[string]string{"Cookie": "token=wrongtoken"},
 		},
 	}

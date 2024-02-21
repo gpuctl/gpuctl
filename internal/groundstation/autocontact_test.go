@@ -68,7 +68,7 @@ func (edb *ErrorDB) ListFiles(hostname string) ([]string, error) {
 	return nil, nil
 }
 
-func (edb *ErrorDB) RemoveFile(hostname string, filename string) error {
+func (edb *ErrorDB) RemoveFile(rem broadcast.RemoveFile) error {
 	return nil
 }
 
