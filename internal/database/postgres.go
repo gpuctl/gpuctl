@@ -91,6 +91,8 @@ func createTables(db *sql.DB) error {
 		MaxGraphicsClock real NOT NULL,
 		MemoryClock real NOT NULL,
 		MaxMemoryClock real NOT NULL,
+		InUse boolean NOT NULL,
+		UserName text NOT NULL DEFAULT '',
 		PRIMARY KEY (Gpu, Received)
 	);`)
 
@@ -163,18 +165,22 @@ func updateLastSeen(host string, now time.Time, tx *sql.Tx) (err error) {
 func (conn PostgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 	now := time.Now()
 
+	inUse, user := sample.RunningProcesses.Summarise()
+
 	_, err := conn.db.Exec(`INSERT INTO Stats
 		(Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed,
 		FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw,
-		GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock)
+		GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock,
+		InUse, UserName)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13,
-		$14)`,
+		$14, $15, $16)`,
 		sample.Uuid, now,
 		sample.MemoryUtilisation, sample.GPUUtilisation,
 		sample.MemoryUsed, sample.FanSpeed, sample.Temp,
 		sample.MemoryTemp, sample.GraphicsVoltage, sample.PowerDraw,
 		sample.GraphicsClock, sample.MaxGraphicsClock,
-		sample.MemoryClock, sample.MaxMemoryClock)
+		sample.MemoryClock, sample.MaxMemoryClock,
+		inUse, user)
 
 	// TODO: hacky, untested. Might not work
 	if err != nil {
@@ -391,7 +397,7 @@ func getGpus(host string, tx *sql.Tx) ([]broadcast.GPU, error) {
 		s.MemoryUsed, s.FanSpeed, s.Temp, s.MemoryTemp,
 		s.GraphicsVoltage, s.PowerDraw, s.GraphicsClock,
 		s.MaxGraphicsClock, s.MemoryClock,
-		s.MaxMemoryClock
+		s.MaxMemoryClock, s.InUse, s.UserName
 		FROM GPUs g INNER JOIN Stats s ON g.Uuid = s.Gpu
 		INNER JOIN (
 			SELECT Gpu, Max(Received) Received
@@ -416,7 +422,7 @@ func getGpus(host string, tx *sql.Tx) ([]broadcast.GPU, error) {
 			&gpu.MemoryTemp, &gpu.GraphicsVoltage,
 			&gpu.PowerDraw, &gpu.GraphicsClock,
 			&gpu.MaxGraphicsClock, &gpu.MemoryClock,
-			&gpu.MaxMemoryClock)
+			&gpu.MaxMemoryClock, &gpu.InUse, &gpu.User)
 		if err != nil {
 			return nil, err
 		}

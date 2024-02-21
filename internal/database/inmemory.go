@@ -83,6 +83,10 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 		// most recent stat is at the end
 		stats := m.stats[uuid]
 		stat := stats[len(stats)-1]
+
+		// add on in-use info
+		gpu.InUse, gpu.User = stat.RunningProcesses.Summarise()
+
 		// reflect on stat to get all the fields
 		for _, field := range reflect.VisibleFields(reflect.TypeOf(stat)) {
 			// uuid already set, skip
