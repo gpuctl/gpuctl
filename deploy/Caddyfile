@@ -24,21 +24,25 @@ https://gpuctl.perial.co.uk {
 		-Access-Control-Allow-Credentials
 	}
 
-	# For api routes, we can lock down the CSP even further
-	# https://infosec.mozilla.org/guidelines/web_security#content-security-policy
-	header /gs-api/* Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
-	header /api/* Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
-
-	# forward groundstation and web-api requests to control
-	# should match ports set in ./control.toml.default
-	reverse_proxy /gs-api/* control:8080
-	reverse_proxy /api/* control:8000
-
-	handle_path /stats/* {
+	# handler for all frontend pages (not all static content)
+	# redirect when not present on disk to /
+	handle_path /stats* {
 		try_files {path} /index.html
 		file_server
 	}
+
+	# handler for all the other content (root page, images, api endpoints)
 	handle {
+		# For api routes, we can lock down the CSP even further
+		# https://infosec.mozilla.org/guidelines/web_security#content-security-policy
+		header /gs-api/* Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+		header /api/* Content-Security-Policy "default-src 'none'; frame-ancestors 'none'"
+
+		# forward groundstation and web-api requests to control
+		# should match ports set in ./control.toml.default
+		reverse_proxy /gs-api/* control:8080
+		reverse_proxy /api/* control:8000
+
 		file_server
 	}
 

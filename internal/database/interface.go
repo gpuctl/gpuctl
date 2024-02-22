@@ -11,6 +11,8 @@ import (
 var (
 	ErrMachineNotPresent = errors.New("adding gpu to non present machine")
 	ErrGpuNotPresent     = errors.New("appending to non present gpu")
+	ErrNoSuchMachine     = errors.New("could not find given machine")
+	ErrFileNotPresent    = errors.New("no file found")
 )
 
 // default group to give to machines with a null or empty group
@@ -41,4 +43,10 @@ type Database interface {
 
 	// downsample since certain unix time
 	Downsample(time int64) error
+
+	// methods for interacting with files
+	AttachFile(broadcast.AttachFile) error
+	GetFile(hostname string, filename string) (broadcast.AttachFile, error)
+	RemoveFile(broadcast.RemoveFile) error
+	ListFiles(hostname string) ([]string, error)
 }

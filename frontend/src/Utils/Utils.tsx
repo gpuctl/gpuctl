@@ -155,10 +155,6 @@ export function validatedElim<T, U>(
   }
 }
 
-export function isFree(s: GPUStats): Boolean {
-  return s.gpu_util < 5;
-}
-
 export const mapSuccess = <T, U>(
   v: Validation<T>,
   f: (x: T) => U,
@@ -170,3 +166,10 @@ export const mapSuccess = <T, U>(
  */
 export const orElse = <T, U>(v: Validation<T>, e: () => U) =>
   v.tag === VTag.Success ? v.data : e();
+
+// A mechine is busy if all gpus are in use
+export const workstationBusy = (gs: GPUStats[]) => {
+  return gs.every((g) => {
+    return g.in_use;
+  });
+};

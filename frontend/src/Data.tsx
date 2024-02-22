@@ -1,9 +1,8 @@
 // These types need to be kept in sync with `internal/webapi/types.go`
 
-export type WorkStationGroup = {
+export type WorkStationGroup<E = {}> = {
   name: string;
-  // TODO: Consistant cases here
-  workstations: WorkStationData[];
+  workstations: (WorkStationData & E)[];
 };
 
 export type WorkStationData = {
@@ -12,10 +11,12 @@ export type WorkStationData = {
   motherboard: string;
   notes: string;
   gpus: GPUStats[];
+  last_seen: number;
 };
 
 // This needs to be kept in sync with `internal/uplink/
 export type GPUStats = {
+  uuid: string;
   gpu_name: string;
   gpu_brand: string;
   driver_ver: string;
@@ -33,6 +34,8 @@ export type GPUStats = {
   max_graphics_clock: number;
   memory_clock: number;
   max_memory_clock: number;
+  in_use: boolean;
+  user: string;
 };
 
 export type DurationDeltas = {
@@ -49,8 +52,10 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "i7-7700k",
         motherboard: "ASUS ROG STRIX Z790-A",
         notes: "noisy fan",
+        last_seen: 500,
         gpus: [
           {
+            uuid: "AAAAA",
             gpu_name: "NVIDIA GeForce GT 1030",
             gpu_brand: "GeForce",
             driver_ver: "535.146.02",
@@ -67,6 +72,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 5,
             memory_clock: 6,
             max_memory_clock: 7,
+            in_use: false,
+            user: "",
           },
         ],
       },
@@ -75,8 +82,10 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "Ryzen 5800X",
         motherboard: "Z790 AORUS XTREME X",
         notes: "",
+        last_seen: 260,
         gpus: [
           {
+            uuid: "BBBBB",
             gpu_name: "NVIDIA TITAN Xp",
             gpu_brand: "Titan",
             driver_ver: "535.146.02",
@@ -93,8 +102,11 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 12,
             memory_clock: 13,
             max_memory_clock: 14,
+            in_use: false,
+            user: "",
           },
           {
+            uuid: "CCCCC",
             gpu_name: "NVIDIA TITAN Xp",
             gpu_brand: "Titan",
             driver_ver: "535.146.02",
@@ -111,6 +123,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 19,
             memory_clock: 20,
             max_memory_clock: 21,
+            in_use: true,
+            user: "",
           },
         ],
       },
@@ -119,8 +133,10 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "Intel Pentium 2",
         motherboard: "Acer Veriton M4630G MT",
         notes: "scheduled for replacement 2024",
+        last_seen: 30000000000,
         gpus: [
           {
+            uuid: "DDDDD",
             gpu_name: "NVIDIA GeForce GT 730",
             gpu_brand: "GeForce",
             driver_ver: "470.223.02",
@@ -137,6 +153,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 26,
             memory_clock: 27,
             max_memory_clock: 28,
+            in_use: true,
+            user: "",
           },
         ],
       },
@@ -146,8 +164,10 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         motherboard: "",
         notes:
           "We don't particularly like this one, but it always works and we can't really bin it",
+        last_seen: 90000000000,
         gpus: [
           {
+            uuid: "EEEEE",
             gpu_name: "NVIDIA TITAN Xp",
             gpu_brand: "Titan",
             driver_ver: "535.146.02",
@@ -164,8 +184,11 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 33,
             memory_clock: 34,
             max_memory_clock: 35,
+            in_use: false,
+            user: "",
           },
           {
+            uuid: "FFFFF",
             gpu_name: "NVIDIA TITAN Xp",
             gpu_brand: "Titan",
             driver_ver: "535.146.02",
@@ -182,6 +205,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 40,
             memory_clock: 41,
             max_memory_clock: 42,
+            in_use: false,
+            user: "",
           },
         ],
       },
@@ -190,8 +215,10 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "AMD Z1 Extreme",
         motherboard: "Ticket to Ride: Europe",
         notes: "Please don't use this unless you absolutely have to",
+        last_seen: 40000000000,
         gpus: [
           {
+            uuid: "GGGGG",
             gpu_name: "NVIDIA GeForce GT 1030",
             gpu_brand: "GeForce",
             driver_ver: "535.146.02",
@@ -208,6 +235,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 47,
             memory_clock: 48,
             max_memory_clock: 49,
+            in_use: false,
+            user: "",
           },
         ],
       },
@@ -217,8 +246,10 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "AMD 4800S",
         motherboard: "AMD 4800S Desktop Kit",
         notes: "",
+        last_seen: 180000000123,
         gpus: [
           {
+            uuid: "HHHHH",
             gpu_name: "NVIDIA GeForce GT 730",
             gpu_brand: "GeForce",
             driver_ver: "470.223.02",
@@ -235,6 +266,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 54,
             memory_clock: 55,
             max_memory_clock: 56,
+            in_use: true,
+            user: "",
           },
         ],
       },
