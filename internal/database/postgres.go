@@ -223,7 +223,7 @@ WITH OrderedStats AS (
     MaxGraphicsClock,
     MemoryClock,
     MaxMemoryClock,
-	InUse,
+    InUse,
     UserName,
     ROW_NUMBER() OVER (PARTITION BY Gpu ORDER BY Received ASC) - 1 AS RowNum
   FROM Stats
