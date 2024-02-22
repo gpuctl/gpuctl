@@ -16,7 +16,6 @@ import {
 import { WorkStationGroup } from "../Data";
 import { useState } from "react";
 import { useForceUpdate } from "framer-motion";
-import { ObjectFlags } from "typescript";
 
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   // default to show group, machine_name, gpu_name, isFree, brand, and memory_total
