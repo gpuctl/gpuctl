@@ -15,7 +15,7 @@ import {
 } from "@chakra-ui/react";
 import { WorkStationGroup } from "../Data";
 import { useState } from "react";
-import { isFree } from "../Utils/Utils";
+import { isFree, workstationIsFree } from "../Utils/Utils";
 import { useForceUpdate } from "framer-motion";
 
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
@@ -119,7 +119,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
             </Tr>
           </Thead>
           <Tbody key={1}>
-            {groups.map(({ name: group_name, workstations }, i) =>
+            {sortIsFree(groups).map(({ name: group_name, workstations }, i) =>
               workstations.map(({ name: workstation_name, gpus }, j) =>
                 gpus.map((gpu, k) => {
                   const id =
@@ -205,4 +205,21 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
       </TableContainer>
     </div>
   );
+};
+
+const sortIsFree = (groups: WorkStationGroup[]) => {
+  const freeWorkStations: WorkStationGroup[] = groups.map(
+    ({ name: group_name, workstations }) => ({
+      name: group_name,
+      workstations: workstations.filter((w) => workstationIsFree(w)),
+    }),
+  );
+  const notfreeWorkStations = groups.map(
+    ({ name: group_name, workstations }) => ({
+      name: group_name,
+      workstations: workstations.filter((w) => !workstationIsFree(w)),
+    }),
+  );
+
+  return freeWorkStations.concat(notfreeWorkStations);
 };

@@ -1,4 +1,4 @@
-import { GPUStats } from "../Data";
+import { GPUStats, WorkStationData } from "../Data";
 
 /** Create an array of numbers that span between a given minimum and maximum */
 export const range = (min: number, max: number) =>
@@ -154,6 +154,12 @@ export function validatedElim<T, U>(
 
 export function isFree(s: GPUStats): Boolean {
   return s.gpu_util < 5;
+}
+
+export function workstationIsFree(w: WorkStationData): Boolean {
+  return w.gpus.every((g) => {
+    isFree(g);
+  });
 }
 
 export const mapSuccess = <T, U>(
