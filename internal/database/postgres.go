@@ -80,7 +80,8 @@ func createTables(db *sql.DB) error {
 		Hostname text NOT NULL REFERENCES Machines (Hostname),
 		Filename text NOT NULL,
 		Mime text NOT NULL,
-		File text NOT NULL
+		File text NOT NULL,
+		PRIMARY KEY (Hostname, Filename)
 	);`)
 
 	if err != nil {
@@ -636,24 +637,11 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 }
 
 func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
-	// Make sure we delete duplicates. Somewhat hacky
-	var exists bool
-	err := conn.db.QueryRow(`SELECT COUNT(* )
-		FROM Files WHERE Hostname = $1 AND Filename = $2`,
-		attach.Hostname, attach.Filename).Scan(&exists)
-	if err != nil {
-		return err
-	}
-	if exists {
-		err = conn.RemoveFile(broadcast.RemoveFile{Hostname: attach.Hostname, Filename: attach.Filename})
-		if err != nil {
-			return err
-		}
-	}
-
 	// Insert into db
-	_, err = conn.db.Exec(`INSERT INTO Files (Hostname, Mime, Filename, File)
-		VALUES ($1, $2, $3, $4);`,
+	_, err := conn.db.Exec(`INSERT INTO Files (Hostname, Mime, Filename, File)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (Hostname, Filename) DO UPDATE
+		SET (Mime, File) = (EXCLUDED.Mime, Excluded.File);`,
 		attach.Hostname, attach.Mime, attach.Filename, attach.EncodedFile,
 	)
 	if err != nil {
@@ -665,28 +653,16 @@ func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
 func (conn PostgresConn) GetFile(hostname string, filename string) (broadcast.AttachFile, error) {
 	file := broadcast.AttachFile{Hostname: hostname, Filename: filename}
 
-	rows, err := conn.db.Query(`SELECT Mime, File
+	row := conn.db.QueryRow(`SELECT Mime, File
 		FROM Files
 		WHERE Hostname=$1 AND Filename=$2`,
 		hostname, filename)
-	if err != nil {
-		return file, err
-	}
-
-	found := false
-	for rows.Next() {
-		found = true
-		err = rows.Scan(&file.Mime, &file.EncodedFile)
-		if err != nil {
-			return file, err
-		}
-	}
-
-	if !found {
+	err := row.Scan(&file.Mime, &file.EncodedFile)
+	if errors.Is(err, sql.ErrNoRows) {
 		return file, ErrFileNotPresent
 	}
 
-	return file, nil
+	return file, err
 }
 
 func (conn PostgresConn) ListFiles(hostname string) ([]string, error) {
