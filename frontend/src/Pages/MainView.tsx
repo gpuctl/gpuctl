@@ -83,7 +83,7 @@ const cardView = (
                   <WorkstationCardMin
                     key={i}
                     width={325}
-                    data={{ lastSeen: lastSeen[row.name], ...row }}
+                    data={row}
                   ></WorkstationCardMin>
                 );
               })}
