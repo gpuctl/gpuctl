@@ -71,11 +71,10 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 	for uuid, info := range m.infos {
 		stats, exists := m.stats[uuid]
 		if !exists || len(stats) == 0 {
-			continue // Skip if no stats are available for the GPU
+			continue
 		}
 
-		// Assumed fix: Check if stats are present before accessing
-		stat := stats[len(stats)-1] // Safely access the last element
+		stat := stats[len(stats)-1]
 
 		inUse, user := stat.RunningProcesses.Summarise()
 
