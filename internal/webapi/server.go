@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -35,7 +34,6 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 
 	femto.OnGet(mux, "/api/stats/all", api.AllStatistics)
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
-	femto.OnGet(mux, "/api/stats/since_last_seen", api.durationDelta)
 
 	// Set up authentication and logging-out endpoint
 	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
@@ -225,31 +223,6 @@ func (a *Api) ConfirmAdmin(auth authentication.Authenticator[APIAuthCredientals]
 		return &femto.Response[UsernameReminder]{Status: http.StatusUnauthorized}, nil
 	}
 	return femto.Ok(UsernameReminder{Username: u})
-}
-
-func (a *Api) durationDelta(r *http.Request, l *slog.Logger) (*femto.Response[[]broadcast.DurationDeltas], error) {
-	const nanosInSecond = 1e9
-
-	latest, err := a.DB.LastSeen()
-
-	if err != nil {
-		return nil, err
-	}
-
-	var deltas []broadcast.DurationDeltas
-
-	now := time.Now().Unix() / nanosInSecond
-
-	for idx := range latest {
-		then_s := latest[idx].LastSeen / nanosInSecond
-
-		deltas = append(deltas, broadcast.DurationDeltas{
-			Hostname: latest[idx].Hostname,
-			Delta:    now - then_s,
-		})
-	}
-
-	return femto.Ok(deltas)
 }
 
 func (a *Api) modifyMachineInfo(info broadcast.ModifyMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
