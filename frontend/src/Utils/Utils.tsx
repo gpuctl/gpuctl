@@ -158,7 +158,7 @@ export function isFree(s: GPUStats): Boolean {
 
 export function workstationIsFree(w: WorkStationData): Boolean {
   return w.gpus.every((g) => {
-    isFree(g);
+    return isFree(g);
   });
 }
 
