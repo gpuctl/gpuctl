@@ -15,7 +15,6 @@ import {
 } from "@chakra-ui/react";
 import { WorkStationGroup } from "../Data";
 import { useState } from "react";
-import { isFree } from "../Utils/Utils";
 import { useForceUpdate } from "framer-motion";
 
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
@@ -139,7 +138,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                         <Td key={id + 2}> {gpu.gpu_name}</Td>
                       ) : null}
                       {shownColumns.is_free ? (
-                        <Td key={id + 3}> {isFree(gpu).toString()}</Td>
+                        <Td key={id + 3}> {!gpu.in_use}</Td>
                       ) : null}
                       {shownColumns.gpu_brand ? (
                         <Td key={id + 4}> {gpu.gpu_brand}</Td>

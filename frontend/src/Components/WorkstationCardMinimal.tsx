@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { WorkStationData } from "../Data";
 import { TimeIcon } from "@chakra-ui/icons";
-import { cropString } from "../Utils/Utils";
+import { cropString, workstationBusy } from "../Utils/Utils";
 
 const LAST_SEEN_WARN_THRESH = 60 * 5;
 const GREEN = "#25D36B";
@@ -29,7 +29,8 @@ export const WorkstationCardMin = ({
         padding={0}
         w={width}
         rounded={"md"}
-        bg={useColorModeValue("white", "gray.900")}
+        opacity={workstationBusy(gpus) ? 0.4 : 1.0}
+        bg={greyed(workstationBusy(gpus))}
       >
         {lastSeen !== undefined && lastSeen > LAST_SEEN_WARN_THRESH ? (
           <Alert
@@ -65,7 +66,7 @@ export const WorkstationCardMin = ({
                 <Heading size="md">{`${s.gpu_name} (${(
                   s.memory_total / 1000
                 ).toFixed(0)} GB)`}</Heading>
-                <p>{`${s.gpu_util < 25 ? "🟢 Free" : "🔴 In-use"} (${Math.round(
+                <p>{`${s.in_use ? "🔴 In-use" : "🟢 Free"} (${Math.round(
                   s.gpu_util,
                 )}% Utilisation)`}</p>
                 <p>{`${s.gpu_temp < 80 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${Math.round(
@@ -78,4 +79,9 @@ export const WorkstationCardMin = ({
       </Box>
     </Center>
   );
+};
+
+//Returns color for greyed out components
+export const greyed = (b: boolean) => {
+  return b ? "white" : "white";
 };

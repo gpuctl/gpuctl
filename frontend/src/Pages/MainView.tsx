@@ -1,6 +1,6 @@
 import { Box, Heading, VStack } from "@chakra-ui/react";
 import { API_URL, DEFAULT_VIEW, REFRESH_INTERVAL, ViewPage } from "../App";
-import { DurationDeltas, WorkStationGroup } from "../Data";
+import { DurationDeltas, WorkStationGroup, WorkStationData } from "../Data";
 import { Validated, Validation, success, validationElim } from "../Utils/Utils";
 import { ColumnGrid } from "../Components/ColumnGrid";
 import { TableTab } from "../Components/DataTable";
@@ -11,7 +11,7 @@ import { useAuth } from "../Providers/AuthProvider";
 import { STATS_PATH } from "../Config/Paths";
 import { AdminPanel } from "./AdminPanel";
 import { Navigate } from "react-router-dom";
-
+import { partition } from "lodash";
 const API_ALL_STATS_PATH = "/stats/all";
 const API_LAST_SEEN_PATH = "/stats/since_last_seen";
 
@@ -20,19 +20,41 @@ const API_LAST_SEEN_PATH = "/stats/since_last_seen";
 const retrieveAllStats: () => Promise<
   Validated<WorkStationGroup[]>
 > = async () =>
-  success(sortData(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()));
-//success(foo);
+  success(preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()));
 
-const sortData = (gs: WorkStationGroup[]) =>
-  gs.map(({ name, workstations }) => ({
-    name: name,
-    workstations: workstations.sort((ws1, ws2) =>
-      ws1.name.localeCompare(ws2.name),
-    ),
+// We will consider a machine to be in use if any of it's GPUs are
+const inUse = (machine: WorkStationData) =>
+  machine.gpus.some(({ in_use }) => in_use);
+
+const sortData = <T,>(ws: (WorkStationData & T)[]) =>
+  ws
+    .map(({ name, gpus, ...rest }) => ({
+      name,
+      gpus: gpus.sort((g1, g2) => g1.uuid.localeCompare(g2.uuid)),
+      ...rest,
+    }))
+    .sort((ws1, ws2) => ws1.name.localeCompare(ws2.name));
+
+const tagFree = (ws: WorkStationData[], free: boolean) =>
+  ws.map((data) => ({
+    free,
+    ...data,
   }));
 
 const retrieveLastSeen: () => Promise<Validated<DurationDeltas[]>> = async () =>
   success(await (await fetch(API_URL + API_LAST_SEEN_PATH)).json());
+
+const preProcess = (
+  gs: WorkStationGroup[],
+): WorkStationGroup<{ free: boolean }>[] =>
+  gs.map(({ name, workstations }) => {
+    const [used, free] = partition(sortData(workstations), inUse);
+
+    return {
+      name,
+      workstations: tagFree(free, true).concat(tagFree(used, false)),
+    };
+  });
 
 const cardView = (
   stats: WorkStationGroup[],
