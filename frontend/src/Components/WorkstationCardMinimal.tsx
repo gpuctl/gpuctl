@@ -29,6 +29,7 @@ export const WorkstationCardMin = ({
         padding={0}
         w={width}
         rounded={"md"}
+        opacity={workstationBusy(gpus) ? 0.4 : 1.0}
         bg={greyed(workstationBusy(gpus))}
       >
         {lastSeen !== undefined && lastSeen > LAST_SEEN_WARN_THRESH ? (
@@ -81,6 +82,6 @@ export const WorkstationCardMin = ({
 };
 
 //Returns color for greyed out components
-export const greyed = (b : boolean) => {
-  return b ? "darkred" : "white";
-}
+export const greyed = (b: boolean) => {
+  return b ? "white" : "white";
+};

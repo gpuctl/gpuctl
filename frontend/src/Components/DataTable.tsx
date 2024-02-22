@@ -14,7 +14,6 @@ import {
   Tr,
 } from "@chakra-ui/react";
 import { WorkStationGroup } from "../Data";
-import { workstationBusy } from "../Utils/Utils";
 import { useState } from "react";
 import { useForceUpdate } from "framer-motion";
 
@@ -128,7 +127,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                       k) *
                     19; //size of gpu
                   return (
-                    <Tr key={id} >
+                    <Tr key={id}>
                       {shownColumns.group ? (
                         <Td key={id}> {group_name}</Td>
                       ) : null}

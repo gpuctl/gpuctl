@@ -1,6 +1,6 @@
 import { Box, Heading, VStack } from "@chakra-ui/react";
 import { API_URL, DEFAULT_VIEW, REFRESH_INTERVAL, ViewPage } from "../App";
-import { DurationDeltas, WorkStationGroup, WorkStationData, EXAMPLE_DATA_1 } from "../Data";
+import { DurationDeltas, WorkStationGroup, WorkStationData } from "../Data";
 import { Validated, Validation, success, validationElim } from "../Utils/Utils";
 import { ColumnGrid } from "../Components/ColumnGrid";
 import { TableTab } from "../Components/DataTable";
@@ -19,10 +19,8 @@ const API_LAST_SEEN_PATH = "/stats/since_last_seen";
 // or indeed handle errors that might be thrown by the Promises
 const retrieveAllStats: () => Promise<
   Validated<WorkStationGroup[]>
-> = async () => {
-  console.log(preProcess(EXAMPLE_DATA_1));
-  return success(preProcess(EXAMPLE_DATA_1));
-}
+> = async () =>
+  success(preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()));
 
 // We will consider a machine to be in use if any of it's GPUs are
 const inUse = (machine: WorkStationData) =>
