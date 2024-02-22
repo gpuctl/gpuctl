@@ -30,5 +30,5 @@ port = 443
 # intervals in nanoseconds
 data_interval = 15000000000
 heartbeat_interval = 5000000000
-fake_gpu = true
+fake_gpu = false
 
