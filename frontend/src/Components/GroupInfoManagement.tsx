@@ -46,7 +46,7 @@ export const GroupInfoManagement: React.FC<GroupInfoManagementProps> = ({
               <Th>Motherboard</Th>
               <Th>Notes</Th>
               <Th>Action</Th>
-              <Th>Shutdown</Th> {/* New column for the shutdown button */}
+              <Th>Shutdown</Th> 
             </Tr>
           </Thead>
           <Tbody>
