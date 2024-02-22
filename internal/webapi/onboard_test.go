@@ -6,10 +6,13 @@ import (
 	"strings"
 	"testing"
 
+	"golang.org/x/crypto/ssh"
+
+	"github.com/gpuctl/gpuctl/internal/authentication"
+	"github.com/gpuctl/gpuctl/internal/tunnel"
 	"github.com/gpuctl/gpuctl/internal/webapi"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"golang.org/x/crypto/ssh"
 )
 
 // Don't worry, this was generated for testing purposes :)
@@ -21,23 +24,26 @@ AAAEDFqhoLXMIqj+C810RJ2oUHLczGxXE9kneJse9y/LeNiWMriviDtpzPQ0xR0d1lHsgx
 1xsHKQosKNUZkDhp/jXKAAAADERlbW8gU1NIIEtleQE=
 -----END OPENSSH PRIVATE KEY-----`
 
+var emptyAuthCookie = &http.Cookie{Name: authentication.TokenCookieName, Value: ""}
+
 // TODO: Figure out how to test the happy path somehow
 
 func TestOnboardNoKey(t *testing.T) {
 	t.Parallel()
 
-	serv := webapi.NewServer(nil, alwaysAuth{}, webapi.OnboardConf{
+	serv := webapi.NewServer(nil, alwaysAuth{}, tunnel.Config{
 		DataDir: "/foo",
+		User:    "JFK",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader(`{"hostname": "foo.net"}`))
-	req.Header.Add("Authorization", "Bearer 123")
+	req.AddCookie(emptyAuthCookie)
 	w := httptest.NewRecorder()
 
 	serv.ServeHTTP(w, req)
 
 	assert.Equal(t, 500, w.Code)
-	assert.Contains(t, w.Body.String(), "no ssh key")
+	assert.Contains(t, w.Body.String(), "tunnel: invalid config")
 }
 
 func TestOnboardNoHostname(t *testing.T) {
@@ -46,14 +52,14 @@ func TestOnboardNoHostname(t *testing.T) {
 	sign, err := ssh.ParsePrivateKey([]byte(demoPrivKey))
 	require.NoError(t, err)
 
-	serv := webapi.NewServer(nil, alwaysAuth{}, webapi.OnboardConf{
-		DataDir:  "/foo",
-		Username: "root",
-		Signer:   sign,
+	serv := webapi.NewServer(nil, alwaysAuth{}, tunnel.Config{
+		DataDir: "/foo",
+		User:    "root",
+		Signer:  sign,
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader("{}"))
-	req.Header.Add("Authorization", "Bearer 123")
+	req.AddCookie(emptyAuthCookie)
 	w := httptest.NewRecorder()
 
 	serv.ServeHTTP(w, req)

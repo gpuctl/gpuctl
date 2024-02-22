@@ -6,11 +6,14 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/gpuctl/gpuctl/internal/femto"
 	"github.com/gpuctl/gpuctl/internal/gpustats"
+	"github.com/gpuctl/gpuctl/internal/passwd"
+	"github.com/gpuctl/gpuctl/internal/procinfo"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
@@ -32,7 +35,7 @@ func main() {
 
 	log.Info("got hostname", "hostname", host)
 
-	satellite_configuration, err := config.GetClientConfiguration("satellite.toml")
+	satellite_configuration, err := config.GetSatellite("satellite.toml")
 
 	log.Info("got config", "config", satellite_configuration)
 
@@ -49,7 +52,7 @@ func main() {
 		hostname: host,
 	}
 
-	hndlr := setGPUHandler(satellite_configuration.Satellite.FakeGPU)
+	hndlr := setGPUHandler(log, satellite_configuration.Satellite.FakeGPU)
 
 	// Send initial infopacket of GPUInfo
 	log.Info("Sending initial GPU context")
@@ -178,11 +181,27 @@ func processStats(stats [][]uplink.GPUStatSample) []uplink.GPUStatSample {
 	return stats[len(stats)-1]
 }
 
-func setGPUHandler(isFakeGPUs bool) gpustats.GPUDataSource {
+func setGPUHandler(log *slog.Logger, isFakeGPUs bool) gpustats.GPUDataSource {
 	if isFakeGPUs {
 		return gpustats.FakeGPU{}
 	} else {
-		return gpustats.NvidiaGPUHandler{}
+		passwdfile, err := os.Open("/etc/passwd")
+		if err != nil {
+			log.Error("Could not open passwd file, will not be able to report users' names", "err", err)
+			return gpustats.NvidiaGPUHandler{}
+		}
+		passwd, err := passwd.Parse(passwdfile)
+		if err != nil {
+			log.Error("Could not read passwd file, will not be able to report users' names", "err", err)
+			return gpustats.NvidiaGPUHandler{}
+		}
+
+		// Filter function for determining a busy process: it contains "python"
+		filter := func(proc uplink.GPUProcInfo) bool {
+			return strings.Contains(proc.Name, "python")
+		}
+
+		return gpustats.NvidiaGPUHandler{Lookup: procinfo.PasswdToLookup(passwd), ProcFilter: filter}
 	}
 }
 

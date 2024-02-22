@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetClientConfiguration_ValidConfig(t *testing.T) {
+func TestGetSatellite_ValidConfig(t *testing.T) {
 	t.Parallel()
 	content := `
 [groundstation]
@@ -25,7 +25,7 @@ heartbeat_interval = 5`
 
 	filename = filepath.Base(filename)
 
-	config, err := config.GetClientConfiguration(filename)
+	config, err := config.GetSatellite(filename)
 	assert.NoError(t, err)
 	assert.Equal(t, "http", config.Groundstation.Protocol)
 	assert.Equal(t, "local.groundstation", config.Groundstation.Hostname)
@@ -35,7 +35,7 @@ heartbeat_interval = 5`
 	assert.Equal(t, 5, config.Satellite.HeartbeatInterval)
 }
 
-func TestGetClientConfiguration_DefaultConfig(t *testing.T) {
+func TestGetSatellite_DefaultConfig(t *testing.T) {
 	t.Parallel()
 	content := ``
 
@@ -44,7 +44,7 @@ func TestGetClientConfiguration_DefaultConfig(t *testing.T) {
 
 	filename = filepath.Base(filename)
 
-	config, err := config.GetClientConfiguration(filename)
+	config, err := config.GetSatellite(filename)
 	assert.NoError(t, err)
 	assert.Equal(t, "http", config.Groundstation.Protocol)
 	assert.Equal(t, "localhost", config.Groundstation.Hostname)
@@ -55,7 +55,7 @@ func TestGetClientConfiguration_DefaultConfig(t *testing.T) {
 	assert.Equal(t, 60, config.Satellite.DataInterval)
 }
 
-func TestGetClientConfiguration_InvalidConfig(t *testing.T) {
+func TestGetSatellite_InvalidConfig(t *testing.T) {
 	t.Parallel()
 	content := `
 groundstation: "should be a table, not a string"`
@@ -65,7 +65,7 @@ groundstation: "should be a table, not a string"`
 
 	filename = filepath.Base(filename)
 
-	config, err := config.GetClientConfiguration(filename)
+	config, err := config.GetSatellite(filename)
 	assert.Error(t, err)
 	assert.Equal(t, "", config.Groundstation.Hostname)
 	assert.Equal(t, 0, config.Groundstation.Port)

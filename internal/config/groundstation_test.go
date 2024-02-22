@@ -8,7 +8,7 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGetConfiguration_ValidConfig(t *testing.T) {
+func TestGetControl_ValidConfig(t *testing.T) {
 	t.Parallel()
 	content := `
 [server]
@@ -24,7 +24,7 @@ test_url = "postgres://postgres@localhost/gpuctl-tests"`
 
 	filename = filepath.Base(filename)
 
-	config, err := config.GetServerConfiguration(filename)
+	config, err := config.GetControl(filename)
 	assert.NoError(t, err)
 	assert.Equal(t, 9090, config.Server.GSPort)
 	assert.Equal(t, 9070, config.Server.WAPort)
@@ -33,7 +33,7 @@ test_url = "postgres://postgres@localhost/gpuctl-tests"`
 	assert.Equal(t, "postgres://tony@ic.ac.uk/squares", config.Database.PostgresUrl)
 }
 
-func TestGetConfiguration_DefaultConfig(t *testing.T) {
+func TestGetControl_DefaultConfig(t *testing.T) {
 	t.Parallel()
 	content := ``
 
@@ -42,12 +42,12 @@ func TestGetConfiguration_DefaultConfig(t *testing.T) {
 
 	filename = filepath.Base(filename)
 
-	config, err := config.GetServerConfiguration(filename)
+	config, err := config.GetControl(filename)
 	assert.NoError(t, err)
 	assert.Equal(t, 8080, config.Server.GSPort)
 }
 
-func TestGetConfiguration_InvalidConfig(t *testing.T) {
+func TestGetControl_InvalidConfig(t *testing.T) {
 	t.Parallel()
 	content := `
 server: "should be a table, not a string"`
@@ -56,7 +56,7 @@ server: "should be a table, not a string"`
 
 	filename = filepath.Base(filename)
 
-	conf, err := config.GetServerConfiguration(filename)
+	conf, err := config.GetControl(filename)
 	assert.Error(t, err)
 	assert.Equal(t, config.ControlConfiguration{}, conf)
 }

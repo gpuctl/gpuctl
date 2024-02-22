@@ -53,6 +53,9 @@ export const enumIndex = <E extends EnumDict>(
 export const instKeys = <T,>(xs: ((k: number) => T)[]): T[] =>
   xs.map((x, i) => x(i));
 
+export const cropString = (s: string, max: number) =>
+  s.length < max ? s : s.substring(0, max - 2) + "...";
+
 enum VTag {
   Success = "Success",
   Loading = "Loading",

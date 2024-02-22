@@ -10,7 +10,7 @@ test("renders welcome message", async () => {
   const welcome = await screen.findByText("Welcome to the GPU Control Room!");
   expect(welcome).toBeInTheDocument();
 
-  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(3));
 });
 
 test(`before fetch succeeds inform the user that data is being fetched
@@ -25,7 +25,7 @@ after fetch succeeds, no longer show that message`, async () => {
   );
   statuses.forEach((status) => expect(status).toBeInTheDocument());
 
-  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 
   // This is janky, but I don't know a better way to wait for the state change
   // to have occured than to wait for the results to be visible
@@ -40,7 +40,7 @@ test("retrieves data from API server and displays correctly", async () => {
   jest.useFakeTimers();
 
   render(<App />);
-  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 
   EXAMPLE_DATA_1.forEach((g) => {
     g.workstations.forEach((ws) => {
@@ -68,7 +68,7 @@ test("data is fetched again after refresh interval", async () => {
   jest.spyOn(global, "setInterval");
   const view = render(<App />);
 
-  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
 
   (await screen.findAllByText("31 °C", { exact: false })).forEach((temp) =>
     expect(temp).toBeInTheDocument(),
@@ -81,7 +81,7 @@ test("data is fetched again after refresh interval", async () => {
 
   jest.advanceTimersByTime(REFRESH_INTERVAL + 1);
 
-  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
   // It appears that it is necessary to request a rerender for every fetch after
   // the first. It is somewhat unclear to me whether it would be better practice
   // to rerender after every fetch (just in case)

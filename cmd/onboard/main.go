@@ -10,7 +10,7 @@ import (
 	"golang.org/x/crypto/ssh"
 
 	"github.com/gpuctl/gpuctl/internal/config"
-	"github.com/gpuctl/gpuctl/internal/onboard"
+	"github.com/gpuctl/gpuctl/internal/tunnel"
 )
 
 // This is right on DoC CSG machines.
@@ -45,13 +45,11 @@ func main() {
 		log.Fatalf("Unable to parse key file %s: %v", *keypath, err)
 	}
 
-	err = onboard.Onboard(
-		*user,
-		*remote,
-		dataDir,
-		signer,
-		ssh.InsecureIgnoreHostKey(),
-		config.SatelliteConfiguration{
+	conf := tunnel.Config{
+		User:    *user,
+		DataDir: dataDir,
+		Signer:  signer,
+		RemoteConf: config.SatelliteConfiguration{
 			Groundstation: config.Groundstation{"https://", "gpuctl.perial.co.uk", 80},
 			Satellite: config.Satellite{
 				DataInterval:      int(10 * time.Second),
@@ -60,7 +58,9 @@ func main() {
 				Cache:             "/data/gpuctl/cache",
 			},
 		},
-	)
+	}
+
+	err = tunnel.Onboard(*remote, conf)
 
 	if err != nil {
 		log.Fatal(err)

@@ -5,6 +5,11 @@ type Server struct {
 	WAPort int `toml:"webapi_port"`
 }
 
+type Timeouts struct {
+	DeathTimeout    int `toml:"death_timeout"`
+	MonitorInterval int `toml:"monitor_interval"`
+}
+
 type Database struct {
 	InMemory           bool   `toml:"inmemory"`
 	Postgres           bool   `toml:"postgres"`
@@ -18,13 +23,14 @@ type AuthConfig struct {
 }
 
 type ControlConfiguration struct {
-	Server   Server      `toml:"server"`
-	Database Database    `toml:"database"`
-	Auth     AuthConfig  `toml:"auth"`
-	Onboard  OnboardConf `toml:"onboard"`
+	Timeouts Timeouts   `toml:"timeouts"`
+	Server   Server     `toml:"server"`
+	Database Database   `toml:"database"`
+	Auth     AuthConfig `toml:"auth"`
+	SSH      SSHConf    `toml:"onboard"` // TODO: Change name to ssh_configuration, deferred due to it being a breaking change
 }
 
-type OnboardConf struct {
+type SSHConf struct {
 	DataDir    string                 `toml:"datadir"`
 	KeyPath    string                 `toml:"keyfile"`
 	Username   string                 `toml:"username"`
@@ -46,13 +52,13 @@ func DefaultControlConfiguration() ControlConfiguration {
 			Username: "admin",
 			Password: "password",
 		},
-		Onboard: OnboardConf{
+		SSH: SSHConf{
 			// We don't set any of the others.
 			RemoteConf: DefaultSatelliteConfiguration(),
 		},
 	}
 }
 
-func GetServerConfiguration(filename string) (ControlConfiguration, error) {
+func GetControl(filename string) (ControlConfiguration, error) {
 	return getConfiguration[ControlConfiguration](filename, DefaultControlConfiguration)
 }

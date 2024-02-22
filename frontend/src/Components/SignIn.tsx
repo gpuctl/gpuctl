@@ -9,6 +9,10 @@ export const SignIn = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
+  const attemptLogin = async () => {
+    login(username, password);
+  };
+
   return (
     <Box padding={4} bgColor={"gray.100"}>
       <VStack spacing={2}>
@@ -21,6 +25,11 @@ export const SignIn = () => {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           bgColor={"white"}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              attemptLogin();
+            }
+          }}
         ></Input>
         <Box w="100%">
           <Heading textAlign={"left"} size="l">
@@ -32,6 +41,11 @@ export const SignIn = () => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           bgColor={"white"}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              attemptLogin();
+            }
+          }}
         ></Input>
         {validatedElim(authName, {
           success: () => <></>,
@@ -43,12 +57,7 @@ export const SignIn = () => {
             ),
         })}
         ;
-        <Button
-          bgColor={"white"}
-          onClick={async () => {
-            login(username, password);
-          }}
-        >
+        <Button bgColor={"white"} onClick={attemptLogin}>
           Sign In
         </Button>
       </VStack>
