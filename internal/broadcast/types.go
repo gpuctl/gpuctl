@@ -25,6 +25,18 @@ type ModifyMachine struct {
 	Group       *string `json:"group"`       // nullable - means no change
 }
 
+type AttachFile struct {
+	Hostname    string `json:"hostname"`
+	Mime        string `json:"mime"`
+	Filename    string `json:"filename"`
+	EncodedFile string `json:"file_enc"`
+}
+
+type RemoveFile struct {
+	Hostname string `json:"hostname"`
+	Filename string `json:"filename"`
+}
+
 // data type representing struct returned on all workstations request
 type Workstations []Group
 

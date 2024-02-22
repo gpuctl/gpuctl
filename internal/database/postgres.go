@@ -76,6 +76,18 @@ func createTables(db *sql.DB) error {
 		return err
 	}
 
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Files (
+		Hostname text NOT NULL REFERENCES Machines (Hostname),
+		Filename text NOT NULL,
+		Mime text NOT NULL,
+		File text NOT NULL,
+		PRIMARY KEY (Hostname, Filename)
+	);`)
+
+	if err != nil {
+		return err
+	}
+
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Stats (
 		Gpu text REFERENCES GPUs (Uuid) NOT NULL,
 		Received timestamp NOT NULL,
@@ -504,6 +516,13 @@ func (conn PostgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
 		return errors.Join(err, tx.Rollback())
 	}
 
+	_, err = tx.Exec(`DELETE FROM Files
+		WHERE Hostname=$1`,
+		machine.Hostname)
+	if err != nil {
+		return errors.Join(err, tx.Rollback())
+	}
+
 	return tx.Commit()
 }
 
@@ -591,6 +610,7 @@ func (conn PostgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 func (conn PostgresConn) Drop() error {
 	_, err := conn.db.Exec(`DROP TABLE stats;
 		DROP TABLE gpus;
+		DROP TABLE files;
 		DROP TABLE machines`)
 	if err != nil {
 		return err
@@ -626,4 +646,75 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 	}
 
 	return seens, nil
+}
+
+func (conn PostgresConn) AttachFile(attach broadcast.AttachFile) error {
+	// Insert into db
+	_, err := conn.db.Exec(`INSERT INTO Files (Hostname, Mime, Filename, File)
+		VALUES ($1, $2, $3, $4)
+		ON CONFLICT (Hostname, Filename) DO UPDATE
+		SET (Mime, File) = (EXCLUDED.Mime, Excluded.File);`,
+		attach.Hostname, attach.Mime, attach.Filename, attach.EncodedFile,
+	)
+	if err != nil {
+		return ErrNoSuchMachine
+	}
+	return nil
+}
+
+func (conn PostgresConn) GetFile(hostname string, filename string) (broadcast.AttachFile, error) {
+	file := broadcast.AttachFile{Hostname: hostname, Filename: filename}
+
+	row := conn.db.QueryRow(`SELECT Mime, File
+		FROM Files
+		WHERE Hostname=$1 AND Filename=$2`,
+		hostname, filename)
+	err := row.Scan(&file.Mime, &file.EncodedFile)
+	if errors.Is(err, sql.ErrNoRows) {
+		return file, ErrFileNotPresent
+	}
+
+	return file, err
+}
+
+func (conn PostgresConn) ListFiles(hostname string) ([]string, error) {
+	rows, err := conn.db.Query(`SELECT Filename
+		FROM Files
+		WHERE Hostname=$1`,
+		hostname)
+	if err != nil {
+		return []string{}, err
+	}
+
+	res := []string{}
+	for rows.Next() {
+		val := ""
+		err = rows.Scan(&val)
+		if err != nil {
+			return res, err
+		}
+		res = append(res, val)
+	}
+	return res, nil
+}
+
+func (conn PostgresConn) RemoveFile(remove broadcast.RemoveFile) error {
+	rows, err := conn.db.Query(`DELETE FROM Files
+		WHERE Hostname=$1 AND Filename=$2
+		RETURNING Filename;`,
+		remove.Hostname, remove.Filename)
+	if err != nil {
+		return err
+	}
+
+	found := false
+	for rows.Next() {
+		found = true
+		rows.Scan()
+	}
+
+	if !found {
+		return ErrFileNotPresent
+	}
+	return err
 }
