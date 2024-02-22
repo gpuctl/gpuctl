@@ -46,7 +46,7 @@ export const GroupInfoManagement: React.FC<GroupInfoManagementProps> = ({
               <Th>Motherboard</Th>
               <Th>Notes</Th>
               <Th>Action</Th>
-              <Th>Shutdown</Th> 
+              <Th>Shutdown</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -94,7 +94,7 @@ export const GroupInfoManagement: React.FC<GroupInfoManagementProps> = ({
                     </Button>
                   </Td>
                 </Tr>
-              ))
+              )),
             )}
           </Tbody>
         </Table>
