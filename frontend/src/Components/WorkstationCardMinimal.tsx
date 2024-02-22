@@ -60,21 +60,19 @@ export const WorkstationCardMin = ({
               <>{cropString(name, 17)}</>
             )}
           </Heading>
-          {gpus.map((s, i) => {
-            return (
-              <Box key={i}>
-                <Heading size="md">{`${s.gpu_name} (${(
-                  s.memory_total / 1000
-                ).toFixed(0)} GB)`}</Heading>
-                <p>{`${s.in_use ? "🔴 In-use" : "🟢 Free"} (${Math.round(
-                  s.gpu_util,
-                )}% Utilisation)`}</p>
-                <p>{`${s.gpu_temp < 80 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${Math.round(
-                  s.gpu_temp,
-                )} °C (${Math.round(s.fan_speed)}% Fan Speed)`}</p>
-              </Box>
-            );
-          })}
+
+          {gpus.map((s, i) => (
+            <Box key={i}>
+              <Heading size="md">{`${s.gpu_name} (${(
+                s.memory_total / 1000
+              ).toFixed(0)} GB)`}</Heading>
+              <p>{`${s.in_use ? "🔴 In-use" : "🟢 Free"} (User: ${s.user})`}</p>
+              <p>{`${s.gpu_util < 10 ? "🐌" : "🏎️" + "☁️".repeat(Math.ceil(s.gpu_util / 40))} GPU Usage: (${Math.round(s.gpu_util)}% Utilisation)`}</p>
+              <p>{`${s.gpu_temp < 80 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${Math.round(
+                s.gpu_temp,
+              )} °C (${Math.round(s.fan_speed)}% Fan Speed)`}</p>
+            </Box>
+          ))}
         </Box>
       </Box>
     </Center>
