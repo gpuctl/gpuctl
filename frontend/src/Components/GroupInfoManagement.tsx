@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   Box,
   Button,
@@ -23,6 +23,15 @@ export const GroupInfoManagement: React.FC<GroupInfoManagementProps> = ({
   groups,
 }) => {
   const removeMachine = useRemoveMachine();
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = (command: string) => {
+    navigator.clipboard.writeText(command);
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+    }, 3000);
+  };
 
   return (
     <Box w="100%">
@@ -37,6 +46,7 @@ export const GroupInfoManagement: React.FC<GroupInfoManagementProps> = ({
               <Th>Motherboard</Th>
               <Th>Notes</Th>
               <Th>Action</Th>
+              <Th>Shutdown</Th> {/* New column for the shutdown button */}
             </Tr>
           </Thead>
           <Tbody>
@@ -72,8 +82,19 @@ export const GroupInfoManagement: React.FC<GroupInfoManagementProps> = ({
                       Remove
                     </Button>
                   </Td>
+                  <Td>
+                    <Button
+                      colorScheme="blue"
+                      onClick={() =>
+                        copyToClipboard(`ssh user@${workstation.name} shutdown`)
+                      }
+                      disabled={copied}
+                    >
+                      {copied ? "Copied" : "Copy Shutdown Command"}
+                    </Button>
+                  </Td>
                 </Tr>
-              )),
+              ))
             )}
           </Tbody>
         </Table>
