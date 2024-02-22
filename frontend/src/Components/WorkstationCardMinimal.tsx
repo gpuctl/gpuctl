@@ -17,10 +17,10 @@ const GREEN = "#25D36B";
 
 export const WorkstationCardMin = ({
   width,
-  data: { name, gpus, lastSeen },
+  data: { name, gpus, last_seen },
 }: {
   width: number;
-  data: WorkStationData & { lastSeen: number | undefined };
+  data: WorkStationData;
 }) => {
   const textCol = useColorModeValue("black", "white");
   return (
@@ -32,7 +32,7 @@ export const WorkstationCardMin = ({
         opacity={workstationBusy(gpus) ? 0.4 : 1.0}
         bg={greyed(workstationBusy(gpus))}
       >
-        {lastSeen !== undefined && lastSeen > LAST_SEEN_WARN_THRESH ? (
+        {last_seen !== undefined && last_seen > LAST_SEEN_WARN_THRESH ? (
           <Alert
             roundedTopLeft="md"
             roundedTopRight="md"
@@ -40,16 +40,16 @@ export const WorkstationCardMin = ({
             status="warning"
           >
             <AlertIcon></AlertIcon>
-            {lastSeen === undefined
+            {last_seen === undefined
               ? "Missing provenance data!"
-              : `Last seen over ${Math.floor(lastSeen / 60)} minutes ago!`}
+              : `Last seen over ${Math.floor(last_seen / 60)} minutes ago!`}
           </Alert>
         ) : (
           <></>
         )}
         <Box padding={2}>
           <Heading size="lg" color={textCol}>
-            {lastSeen !== undefined && lastSeen <= LAST_SEEN_WARN_THRESH ? (
+            {last_seen !== undefined && last_seen <= LAST_SEEN_WARN_THRESH ? (
               <HStack>
                 <Tooltip placement="right-start" label={`Seen recently!`}>
                   <TimeIcon color={GREEN} />
