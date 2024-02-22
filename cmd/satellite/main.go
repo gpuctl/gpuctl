@@ -6,6 +6,7 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/config"
@@ -195,7 +196,12 @@ func setGPUHandler(log *slog.Logger, isFakeGPUs bool) gpustats.GPUDataSource {
 			return gpustats.NvidiaGPUHandler{}
 		}
 
-		return gpustats.NvidiaGPUHandler{Lookup: procinfo.PasswdToLookup(passwd)}
+		// Filter function for determining a busy process: it contains "python"
+		filter := func(proc uplink.GPUProcInfo) bool {
+			return strings.Contains(proc.Name, "python")
+		}
+
+		return gpustats.NvidiaGPUHandler{Lookup: procinfo.PasswdToLookup(passwd), ProcFilter: filter}
 	}
 }
 

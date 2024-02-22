@@ -421,19 +421,8 @@ func getNvidiaGPUStatus() (NvidiaSmiLog, error) {
 
 // Struct to act as our adapter
 type NvidiaGPUHandler struct {
-	Lookup procinfo.UidLookup
-}
-
-func PopulateNames(samples []uplink.GPUStatSample, lookup procinfo.UidLookup) {
-	for i, sample := range samples {
-		for j, proc := range sample.RunningProcesses {
-			name, err := lookup.UserForPid(proc.Pid)
-			// Intentionally leave unresolved names as zero, don't want to fail
-			if err == nil {
-				samples[i].RunningProcesses[j].Name = name
-			}
-		}
-	}
+	Lookup     procinfo.UidLookup            // Which Uid maps to which user
+	ProcFilter func(uplink.GPUProcInfo) bool // How we determine if a process is worth considering
 }
 
 // Run the whole pipeline of getting GPU information
@@ -448,7 +437,8 @@ func (h NvidiaGPUHandler) GetGPUStatus() ([]uplink.GPUStatSample, error) {
 		return nil, err
 	}
 
-	PopulateNames(samples, h.Lookup)
+	uplink.FilterProcesses(samples, h.ProcFilter)
+	uplink.PopulateNames(samples, h.Lookup)
 	return samples, nil
 }
 
