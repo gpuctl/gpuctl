@@ -49,7 +49,6 @@ type GPUProcInfo struct {
 	Owner   string  `json:"owner"` // NOTE: This is the user that owns the process
 }
 
-
 func PopulateNames(samples []GPUStatSample, lookup procinfo.UidLookup) {
 	for i, sample := range samples {
 		for j, proc := range sample.RunningProcesses {
