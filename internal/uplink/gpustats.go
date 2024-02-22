@@ -82,6 +82,7 @@ func FilterProcesses(samples []GPUStatSample, filter func(GPUProcInfo) bool) {
 func (procs Processes) Summarise() (inUse bool, user string) {
 	user = ""
 	inUse = len(procs) > 0
+
 	if inUse {
 		user = procs[0].Owner
 	}

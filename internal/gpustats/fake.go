@@ -26,5 +26,6 @@ func (FakeGPU) GetGPUStatus() ([]uplink.GPUStatSample, error) {
 		MemoryUsed:        rand.Float64() * 2000,
 		Temp:              rand.Float64()*40 + 20,
 		FanSpeed:          rand.Float64(),
+		RunningProcesses:  uplink.Processes{{Pid: 123, Name: "python-inator", MemUsed: 0, Owner: "pl"}},
 	}}, nil
 }

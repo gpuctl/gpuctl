@@ -166,7 +166,6 @@ func (conn PostgresConn) AppendDataPoint(sample uplink.GPUStatSample) error {
 	now := time.Now()
 
 	inUse, user := sample.RunningProcesses.Summarise()
-
 	_, err := conn.db.Exec(`INSERT INTO Stats
 		(Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed,
 		FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw,
@@ -224,6 +223,8 @@ WITH OrderedStats AS (
     MaxGraphicsClock,
     MemoryClock,
     MaxMemoryClock,
+    InUse,
+    UserName,
     ROW_NUMBER() OVER (PARTITION BY Gpu ORDER BY Received ASC) - 1 AS RowNum
   FROM Stats
   WHERE Received > $1
@@ -245,7 +246,9 @@ GroupedStats AS (
     AVG(MaxMemoryClock) AS AvgMaxMemoryClock,
     MIN(Received) AS SampleStartTime,
     MAX(Received) AS SampleEndTime,
-    (RowNum / 100) AS GroupId
+    (RowNum / 100) AS GroupId,
+    bool_or(InUse) AS OrInUse,
+    mode() WITHIN GROUP (ORDER BY UserName) as ModeUserName
   FROM OrderedStats
   GROUP BY Gpu, GroupId
 )
@@ -256,7 +259,7 @@ WHERE Received > $1
 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);
 	`
 
-	insert_query := `INSERT INTO Stats (Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed, FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw, GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock)
+	insert_query := `INSERT INTO Stats (Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed, FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw, GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock, InUse, UserName)
 SELECT
   Gpu,
   SampleStartTime, 
@@ -271,7 +274,9 @@ SELECT
   AvgGraphicsClock,
   AvgMaxGraphicsClock,
   AvgMemoryClock,
-  AvgMaxMemoryClock
+  AvgMaxMemoryClock,
+  OrInUse,
+  ModeUserName
 FROM TempDownsampled;
 	`
 
