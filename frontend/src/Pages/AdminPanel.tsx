@@ -94,7 +94,7 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
     <AutoComplete
       openOnFocus
       creatable
-      onChange={(a) => onChange(a.target.value)}
+      onChange={(a) => onChange(a)}
       values={groups.map((g) => g.name)}
     >
       <Box {...props} />
@@ -166,22 +166,6 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
                       >
                         <AutoCompleteInput placeholder="Unknown"></AutoCompleteInput>
                       </GroupSelect>
-                      {/* <Editable
-                        placeholder="Unknown"
-                        defaultValue={group}
-                        textColor={pickCol(group)}
-                        onSubmit={(s) =>
-                          modifyInfo(workstation.name, {
-                            group: s,
-                            cpu: null,
-                            motherboard: null,
-                            notes: null,
-                          })
-                        }
-                      >
-                        <EditablePreview />
-                        <EditableInput textColor={"gray.600"} />
-                      </Editable> */}
                     </Td>
                     <Td>
                       {" "}
