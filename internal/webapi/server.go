@@ -5,7 +5,6 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
-	"time"
 
 	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/broadcast"
