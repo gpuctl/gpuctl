@@ -394,14 +394,7 @@ func machineInfoUpdatesWork(t *testing.T, db database.Database) {
 		Group:       &fakeGroup,
 	}
 
-	err = db.UpdateMachine(fakeChange)
-
-	// TODO: remove this
-	// skip errors, as inmemory doesn't currently implement update
-	//assert.NoError(t, err)
-	if err != nil {
-		t.Skipf("Skipping with error, was %v", err)
-	}
+	_ = db.UpdateMachine(fakeChange)
 
 	data, err := db.LatestData()
 	found, group, machine := getMachine(data, fakeHost)
@@ -435,12 +428,7 @@ func removingMachine(t *testing.T, db database.Database) {
 		t.Error("Didn't find machine when we expected to")
 	}
 
-	// TODO: remove this
-	// workaround for inmem not implementing removal
 	err = db.RemoveMachine(broadcast.RemoveMachine{Hostname: fakeHost})
-	if err != nil {
-		t.Skipf("Skipping with error, was %v", err)
-	}
 
 	// we shouldn't find the machine anymore
 	data, err = db.LatestData()
