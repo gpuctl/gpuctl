@@ -5,6 +5,17 @@ webapi_port = 8000
 [Database]
 postgres = true
 url = "postgres://postgres@postgres/postgres"
+# downsample in nanoseconds
+downsample_interval = 500000000000
+
+[Timeouts]
+# timeouts in seconds
+death_timeout = 1000
+monitor_interval = 1000
+
+[Auth]
+username = "admin"
+password = "password"
 
 [Onboard]
 datadir = "/data/gpuctl"
@@ -16,6 +27,7 @@ hostname = "gpuctl.perial.co.uk"
 port = 443
 
 [Onboard.Remote.Satellite]
+# intervals in nanoseconds
 data_interval = 15000000000
 heartbeat_interval = 5000000000
 fake_gpu = true
