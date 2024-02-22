@@ -52,7 +52,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "i7-7700k",
         motherboard: "ASUS ROG STRIX Z790-A",
         notes: "noisy fan",
-	last_seen: 500,
+        last_seen: 500,
         gpus: [
           {
             uuid: "AAAAA",
@@ -82,7 +82,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "Ryzen 5800X",
         motherboard: "Z790 AORUS XTREME X",
         notes: "",
-	last_seen: 260,
+        last_seen: 260,
         gpus: [
           {
             uuid: "BBBBB",
@@ -133,7 +133,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "Intel Pentium 2",
         motherboard: "Acer Veriton M4630G MT",
         notes: "scheduled for replacement 2024",
-	last_seen: 30000000000,
+        last_seen: 30000000000,
         gpus: [
           {
             uuid: "DDDDD",
@@ -164,7 +164,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         motherboard: "",
         notes:
           "We don't particularly like this one, but it always works and we can't really bin it",
-	last_seen: 90000000000,
+        last_seen: 90000000000,
         gpus: [
           {
             uuid: "EEEEE",
@@ -215,7 +215,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "AMD Z1 Extreme",
         motherboard: "Ticket to Ride: Europe",
         notes: "Please don't use this unless you absolutely have to",
-	last_seen: 40000000000,
+        last_seen: 40000000000,
         gpus: [
           {
             uuid: "GGGGG",
@@ -246,7 +246,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "AMD 4800S",
         motherboard: "AMD 4800S Desktop Kit",
         notes: "",
-	last_seen: 180000000123,
+        last_seen: 180000000123,
         gpus: [
           {
             uuid: "HHHHH",
