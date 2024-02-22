@@ -511,6 +511,13 @@ func (conn PostgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
 		return errors.Join(err, tx.Rollback())
 	}
 
+	_, err = tx.Exec(`DELETE FROM Files
+		WHERE Hostname=$1`,
+		machine.Hostname)
+	if err != nil {
+		return errors.Join(err, tx.Rollback())
+	}
+
 	return tx.Commit()
 }
 

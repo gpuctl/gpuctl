@@ -54,6 +54,7 @@ var UnitTests = [...]unitTest{
 	{"RemoveNonexistentFile", removeWrongFile},
 	{"MachinesCanBeRemoved", removingMachine},
 	{"InUseInformation", inUseInformation},
+	//{"RemovingMachineRemovesFiles", removingMachineRemoveFiles},
 }
 
 // fake data for adding during tests
@@ -651,4 +652,27 @@ func additionRemoveOldFile(t *testing.T, db database.Database) {
 
 	file, err := db.GetFile(fakeHost, files[0])
 	assert.Equal(t, text, file)
+}
+
+// TODO: hook this test into the unit tests once in memory has the functionality
+func removingMachineRemoveFiles(t *testing.T, db database.Database) {
+	fakeHost := "chestnut"
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	pdf := broadcast.AttachFile{
+		Hostname:    fakeHost,
+		Mime:        "application/pdf",
+		Filename:    "filename",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	err = db.AttachFile(pdf)
+	assert.NoError(t, err)
+
+	err = db.RemoveMachine(broadcast.RemoveMachine{Hostname: fakeHost})
+	assert.NoError(t, err)
+
+	_, err = db.GetFile(fakeHost, pdf.Filename)
+	assert.ErrorIs(t, err, database.ErrFileNotPresent)
 }
