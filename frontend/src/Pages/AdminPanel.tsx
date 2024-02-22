@@ -94,7 +94,7 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
     <AutoComplete
       openOnFocus
       creatable
-      onChange={(a) => onChange(a)}
+      onChange={onChange}
       values={groups.map((g) => g.name)}
     >
       <Box {...props} />
@@ -229,7 +229,7 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
                       <Button
                         bgColor={"red.300"}
                         onClick={() => {
-                          removeMachine(hostname);
+                          removeMachine(workstation.name);
                         }}
                       >
                         Kill Satellite
