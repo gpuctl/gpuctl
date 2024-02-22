@@ -3,6 +3,7 @@ import {
   Editable,
   EditableInput,
   EditablePreview,
+  StyleProps,
   Table,
   TableContainer,
   Tbody,
@@ -16,7 +17,7 @@ import { WorkStationGroup } from "../Data";
 import { STATS_PATH } from "../Config/Paths";
 import { Box, HStack, Heading, VStack } from "@chakra-ui/layout";
 import { Button } from "@chakra-ui/button";
-import { useState } from "react";
+import { PropsWithChildren, useState } from "react";
 import {
   AutoComplete,
   AutoCompleteInput,
@@ -86,6 +87,25 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
   const removeMachine = useRemoveMachine();
   const modifyInfo = useModifyInfo();
 
+  const GroupSelect = ({
+    onChange,
+    ...props
+  }: PropsWithChildren & StyleProps & { onChange: (v: string) => void }) => (
+    <AutoComplete
+      openOnFocus
+      creatable
+      onChange={(a) => onChange(a.target.value)}
+      values={groups.map((g) => g.name)}
+    >
+      <Box {...props} />
+      <AutoCompleteList maxHeight="200px" overflow="scroll">
+        {groups.map((g, i) => (
+          <AutoCompleteItem key={i} value={g.name}></AutoCompleteItem>
+        ))}
+      </AutoCompleteList>
+    </AutoComplete>
+  );
+
   return (
     <VStack padding={10} spacing={10}>
       <Box w="100%" textAlign="left">
@@ -97,22 +117,13 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
           placeholder="Hostname (e.g. mira05.doc.ic.ac.uk)"
           onChange={(e) => setHostname(e.target.value)}
         ></Input>
-        <AutoComplete
-          openOnFocus
-          creatable
-          onChange={(e) => setGroup(e.target.value)}
-          values={groups.map((g) => g.name)}
-        >
+        <GroupSelect w="100%" onChange={setGroup}>
           <AutoCompleteInput
-            w="45%"
+            w="100%"
             placeholder="Group Name (e.g. shared)"
           ></AutoCompleteInput>
-          <AutoCompleteList maxHeight="200px" overflow="scroll">
-            {groups.map((g, i) => (
-              <AutoCompleteItem key={i} value={g.name}></AutoCompleteItem>
-            ))}
-          </AutoCompleteList>
-        </AutoComplete>
+        </GroupSelect>
+
         <Button
           w="5%"
           onClick={() => {
@@ -138,101 +149,111 @@ export const AdminPanel = ({ groups }: { groups: WorkStationGroup[] }) => {
           </Thead>
           <Tbody>
             {instKeys(
-              groups.flatMap(({ name: group, workstations }, i) => {
-                return workstations.map((workstation, j) => {
-                  return (k: number) => (
-                    <Tr key={k}>
-                      <Td> {workstation.name} </Td>
-                      <Td>
-                        <Editable
-                          placeholder="Unknown"
-                          defaultValue={group}
-                          textColor={pickCol(group)}
-                          onSubmit={(s) =>
-                            modifyInfo(workstation.name, {
-                              group: s,
-                              cpu: null,
-                              motherboard: null,
-                              notes: null,
-                            })
-                          }
-                        >
-                          <EditablePreview />
-                          <EditableInput textColor={"gray.600"} />
-                        </Editable>
-                      </Td>
-                      <Td>
-                        {" "}
-                        {/* Do we need this empty string? */}
-                        <Editable
-                          placeholder="Unknown"
-                          textColor={pickCol(workstation.cpu)}
-                          defaultValue={workstation.cpu}
-                          onSubmit={(s) =>
-                            modifyInfo(workstation.name, {
-                              group: null,
-                              cpu: s,
-                              motherboard: null,
-                              notes: null,
-                            })
-                          }
-                        >
-                          <EditablePreview />
-                          <EditableInput textColor={"gray.600"} />
-                        </Editable>{" "}
-                      </Td>
-                      <Td>
-                        {" "}
-                        <Editable
-                          placeholder="Unknown"
-                          defaultValue={workstation.motherboard}
-                          textColor={pickCol(workstation.motherboard)}
-                          onSubmit={(s) =>
-                            modifyInfo(workstation.name, {
-                              group: null,
-                              cpu: null,
-                              motherboard: s,
-                              notes: null,
-                            })
-                          }
-                        >
-                          <EditablePreview />
-                          <EditableInput textColor={"gray.600"} />
-                        </Editable>{" "}
-                      </Td>
-                      <Td>
-                        {" "}
-                        <Editable
-                          placeholder="None"
-                          defaultValue={workstation.notes}
-                          textColor={pickCol(workstation.notes)}
-                          onSubmit={(s) =>
-                            modifyInfo(workstation.name, {
-                              group: null,
-                              cpu: null,
-                              motherboard: null,
-                              notes: s,
-                            })
-                          }
-                        >
-                          <EditablePreview />
-                          <EditableInput textColor={"gray.600"} />
-                        </Editable>
-                      </Td>
-                      <Td>
-                        <Button
-                          bgColor={"red.300"}
-                          onClick={() => {
-                            removeMachine(hostname);
-                          }}
-                        >
-                          Kill Satellite
-                        </Button>
-                      </Td>
-                    </Tr>
-                  );
-                });
-              }),
+              groups.flatMap(({ name: group, workstations }, i) =>
+                workstations.map((workstation, j) => (k: number) => (
+                  <Tr key={k}>
+                    <Td> {workstation.name} </Td>
+                    <Td>
+                      <GroupSelect
+                        onChange={(s) => {
+                          modifyInfo(workstation.name, {
+                            group: s,
+                            cpu: null,
+                            motherboard: null,
+                            notes: null,
+                          });
+                        }}
+                      >
+                        <AutoCompleteInput placeholder="Unknown"></AutoCompleteInput>
+                      </GroupSelect>
+                      {/* <Editable
+                        placeholder="Unknown"
+                        defaultValue={group}
+                        textColor={pickCol(group)}
+                        onSubmit={(s) =>
+                          modifyInfo(workstation.name, {
+                            group: s,
+                            cpu: null,
+                            motherboard: null,
+                            notes: null,
+                          })
+                        }
+                      >
+                        <EditablePreview />
+                        <EditableInput textColor={"gray.600"} />
+                      </Editable> */}
+                    </Td>
+                    <Td>
+                      {" "}
+                      {/* Do we need this empty string? */}
+                      <Editable
+                        placeholder="Unknown"
+                        textColor={pickCol(workstation.cpu)}
+                        defaultValue={workstation.cpu}
+                        onSubmit={(s) =>
+                          modifyInfo(workstation.name, {
+                            group: null,
+                            cpu: s,
+                            motherboard: null,
+                            notes: null,
+                          })
+                        }
+                      >
+                        <EditablePreview />
+                        <EditableInput textColor={"gray.600"} />
+                      </Editable>{" "}
+                    </Td>
+                    <Td>
+                      {" "}
+                      <Editable
+                        placeholder="Unknown"
+                        defaultValue={workstation.motherboard}
+                        textColor={pickCol(workstation.motherboard)}
+                        onSubmit={(s) =>
+                          modifyInfo(workstation.name, {
+                            group: null,
+                            cpu: null,
+                            motherboard: s,
+                            notes: null,
+                          })
+                        }
+                      >
+                        <EditablePreview />
+                        <EditableInput textColor={"gray.600"} />
+                      </Editable>{" "}
+                    </Td>
+                    <Td>
+                      {" "}
+                      <Editable
+                        placeholder="None"
+                        defaultValue={workstation.notes}
+                        textColor={pickCol(workstation.notes)}
+                        onSubmit={(s) =>
+                          modifyInfo(workstation.name, {
+                            group: null,
+                            cpu: null,
+                            motherboard: null,
+                            notes: s,
+                          })
+                        }
+                      >
+                        <EditablePreview />
+                        <EditableInput textColor={"gray.600"} />
+                      </Editable>
+                    </Td>
+                    <Td>
+                      <Button
+                        bgColor={"red.300"}
+                        onClick={() => {
+                          removeMachine(hostname);
+                        }}
+                      >
+                        Kill Satellite
+                      </Button>
+                    </Td>
+                  </Tr>
+                )),
+              ),
             )}
           </Tbody>
         </Table>
