@@ -10,7 +10,7 @@ import {
 } from "@chakra-ui/react";
 import { WorkStationData } from "../Data";
 import { TimeIcon } from "@chakra-ui/icons";
-import { cropString } from "../Utils/Utils";
+import { cropString, workstationBusy } from "../Utils/Utils";
 
 const LAST_SEEN_WARN_THRESH = 60 * 5;
 const GREEN = "#25D36B";
@@ -29,7 +29,7 @@ export const WorkstationCardMin = ({
         padding={0}
         w={width}
         rounded={"md"}
-        bg={useColorModeValue("white", "gray.900")}
+        bg={greyed(workstationBusy(gpus))}
       >
         {lastSeen !== undefined && lastSeen > LAST_SEEN_WARN_THRESH ? (
           <Alert
@@ -79,3 +79,8 @@ export const WorkstationCardMin = ({
     </Center>
   );
 };
+
+//Returns color for greyed out components
+export const greyed = (b : boolean) => {
+  return b ? "darkred" : "white";
+}
