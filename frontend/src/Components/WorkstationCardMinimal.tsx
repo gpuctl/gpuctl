@@ -65,7 +65,7 @@ export const WorkstationCardMin = ({
                 <Heading size="md">{`${s.gpu_name} (${(
                   s.memory_total / 1000
                 ).toFixed(0)} GB)`}</Heading>
-                <p>{`${s.gpu_util < 25 ? "🟢 Free" : "🔴 In-use"} (${Math.round(
+                <p>{`${s.in_use ? "🔴 In-use" : "🟢 Free"} (${Math.round(
                   s.gpu_util,
                 )}% Utilisation)`}</p>
                 <p>{`${s.gpu_temp < 80 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${Math.round(

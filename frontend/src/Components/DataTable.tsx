@@ -16,7 +16,6 @@ import {
 import { WorkStationGroup } from "../Data";
 import { useState } from "react";
 import { useForceUpdate } from "framer-motion";
-import { isFree } from "../Utils/Stats";
 
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   // default to show group, machine_name, gpu_name, isFree, brand, and memory_total
@@ -139,7 +138,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                         <Td key={id + 2}> {gpu.gpu_name}</Td>
                       ) : null}
                       {shownColumns.is_free ? (
-                        <Td key={id + 3}> {isFree(gpu).toString()}</Td>
+                        <Td key={id + 3}> {!gpu.in_use}</Td>
                       ) : null}
                       {shownColumns.gpu_brand ? (
                         <Td key={id + 4}> {gpu.gpu_brand}</Td>

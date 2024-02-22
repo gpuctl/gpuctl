@@ -60,7 +60,7 @@ type GPU struct {
 	MaxGraphicsClock  float64 `json:"max_graphics_clock"` // Mhz
 	MemoryClock       float64 `json:"memory_clock"`       // Mhz
 	MaxMemoryClock    float64 `json:"max_memory_clock"`   // Mhz
-	InUse             bool    `json:"in_user"`            // is this gpu being used?
+	InUse             bool    `json:"in_use"`             // is this gpu being used?
 	User              string  `json:"user"`               // iff it's being used, who is using this gpu
 }
 

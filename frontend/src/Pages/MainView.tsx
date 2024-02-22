@@ -11,7 +11,6 @@ import { useAuth } from "../Providers/AuthProvider";
 import { STATS_PATH } from "../Config/Paths";
 import { AdminPanel } from "./AdminPanel";
 import { Navigate } from "react-router-dom";
-import { isFree } from "../Utils/Stats";
 import { partition } from "lodash";
 const API_ALL_STATS_PATH = "/stats/all";
 const API_LAST_SEEN_PATH = "/stats/since_last_seen";
@@ -25,7 +24,7 @@ const retrieveAllStats: () => Promise<
 
 // We will consider a machine to be in use if any of it's GPUs are
 const inUse = (machine: WorkStationData) =>
-  machine.gpus.some((g) => !isFree(g));
+  machine.gpus.some(({ in_use }) => in_use);
 
 const sortData = <T,>(ws: (WorkStationData & T)[]) =>
   ws

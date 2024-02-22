@@ -33,6 +33,8 @@ export type GPUStats = {
   max_graphics_clock: number;
   memory_clock: number;
   max_memory_clock: number;
+  in_use: boolean;
+  user: string;
 };
 
 export type DurationDeltas = {
@@ -68,6 +70,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 5,
             memory_clock: 6,
             max_memory_clock: 7,
+            in_use: false,
+            user: "",
           },
         ],
       },
@@ -95,6 +99,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 12,
             memory_clock: 13,
             max_memory_clock: 14,
+            in_use: false,
+            user: "",
           },
           {
             uuid: "CCCCC",
@@ -114,6 +120,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 19,
             memory_clock: 20,
             max_memory_clock: 21,
+            in_use: false,
+            user: "",
           },
         ],
       },
@@ -141,6 +149,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 26,
             memory_clock: 27,
             max_memory_clock: 28,
+            in_use: false,
+            user: "",
           },
         ],
       },
@@ -169,6 +179,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 33,
             memory_clock: 34,
             max_memory_clock: 35,
+            in_use: false,
+            user: "",
           },
           {
             uuid: "FFFFF",
@@ -188,6 +200,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 40,
             memory_clock: 41,
             max_memory_clock: 42,
+            in_use: false,
+            user: "",
           },
         ],
       },
@@ -215,6 +229,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 47,
             memory_clock: 48,
             max_memory_clock: 49,
+            in_use: false,
+            user: "",
           },
         ],
       },
@@ -243,6 +259,8 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
             max_graphics_clock: 54,
             memory_clock: 55,
             max_memory_clock: 56,
+            in_use: false,
+            user: "",
           },
         ],
       },
