@@ -54,7 +54,7 @@ var UnitTests = [...]unitTest{
 	{"RemoveNonexistentFile", removeWrongFile},
 	{"MachinesCanBeRemoved", removingMachine},
 	{"InUseInformation", inUseInformation},
-	//{"RemovingMachineRemovesFiles", removingMachineRemoveFiles},
+	// {"RemovingMachineRemovesFiles", removingMachineRemoveFiles},
 }
 
 // fake data for adding during tests

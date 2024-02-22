@@ -294,6 +294,7 @@ func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) error {
 		return fmt.Errorf("machine with hostname %s does not exist", machine.Hostname)
 	}
 
+	delete(m.files, machine.Hostname)
 	delete(m.lastSeen, machine.Hostname)
 	delete(m.infos, uuidToRemove)
 	delete(m.stats, uuidToRemove)
