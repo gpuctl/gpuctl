@@ -86,7 +86,7 @@ export const GroupInfoManagement: React.FC<GroupInfoManagementProps> = ({
                     <Button
                       colorScheme="blue"
                       onClick={() =>
-                        copyToClipboard(`ssh user@${workstation.name} shutdown`)
+                        copyToClipboard(`ssh ${workstation.name} shutdown`)
                       }
                       disabled={copied}
                     >
