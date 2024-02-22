@@ -50,6 +50,7 @@ type GPUProcInfo struct {
 func (procs Processes) Summarise() (inUse bool, user string) {
 	user = ""
 	inUse = len(procs) > 0
+
 	if inUse {
 		user = procs[0].Owner
 	}
