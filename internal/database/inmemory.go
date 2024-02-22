@@ -69,6 +69,7 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
+	// make mapping from machine->gpu, then make group heirarchy
 	var gpus = make(map[string][]broadcast.GPU)
 	for uuid, info := range m.infos {
 		stats, exists := m.stats[uuid]
