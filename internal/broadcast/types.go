@@ -89,8 +89,3 @@ type WorkstationSeen struct {
 	Hostname string
 	LastSeen int64
 }
-
-type DurationDeltas struct {
-	Hostname string `json:"hostname"`
-	Delta    int64  `json:"seconds_since"`
-}
