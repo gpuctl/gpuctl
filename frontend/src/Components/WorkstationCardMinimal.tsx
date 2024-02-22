@@ -42,7 +42,7 @@ export const WorkstationCardMin = ({
             <AlertIcon></AlertIcon>
             {last_seen === undefined
               ? "Missing provenance data!"
-              : `Last seen over ${Math.floor(lastSeen / 60)} minutes ago!`}
+              : `Last seen over ${Math.floor(last_seen / 60)} minutes ago!`}
           </Alert>
         ) : (
           <></>

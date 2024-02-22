@@ -1,6 +1,6 @@
 import { Box, Heading, VStack } from "@chakra-ui/react";
 import { API_URL, DEFAULT_VIEW, REFRESH_INTERVAL, ViewPage } from "../App";
-import { DurationDeltas, WorkStationGroup, WorkStationData } from "../Data";
+import { WorkStationGroup, WorkStationData } from "../Data";
 import { Validated, Validation, success, validationElim } from "../Utils/Utils";
 import { ColumnGrid } from "../Components/ColumnGrid";
 import { TableTab } from "../Components/DataTable";
@@ -12,8 +12,8 @@ import { STATS_PATH } from "../Config/Paths";
 import { AdminPanel } from "./AdminPanel";
 import { Navigate } from "react-router-dom";
 import { partition } from "lodash";
+
 const API_ALL_STATS_PATH = "/stats/all";
-const API_LAST_SEEN_PATH = "/stats/since_last_seen";
 
 // Currently does not attempt to do any validation of the returned GPU stats,
 // or indeed handle errors that might be thrown by the Promises
@@ -28,8 +28,9 @@ const inUse = (machine: WorkStationData) =>
 
 const sortData = <T,>(ws: (WorkStationData & T)[]) =>
   ws
-    .map(({ name, gpus, ...rest }) => ({
+    .map(({ name, gpus, last_seen, ...rest }) => ({
       name,
+      last_seen: last_seen / 1_000_000_000,
       gpus: gpus.sort((g1, g2) => g1.uuid.localeCompare(g2.uuid)),
       ...rest,
     }))
@@ -40,9 +41,6 @@ const tagFree = (ws: WorkStationData[], free: boolean) =>
     free,
     ...data,
   }));
-
-const retrieveLastSeen: () => Promise<Validated<DurationDeltas[]>> = async () =>
-  success(await (await fetch(API_URL + API_LAST_SEEN_PATH)).json());
 
 const preProcess = (
   gs: WorkStationGroup[],
@@ -56,10 +54,7 @@ const preProcess = (
     };
   });
 
-const cardView = (
-  stats: WorkStationGroup[],
-  lastSeen: Record<string, number>,
-) => (
+const cardView = (stats: WorkStationGroup[]) => (
   <VStack spacing={20}>
     {stats.map((l, i) => (
       <Box
@@ -105,18 +100,10 @@ const adminView = (stats: WorkStationGroup[]) => (
 
 const displayPartial = (
   stats: Validation<WorkStationGroup[]>,
-  lastSeen: Validation<DurationDeltas[]>,
-  cont: (gs: WorkStationGroup[], ls: Record<string, number>) => JSX.Element,
+  cont: (gs: WorkStationGroup[]) => JSX.Element,
 ): JSX.Element => {
-  const ls = Object.fromEntries(
-    validationElim(lastSeen, {
-      success: (ls) => ls,
-      failure: () => [],
-      loading: () => [],
-    }).map(({ hostname, seconds_since }) => [hostname, seconds_since]),
-  );
   return validationElim(stats, {
-    success: (gs: WorkStationGroup[]) => cont(gs, ls),
+    success: cont,
     loading: () => <p>Retrieving data from API server...</p>,
     failure: (_) => <p>Something has gone wrong!</p>,
   });
@@ -132,21 +119,16 @@ export const MainView = ({ page }: { page: ViewPage }) => {
 
 export const ConfirmedMainView = ({ initial }: { initial: ViewPage }) => {
   const [stats, updateStats] = useJarJar(retrieveAllStats);
-  const [lastSeen, updateLastSeen] = useJarJar(retrieveLastSeen);
 
   useOnce(() => {
     setInterval(updateStats, REFRESH_INTERVAL);
   });
 
-  useOnce(() => {
-    setInterval(updateLastSeen, REFRESH_INTERVAL);
-  });
-
   return (
     <Navbar initial={initial}>
-      {displayPartial(stats, lastSeen, cardView)}
-      {displayPartial(stats, lastSeen, tableView)}
-      {displayPartial(stats, lastSeen, adminView)}
+      {displayPartial(stats, cardView)}
+      {displayPartial(stats, tableView)}
+      {displayPartial(stats, adminView)}
     </Navbar>
   );
 };
