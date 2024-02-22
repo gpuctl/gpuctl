@@ -620,7 +620,7 @@ func (conn PostgresConn) Drop() error {
 }
 
 func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
-	rows, err := conn.db.Query(`SELECT * FROM Machines`)
+	rows, err := conn.db.Query(`SELECT Hostname, LastSeen FROM Machines`)
 
 	if err != nil {
 		return nil, err
@@ -631,9 +631,8 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 	for rows.Next() {
 		var seen_instance broadcast.WorkstationSeen
 		var t time.Time
-		var dud sql.NullString
 
-		err = rows.Scan(&seen_instance.Hostname, &dud, &dud, &dud, &dud, &t)
+		err = rows.Scan(&seen_instance.Hostname, &t)
 
 		seen_instance.LastSeen = t.Unix()
 

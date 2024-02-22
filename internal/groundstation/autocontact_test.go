@@ -94,7 +94,7 @@ func TestPingHappy(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	success := ping("google.com", logger)
+	success := ping("8.8.8.8", logger)
 
 	if !success {
 		t.Error("Failed to ping google")
