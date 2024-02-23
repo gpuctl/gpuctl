@@ -469,33 +469,13 @@ func (conn PostgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {
 		return err
 	}
 
-	rows, err := tx.Query(`SELECT Uuid
-		FROM Gpus
-		WHERE Machine=$1`,
+	_, err = tx.Exec(`DELETE FROM Stats
+		WHERE Gpu=ANY(SELECT Uuid
+			FROM Gpus
+			WHERE Machine=$1)`,
 		machine.Hostname,
 	)
-	if err != nil {
-		return err
-	}
 
-	for rows.Next() {
-		var uuid string
-		err = rows.Scan(&uuid)
-		if err != nil {
-			return errors.Join(err, tx.Rollback())
-		}
-
-		_, err = tx.Exec(`DELETE FROM Stats
-			WHERE Gpu=$1`,
-			uuid,
-		)
-
-		if err != nil {
-			return errors.Join(err, tx.Rollback())
-		}
-	}
-
-	err = rows.Err()
 	if err != nil {
 		return errors.Join(err, tx.Rollback())
 	}
