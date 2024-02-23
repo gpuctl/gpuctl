@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -39,6 +39,7 @@ export const GroupInfoManagement = ({
 
   const removeMachine = useRemoveMachine();
 
+  const inputRef = useRef<HTMLInputElement>(null);
   const copyToClipboard = (username: string) => {
     const command = `ssh ${username}@${currentMachine} shutdown now`;
     navigator.clipboard.writeText(command);
@@ -130,7 +131,7 @@ export const GroupInfoManagement = ({
           <ModalHeader>Enter Username</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Input placeholder="Username" id="usernameInput" />
+            <Input placeholder="Username" ref = {inputRef}/>
           </ModalBody>
           <ModalFooter>
             <Button
@@ -138,7 +139,7 @@ export const GroupInfoManagement = ({
               mr={3}
               onClick={() =>
                 copyToClipboard(
-                  document.getElementById("usernameInput")?.innerText || "",
+                  inputRef.current?.value || "",
                 )
               }
             >
