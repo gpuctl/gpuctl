@@ -76,7 +76,7 @@ func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.Response[br
 
 	if data == nil {
 		// dont just return nil, which would not be marshalled properly
-		return &femto.Response[broadcast.Workstations]{Status: http.StatusOK, Body: broadcast.Workstations{}}, nil
+		return femto.Ok(broadcast.Workstations{})
 	}
 
 	return femto.Ok(data)
