@@ -131,17 +131,13 @@ export const GroupInfoManagement = ({
           <ModalHeader>Enter Username</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Input placeholder="Username" ref = {inputRef}/>
+            <Input placeholder="Username" ref={inputRef} />
           </ModalBody>
           <ModalFooter>
             <Button
               colorScheme="blue"
               mr={3}
-              onClick={() =>
-                copyToClipboard(
-                  inputRef.current?.value || "",
-                )
-              }
+              onClick={() => copyToClipboard(inputRef.current?.value || "")}
             >
               Copy Command
             </Button>
