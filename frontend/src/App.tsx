@@ -6,6 +6,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { MainView } from "./Pages/MainView";
 import { STATS_PATH } from "./Config/Paths";
 import { AuthProvider } from "./Providers/AuthProvider";
+import { FetchStatsProvider } from "./Providers/FetchProvider";
 
 export const API_URL =
   process.env.NODE_ENV === "production" ? "/api" : "http://localhost:8000/api";
@@ -24,23 +25,25 @@ export const VIEW_PAGE_INDEX = enumIndex(ViewPage);
 const App = () => (
   <ChakraProvider>
     <AuthProvider>
-      <div className="App"></div>
-      <BrowserRouter>
-        <Routes>
-          <Route index element={<Navigate to={STATS_PATH} replace />} />
-          <Route
-            path={STATS_PATH}
-            element={<Navigate to={STATS_PATH + DEFAULT_VIEW} replace />}
-          />
-          {enumVals(ViewPage).map((page, i) => (
+      <FetchStatsProvider>
+        <div className="App"></div>
+        <BrowserRouter>
+          <Routes>
+            <Route index element={<Navigate to={STATS_PATH} replace />} />
             <Route
-              key={i}
-              path={STATS_PATH + page}
-              element={<MainView page={page} />}
+              path={STATS_PATH}
+              element={<Navigate to={STATS_PATH + DEFAULT_VIEW} replace />}
             />
-          ))}
-        </Routes>
-      </BrowserRouter>
+            {enumVals(ViewPage).map((page, i) => (
+              <Route
+                key={i}
+                path={STATS_PATH + page}
+                element={<MainView page={page} />}
+              />
+            ))}
+          </Routes>
+        </BrowserRouter>
+      </FetchStatsProvider>
     </AuthProvider>
   </ChakraProvider>
 );

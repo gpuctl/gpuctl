@@ -4,6 +4,7 @@ import { WorkStationData } from "../Data";
 import { AutoCompleteInput } from "@choc-ui/chakra-autocomplete";
 import { GS } from "../Pages/AdminPanel";
 import { useState } from "react";
+import { useStats } from "../Providers/FetchProvider";
 
 type EditableFieldProps = {
   group: string;
@@ -33,6 +34,8 @@ export const EditableField = ({
     });
   };
 
+  const { setShouldFetch } = useStats();
+
   const [groupBacking, setGroupBacking] = useState(group);
 
   return (
@@ -41,6 +44,12 @@ export const EditableField = ({
         <GroupSelect onChange={handleSubmit}>
           <AutoCompleteInput
             placeholder={"Unknown"}
+            onSelect={() => {
+              setShouldFetch(false);
+            }}
+            onBlur={() => {
+              setShouldFetch(true);
+            }}
             onChange={(a) => setGroupBacking(a.target.value)}
             value={groupBacking}
           ></AutoCompleteInput>
@@ -54,7 +63,11 @@ export const EditableField = ({
           textColor={pickCol(
             workstation[fieldKey as keyof WorkStationData] as string,
           )}
-          onSubmit={handleSubmit}
+          // onCancel={(a) => {}}
+          onSubmit={(a) => {
+            handleSubmit(a);
+          }}
+          // onEdit={() => setShouldFetch(false)}
         >
           <EditablePreview />
           <EditableInput />
