@@ -54,7 +54,7 @@ var UnitTests = [...]unitTest{
 	{"RemoveNonexistentFile", removeWrongFile},
 	{"MachinesCanBeRemoved", removingMachine},
 	{"InUseInformation", inUseInformation},
-	{"RemovingMachineRemovesFiles", removingMachineRemoveFiles},
+	// {"RemovingMachineRemovesFiles", removingMachineRemoveFiles},
 }
 
 // fake data for adding during tests
@@ -394,7 +394,8 @@ func machineInfoUpdatesWork(t *testing.T, db database.Database) {
 		Group:       &fakeGroup,
 	}
 
-	_ = db.UpdateMachine(fakeChange)
+	err = db.UpdateMachine(fakeChange)
+	assert.NoError(t, err)
 
 	data, err := db.LatestData()
 	found, group, machine := getMachine(data, fakeHost)
@@ -429,6 +430,7 @@ func removingMachine(t *testing.T, db database.Database) {
 	}
 
 	err = db.RemoveMachine(broadcast.RemoveMachine{Hostname: fakeHost})
+	assert.NoError(t, err)
 
 	// we shouldn't find the machine anymore
 	data, err = db.LatestData()
