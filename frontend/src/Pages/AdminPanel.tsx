@@ -36,11 +36,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ groups }) => {
       values={groups.map((g) => g.name)}
     >
       <Box {...props} />
-      <AutoCompleteList maxHeight="200px" overflow="scroll">
+      {/* <AutoCompleteList maxHeight="200px" overflow="scroll">
         {groups.map((g, i) => (
           <AutoCompleteItem key={i} value={g.name}></AutoCompleteItem>
         ))}
-      </AutoCompleteList>
+      </AutoCompleteList> */}
     </AutoComplete>
   );
 
