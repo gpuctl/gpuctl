@@ -3,11 +3,7 @@ import { Box, StyleProps, VStack } from "@chakra-ui/react";
 import { AddMachineForm } from "../Components/AddMachineForm";
 import { GroupInfoManagement } from "../Components/GroupInfoManagement";
 import { WorkStationGroup } from "../Data";
-import {
-  AutoComplete,
-  AutoCompleteItem,
-  AutoCompleteList,
-} from "@choc-ui/chakra-autocomplete";
+import { AutoComplete } from "@choc-ui/chakra-autocomplete";
 
 export const ADMIN_PATH = "/admin";
 
@@ -36,11 +32,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ groups }) => {
       values={groups.map((g) => g.name)}
     >
       <Box {...props} />
-      <AutoCompleteList maxHeight="200px" overflow="scroll">
+      {/* <AutoCompleteList maxHeight="200px" overflow="scroll">
         {groups.map((g, i) => (
           <AutoCompleteItem key={i} value={g.name}></AutoCompleteItem>
         ))}
-      </AutoCompleteList>
+      </AutoCompleteList> */}
     </AutoComplete>
   );
 
