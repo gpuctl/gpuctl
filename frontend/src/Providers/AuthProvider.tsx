@@ -68,7 +68,7 @@ export const AuthProvider = ({
   children: ReactNode[] | ReactNode;
 }) => {
   const [user, setUserDirect] = useState<Validated<string>>(
-    failure(Error("Not logged in!")),
+    success("Checking log-in status"),
   );
 
   // On first page load, we would like to check if we are currently signed in
@@ -80,6 +80,8 @@ export const AuthProvider = ({
       if (r.ok) {
         const remind: UsernameReminder = await r.json();
         setUserDirect(success(remind.username));
+      } else {
+        setUserDirect(failure(Error("Not logged in!")));
       }
     }),
   );
@@ -143,7 +145,7 @@ export const AuthProvider = ({
     const f = (init?: RequestInit | undefined) =>
       fire(async () => {
         const r = await authFetch(path, init);
-        if (!r.ok && r.status === 403) {
+        if (!r.ok && r.status === 401) {
           logout();
         }
         setResp(success(r));
