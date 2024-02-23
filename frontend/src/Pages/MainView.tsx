@@ -13,7 +13,7 @@ import { Navigate } from "react-router-dom";
 import { useStats } from "../Providers/FetchProvider";
 
 const cardView = (stats: WorkStationGroup[]) => (
-  <VStack spacing={20}>
+  <VStack spacing={5}>
     {stats.map((l, i) => (
       <Box
         key={i}

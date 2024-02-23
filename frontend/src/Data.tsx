@@ -240,7 +240,11 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
           },
         ],
       },
-
+    ],
+  },
+  {
+    name: "Other",
+    workstations: [
       {
         name: "Workstation 6",
         cpu: "AMD 4800S",

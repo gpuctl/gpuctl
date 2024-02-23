@@ -106,7 +106,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                         <Td key={id + 2}> {gpu.gpu_name}</Td>
                       ) : null}
                       {shownColumns["Free"] ? (
-                        <Td key={id + 3}> {gpu.gpu_name ? "❌" : "✅"}</Td>
+                        <Td key={id + 3}> {gpu.in_use ? "❌" : "✅"}</Td>
                       ) : null}
                       {shownColumns["GPU brand"] ? (
                         <Td key={id + 4}> {gpu.gpu_brand}</Td>

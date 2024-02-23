@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Box, Button, Heading, HStack, Input } from "@chakra-ui/react";
 import { AutoCompleteInput } from "@choc-ui/chakra-autocomplete";
 import { useAddMachine } from "../Hooks/Hooks";
 import { WorkStationGroup } from "../Data";
 import { GS } from "../Pages/AdminPanel";
+import { useStats } from "../Providers/FetchProvider";
 
 export const AddMachineForm = ({
   GroupSelect,
@@ -16,6 +17,10 @@ export const AddMachineForm = ({
   const [group, setGroup] = useState<string>("");
   const addMachine = useAddMachine();
 
+  const { setShouldFetch } = useStats();
+
+  const ref = useRef<HTMLInputElement>(null);
+
   return (
     <Box w="100%">
       <Heading size="lg">Add a Machine:</Heading>
@@ -24,11 +29,29 @@ export const AddMachineForm = ({
           w="50%"
           placeholder="Hostname (e.g. mira05.doc.ic.ac.uk)"
           onChange={(e) => setHostname(e.target.value)}
+          value={hostname}
         ></Input>
-        <GroupSelect w="100%" onChange={setGroup}>
+        <GroupSelect
+          w="100%"
+          onChange={(a) => {
+            setGroup(a);
+          }}
+        >
           <AutoCompleteInput
+            ref={ref}
             w="100%"
+            onChange={(e) => setGroup(e.target.value)}
             placeholder="Group Name (e.g. shared)"
+            onSelect={() => {
+              setTimeout(() => {
+                ref.current?.focus();
+              }, 1);
+              setShouldFetch(false);
+            }}
+            onBlur={() => {
+              setShouldFetch(true);
+            }}
+            value={group}
           ></AutoCompleteInput>
         </GroupSelect>
 
