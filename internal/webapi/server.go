@@ -198,14 +198,21 @@ func (a *Api) GetFile(r *http.Request, l *slog.Logger) (*femto.Response[[]byte],
 }
 
 func (a *Api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
-	err := a.deboard(rm, r, l)
-	if err != nil {
-		return nil, err
+	// log errors and continue regardless because we still want to attempt to remove from the db
+	deboardErr := a.deboard(rm, r, l)
+	if deboardErr != nil {
+		slog.Error("Got error trying to deboard!", "err", deboardErr)
 	}
-	err = a.DB.RemoveMachine(broadcast.RemoveMachine{Hostname: rm.Hostname})
-	if err != nil {
-		return nil, err
+	dbErr := a.DB.RemoveMachine(broadcast.RemoveMachine{Hostname: rm.Hostname})
+	if dbErr != nil {
+		slog.Error("Got error removing from the database!", "err", dbErr)
 	}
+
+	joined := errors.Join(deboardErr, dbErr)
+	if joined != nil {
+		return nil, joined
+	}
+
 	return femto.Ok(types.Unit{})
 }
 
