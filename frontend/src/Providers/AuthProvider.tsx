@@ -62,7 +62,11 @@ const authFetch = (path: string, init?: RequestInit) => {
 
 export const useAuth = () => useContext(AuthContext);
 
-export const AuthProvider = ({ children }: { children: ReactNode[] }) => {
+export const AuthProvider = ({
+  children,
+}: {
+  children: ReactNode[] | ReactNode;
+}) => {
   const [user, setUserDirect] = useState<Validated<string>>(
     failure(Error("Not logged in!")),
   );
