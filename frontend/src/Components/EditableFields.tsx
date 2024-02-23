@@ -4,7 +4,6 @@ import { WorkStationData } from "../Data";
 import { AutoCompleteInput } from "@choc-ui/chakra-autocomplete";
 import { GS } from "../Pages/AdminPanel";
 import { useRef, useState } from "react";
-import { useStats } from "../Providers/FetchProvider";
 
 type EditableFieldProps = {
   group: string;
@@ -34,8 +33,6 @@ export const EditableField = ({
     });
   };
 
-  const { setShouldFetch } = useStats();
-
   const [groupBacking, setGroupBacking] = useState(group);
 
   const ref = useRef<HTMLInputElement>(null);
@@ -47,15 +44,15 @@ export const EditableField = ({
           <AutoCompleteInput
             ref={ref}
             placeholder={"Unknown"}
-            onSelect={() => {
-              setTimeout(() => {
-                ref.current?.focus();
-              }, 1);
-              setShouldFetch(false);
-            }}
-            onBlur={() => {
-              setShouldFetch(true);
-            }}
+            // onSelect={() => {
+            //   setTimeout(() => {
+            //     ref.current?.focus();
+            //   }, 1);
+            //   setShouldFetch(false);
+            // }}
+            // onBlur={() => {
+            //   setShouldFetch(true);
+            // }}
             onChange={(a) => setGroupBacking(a.target.value)}
             value={groupBacking}
           ></AutoCompleteInput>

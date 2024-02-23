@@ -4,7 +4,6 @@ import { AutoCompleteInput } from "@choc-ui/chakra-autocomplete";
 import { useAddMachine } from "../Hooks/Hooks";
 import { WorkStationGroup } from "../Data";
 import { GS } from "../Pages/AdminPanel";
-import { useStats } from "../Providers/FetchProvider";
 
 export const AddMachineForm = ({
   GroupSelect,
@@ -16,8 +15,6 @@ export const AddMachineForm = ({
   const [hostname, setHostname] = useState<string>("");
   const [group, setGroup] = useState<string>("");
   const addMachine = useAddMachine();
-
-  const { setShouldFetch } = useStats();
 
   const ref = useRef<HTMLInputElement>(null);
 
@@ -42,15 +39,15 @@ export const AddMachineForm = ({
             w="100%"
             onChange={(e) => setGroup(e.target.value)}
             placeholder="Group Name (e.g. shared)"
-            onSelect={() => {
-              setTimeout(() => {
-                ref.current?.focus();
-              }, 1);
-              setShouldFetch(false);
-            }}
-            onBlur={() => {
-              setShouldFetch(true);
-            }}
+            // onSelect={() => {
+            //   setTimeout(() => {
+            //     ref.current?.focus();
+            //   }, 1);
+            //   setShouldFetch(false);
+            // }}
+            // onBlur={() => {
+            //   setShouldFetch(true);
+            // }}
             value={group}
           ></AutoCompleteInput>
         </GroupSelect>
