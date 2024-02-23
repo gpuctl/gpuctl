@@ -26,7 +26,10 @@ import { instKeys } from "../Utils/Utils";
 import { useRemoveMachine } from "../Hooks/Hooks";
 import { GS } from "../Pages/AdminPanel";
 
-export const GroupInfoManagement = ({ GroupSelect, groups }: {
+export const GroupInfoManagement = ({
+  GroupSelect,
+  groups,
+}: {
   GroupSelect: GS;
   groups: WorkStationGroup[];
 }) => {
@@ -130,10 +133,20 @@ export const GroupInfoManagement = ({ GroupSelect, groups }: {
             <Input placeholder="Username" id="usernameInput" />
           </ModalBody>
           <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={() => copyToClipboard((document.getElementById('usernameInput')?.innerText) || '')}>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={() =>
+                copyToClipboard(
+                  document.getElementById("usernameInput")?.innerText || "",
+                )
+              }
+            >
               Copy Command
             </Button>
-            <Button variant="ghost" onClick={onClose}>Cancel</Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
           </ModalFooter>
         </ModalContent>
       </Modal>
