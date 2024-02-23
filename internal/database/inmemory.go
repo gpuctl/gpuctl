@@ -286,22 +286,36 @@ func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	var uuidToRemove string
+	uuidsToRemove := make([]string, 0)
 	for uuid, info := range m.infos {
 		if info.host == machine.Hostname {
-			uuidToRemove = uuid
+			uuidsToRemove = append(uuidsToRemove, uuid)
 			break
 		}
 	}
 
-	if uuidToRemove == "" {
+	found := false
+
+	for hostname, _ := range m.lastSeen {
+		if hostname == machine.Hostname {
+			found = true
+			break
+		}
+	}
+
+	if !found {
 		return ErrMachineNotPresent
 	}
 
 	delete(m.files, machine.Hostname)
 	delete(m.lastSeen, machine.Hostname)
-	delete(m.infos, uuidToRemove)
-	delete(m.stats, uuidToRemove)
+	delete(m.machines, machine.Hostname)
+
+	for i := range uuidsToRemove {
+		uuidToRemove := uuidsToRemove[i]
+		delete(m.infos, uuidToRemove)
+		delete(m.stats, uuidToRemove)
+	}
 
 	return nil
 }
