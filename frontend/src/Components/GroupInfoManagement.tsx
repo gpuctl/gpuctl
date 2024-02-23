@@ -48,24 +48,28 @@ export const GroupInfoManagement = ({
                     <Td>{workstation.name}</Td>
                     <EditableField
                       GroupSelect={GroupSelect}
+                      group={group.name}
                       workstation={workstation}
                       fieldKey="group"
                       placeholder="unknown"
                     />
                     <EditableField
                       GroupSelect={GroupSelect}
+                      group={group.name}
                       workstation={workstation}
                       fieldKey="cpu"
                       placeholder="unknown"
                     />
                     <EditableField
                       GroupSelect={GroupSelect}
+                      group={group.name}
                       workstation={workstation}
                       fieldKey="motherboard"
                       placeholder="unknown"
                     />
                     <EditableField
                       GroupSelect={GroupSelect}
+                      group={group.name}
                       workstation={workstation}
                       fieldKey="notes"
                       placeholder="none"
