@@ -2,7 +2,6 @@ package database
 
 import (
 	"cmp"
-	"errors"
 	"fmt"
 	"reflect"
 	"slices"
@@ -75,29 +74,29 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 	// make mapping from machine->gpu, then make group heirarchy
 	var gpus = make(map[string][]broadcast.GPU)
 	for uuid, info := range m.infos {
+		stats, exists := m.stats[uuid]
+		if !exists || len(stats) == 0 {
+			continue
+		}
+
+		stat := stats[len(stats)-1]
+
+		inUse, user := stat.RunningProcesses.Summarise()
+
 		gpu := broadcast.GPU{
 			Uuid:          uuid,
 			Name:          info.context.Name,
 			Brand:         info.context.Brand,
 			DriverVersion: info.context.DriverVersion,
 			MemoryTotal:   info.context.MemoryTotal,
+			InUse:         inUse,
+			User:          user,
 		}
 
-		// most recent stat is at the end
-		stats := m.stats[uuid]
-		stat := stats[len(stats)-1]
-
-		// add on in-use info
-		gpu.InUse, gpu.User = stat.RunningProcesses.Summarise()
-
-		// reflect on stat to get all the fields
 		for _, field := range reflect.VisibleFields(reflect.TypeOf(stat)) {
-			// uuid already set, skip
 			if field.Name == "Uuid" {
 				continue
 			}
-
-			// we need a reference to gpu, not a copy so it's settable
 			target := reflect.ValueOf(&gpu).Elem().FieldByName(field.Name)
 			if target.CanSet() {
 				target.Set(reflect.ValueOf(stat).FieldByIndex(field.Index))
@@ -108,7 +107,6 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 	}
 
 	var groups = make(map[string][]broadcast.Workstation)
-
 	for machine, info := range m.machines {
 		group := info.Group
 		if group == nil || strings.TrimSpace(*group) == "" {
@@ -116,7 +114,7 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 			group = &fallback
 		}
 
-		var workstation = broadcast.Workstation{
+		workstation := broadcast.Workstation{
 			Name:        machine,
 			CPU:         info.CPU,
 			Motherboard: info.Motherboard,
@@ -128,8 +126,7 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 		groups[*group] = append(groups[*group], workstation)
 	}
 
-	// flatten map
-	var result broadcast.Workstations = nil
+	var result broadcast.Workstations
 	for group, machines := range groups {
 		result = append(result, broadcast.Group{Name: group, Workstations: machines})
 	}
@@ -142,10 +139,7 @@ func (m *inMemory) UpdateLastSeen(host string, time int64) error {
 	defer m.mu.Unlock()
 
 	m.lastSeen[host] = time
-
-	// make sure it's present in the machine list
-	_, found := m.machines[host]
-	if !found {
+	if _, found := m.machines[host]; !found {
 		m.machines[host] = broadcast.ModifyMachine{Hostname: host}
 	}
 
@@ -183,6 +177,7 @@ func (m *inMemory) Downsample(cutoffTime int64) error {
 		})
 
 		var downsampled []uplink.GPUStatSample
+
 		for len(oldSamples) > 0 {
 			batchEnd := 100
 			if len(oldSamples) < 100 {
@@ -208,8 +203,6 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 
 	var sumMemoryUtil, sumGPUUtil, sumMemoryUsed, sumFanSpeed, sumTemp, sumMemoryTemp, sumGraphicsVoltage, sumPowerDraw, sumGraphicsClock, sumMaxGraphicsClock, sumMemoryClock, sumMaxMemoryClock float64
 	var minTime int64 = samples[0].Time
-
-	// Pid -> Process
 	processesMap := make(map[uint64]uplink.GPUProcInfo)
 
 	for _, sample := range samples {
@@ -225,24 +218,22 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 		sumMaxGraphicsClock += sample.MaxGraphicsClock
 		sumMemoryClock += sample.MemoryClock
 		sumMaxMemoryClock += sample.MaxMemoryClock
-
 		if sample.Time < minTime {
 			minTime = sample.Time
 		}
-
+		// Addressing potential duplicate PID handling
 		for _, proc := range sample.RunningProcesses {
 			// TODO: What if multiple samples have a process with the same PID?
-			processesMap[proc.Pid] = proc
+			processesMap[proc.Pid] = proc // Overwrites if duplicate, ensuring only the latest is kept
 		}
 	}
 
 	n := float64(len(samples))
-
 	aggregatedProcesses := make([]uplink.GPUProcInfo, 0, len(processesMap))
 	for _, proc := range processesMap {
 		aggregatedProcesses = append(aggregatedProcesses, proc)
 	}
-	// Ensure deterministic order.
+	// Sorting to ensure deterministic order
 	slices.SortFunc(aggregatedProcesses, func(a, b uplink.GPUProcInfo) int {
 		return cmp.Compare(a.Pid, b.Pid)
 	})
@@ -261,7 +252,7 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 		MaxGraphicsClock:  sumMaxGraphicsClock / n,
 		MemoryClock:       sumMemoryClock / n,
 		MaxMemoryClock:    sumMaxMemoryClock / n,
-		Time:              minTime, // Use the earliest time as the timestamp for the averaged sample
+		Time:              minTime,
 		RunningProcesses:  aggregatedProcesses,
 	}
 
@@ -269,18 +260,95 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 }
 
 func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {
-	// TODO: add actual functionality. This was just to make the code compile
-	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if _, exists := m.lastSeen[machine.Hostname]; exists {
+		return ErrMachineFoundTwice
+	}
+
+	m.lastSeen[machine.Hostname] = time.Now().Unix()
+
+	newMachine := broadcast.ModifyMachine{
+		Hostname: machine.Hostname,
+	}
+
+	if machine.Group != nil {
+		newMachine.Group = machine.Group
+	}
+
+	m.machines[machine.Hostname] = newMachine
+
+	return nil
 }
 
-func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) (err error) {
-	// TODO: add actual functionality. This was just to make the code compile
-	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
+func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	uuidsToRemove := make([]string, 0)
+	for uuid, info := range m.infos {
+		if info.host == machine.Hostname {
+			uuidsToRemove = append(uuidsToRemove, uuid)
+			break
+		}
+	}
+
+	found := false
+
+	for hostname, _ := range m.lastSeen {
+		if hostname == machine.Hostname {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		return ErrMachineNotPresent
+	}
+
+	delete(m.files, machine.Hostname)
+	delete(m.lastSeen, machine.Hostname)
+	delete(m.machines, machine.Hostname)
+
+	for i := range uuidsToRemove {
+		uuidToRemove := uuidsToRemove[i]
+		delete(m.infos, uuidToRemove)
+		delete(m.stats, uuidToRemove)
+	}
+
+	return nil
 }
 
 func (m *inMemory) UpdateMachine(changes broadcast.ModifyMachine) error {
-	// TODO: add actual functionality. This was just to make the code compile
-	return errors.New("NOT IMPLEMENTED FOR IN-MEMORY DB")
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if _, exists := m.lastSeen[changes.Hostname]; !exists {
+		return ErrMachineNotPresent
+	}
+
+	machine, exists := m.machines[changes.Hostname]
+	if !exists {
+		return ErrMachineNotPresent
+	}
+
+	if changes.CPU != nil {
+		machine.CPU = changes.CPU
+	}
+	if changes.Motherboard != nil {
+		machine.Motherboard = changes.Motherboard
+	}
+	if changes.Notes != nil {
+		machine.Notes = changes.Notes
+	}
+	if changes.Group != nil {
+		machine.Group = changes.Group
+	}
+
+	m.machines[changes.Hostname] = machine
+
+	return nil
 }
 
 func (m *inMemory) AttachFile(file broadcast.AttachFile) error {

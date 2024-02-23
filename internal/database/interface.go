@@ -9,6 +9,7 @@ import (
 
 // Constant errors for failures in DB
 var (
+	ErrMachineFoundTwice = errors.New("machine found twice")
 	ErrMachineNotPresent = errors.New("adding gpu to non present machine")
 	ErrGpuNotPresent     = errors.New("appending to non present gpu")
 	ErrNoSuchMachine     = errors.New("could not find given machine")
