@@ -145,7 +145,7 @@ export const AuthProvider = ({
     const f = (init?: RequestInit | undefined) =>
       fire(async () => {
         const r = await authFetch(path, init);
-        if (!r.ok && r.status === 403) {
+        if (!r.ok && r.status === 401) {
           logout();
         }
         setResp(success(r));
