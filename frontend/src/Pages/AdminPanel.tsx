@@ -3,11 +3,7 @@ import { Box, StyleProps, VStack } from "@chakra-ui/react";
 import { AddMachineForm } from "../Components/AddMachineForm";
 import { GroupInfoManagement } from "../Components/GroupInfoManagement";
 import { WorkStationGroup } from "../Data";
-import {
-  AutoComplete,
-  AutoCompleteItem,
-  AutoCompleteList,
-} from "@choc-ui/chakra-autocomplete";
+import { AutoComplete } from "@choc-ui/chakra-autocomplete";
 
 export const ADMIN_PATH = "/admin";
 
