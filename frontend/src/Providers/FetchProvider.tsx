@@ -51,6 +51,8 @@ const retrieveAllStats: () => Promise<
   Validated<WorkStationGroup[]>
 > = async () =>
   success(preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()));
+// USEFUL FOR TESTING, DON'T DELETE PLS
+// success(preProcess(EXAMPLE_DATA_1));
 
 // We will consider a machine to be in use if any of it's GPUs are
 const inUse = (machine: WorkStationData) =>
@@ -75,11 +77,19 @@ const tagFree = (ws: WorkStationData[], free: boolean) =>
 const preProcess = (
   gs: WorkStationGroup[],
 ): WorkStationGroup<{ free: boolean }>[] =>
-  gs.map(({ name, workstations }) => {
-    const [used, free] = partition(sortData(workstations), inUse);
+  gs
+    .map(({ name, workstations }) => {
+      const [used, free] = partition(sortData(workstations), inUse);
 
-    return {
-      name,
-      workstations: tagFree(free, true).concat(tagFree(used, false)),
-    };
-  });
+      return {
+        name,
+        workstations: tagFree(free, true).concat(tagFree(used, false)),
+      };
+    })
+    .sort((g1, g2) =>
+      g1.name === "Shared"
+        ? -1
+        : g2.name === "Shared"
+          ? 1
+          : g1.name.localeCompare(g2.name),
+    );
