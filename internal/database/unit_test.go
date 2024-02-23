@@ -53,6 +53,7 @@ var UnitTests = [...]unitTest{
 	{"RemoveFile", removeFile},
 	{"RemoveNonexistentFile", removeWrongFile},
 	{"MachinesCanBeRemoved", removingMachine},
+	{"MachinesWithSamplesCanBeRemoved", removingMachineAndSamples},
 	{"InUseInformation", inUseInformation},
 	{"RemovingMachineRemovesFiles", removingMachineRemoveFiles},
 }
@@ -83,6 +84,22 @@ var fakeDataSample = uplink.GPUStatSample{
 	MemoryClock:       650.3,
 	MaxMemoryClock:    750,
 	RunningProcesses:  nil,
+}
+var fakeDataSample2 = uplink.GPUStatSample{
+	Uuid:              "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	MemoryUtilisation: 2,
+	GPUUtilisation:    6,
+	MemoryUsed:        1.2,
+	FanSpeed:          5.2,
+	Temp:              4.3,
+	MemoryTemp:        4.3,
+	GraphicsVoltage:   15.0,
+	PowerDraw:         4.5,
+	GraphicsClock:     5,
+	MaxGraphicsClock:  34.4,
+	MemoryClock:       6.3,
+	MaxMemoryClock:    75,
+	RunningProcesses:  uplink.Processes{{Pid: 3456, Name: "python", Owner: "bob"}},
 }
 
 // helper functions for getting/checking machine info
@@ -428,6 +445,44 @@ func removingMachine(t *testing.T, db database.Database) {
 	if !found {
 		t.Error("Didn't find machine when we expected to")
 	}
+
+	err = db.RemoveMachine(broadcast.RemoveMachine{Hostname: fakeHost})
+	assert.NoError(t, err)
+
+	// we shouldn't find the machine anymore
+	data, err = db.LatestData()
+	assert.NoError(t, err)
+	found, _, _ = getMachine(data, fakeHost)
+	if found {
+		t.Logf("%v", data)
+		t.Error("Found the machine when we didn't expect to")
+	}
+}
+
+// removing a machine removes all of its samples
+func removingMachineAndSamples(t *testing.T, db database.Database) {
+	fakeHost := "yak"
+
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	// add some data
+	// I'm not going to bother checking it got added, that's done by other tests
+	err = db.UpdateGPUContext(fakeHost, fakeDataInfo)
+	assert.NoError(t, err)
+	err = db.AppendDataPoint(fakeDataSample)
+	assert.NoError(t, err)
+
+	// we should find the machine now
+	data, err := db.LatestData()
+	assert.NoError(t, err)
+	found, _, _ := getMachine(data, fakeHost)
+	if !found {
+		t.Error("Didn't find machine when we expected to")
+	}
+
+	err = db.AppendDataPoint(fakeDataSample2)
+	assert.NoError(t, err)
 
 	err = db.RemoveMachine(broadcast.RemoveMachine{Hostname: fakeHost})
 	assert.NoError(t, err)
