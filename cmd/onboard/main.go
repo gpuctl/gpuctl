@@ -14,6 +14,9 @@ import (
 )
 
 // This is right on DoC CSG machines.
+// we'll append the user we're logging in as to this path, so we don't run into
+// issues overwriting gpuctl directories created by other users in previous
+// deployments
 const dataDir = "/data/gpuctl"
 
 func main() {
@@ -47,7 +50,7 @@ func main() {
 
 	conf := tunnel.Config{
 		User:    *user,
-		DataDir: dataDir,
+		DataDir: dataDir + *user,
 		Signer:  signer,
 		RemoteConf: config.SatelliteConfiguration{
 			Groundstation: config.Groundstation{"https://", "gpuctl.perial.co.uk", 80},
