@@ -1,10 +1,12 @@
 import { Editable, EditableInput, EditablePreview, Td } from "@chakra-ui/react";
-import { useModifyInfo } from "../Hooks/Hooks";
+import { useModifyInfo, FieldKey } from "../Hooks/Hooks";
 import { WorkStationData } from "../Data";
+import { AutoCompleteInput } from "@choc-ui/chakra-autocomplete";
+import { GS } from "../Pages/AdminPanel";
 
 type EditableFieldProps = {
   workstation: WorkStationData;
-  fieldKey: "cpu" | "motherboard" | "notes" | "group";
+  fieldKey: FieldKey;
   placeholder: string;
 };
 
@@ -12,7 +14,10 @@ export const EditableField = ({
   workstation,
   fieldKey,
   placeholder,
-}: EditableFieldProps) => {
+  GroupSelect,
+}: EditableFieldProps & {
+  GroupSelect: GS;
+}) => {
   const pickCol = (value: string) => (value ? "gray.600" : "gray.300");
   const modifyInfo = useModifyInfo();
 
@@ -27,17 +32,31 @@ export const EditableField = ({
 
   return (
     <Td>
-      <Editable
-        defaultValue={workstation[fieldKey as keyof WorkStationData] as string}
-        placeholder={placeholder}
-        textColor={pickCol(
-          workstation[fieldKey as keyof WorkStationData] as string,
-        )}
-        onSubmit={handleSubmit}
-      >
-        <EditablePreview />
-        <EditableInput />
-      </Editable>
+      {fieldKey === "group" ? (
+        <GroupSelect onChange={handleSubmit}>
+          <AutoCompleteInput placeholder="Unknown"></AutoCompleteInput>
+        </GroupSelect>
+      ) : (
+        <Editable
+          defaultValue={
+            workstation[fieldKey as keyof WorkStationData] as string
+          }
+          placeholder={placeholder}
+          textColor={pickCol(
+            workstation[fieldKey as keyof WorkStationData] as string,
+          )}
+          onSubmit={handleSubmit}
+        >
+          <EditablePreview />
+          <EditableInput />
+        </Editable>
+      )}
     </Td>
   );
 };
+
+export const EditableFieldGroupSelect = ({
+  workstation,
+  fieldKey,
+  placeholder,
+}: EditableFieldProps) => {};

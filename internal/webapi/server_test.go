@@ -2,12 +2,15 @@ package webapi_test
 
 import (
 	"bytes"
+	_ "embed"
+	"encoding/base64"
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/gpuctl/gpuctl/internal/authentication"
+	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/tunnel"
 	"github.com/gpuctl/gpuctl/internal/uplink"
@@ -15,23 +18,33 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+//go:embed testdata/uploadtest.pdf
+var uploadPdfBytes []byte
+var uploadPdfEnc = base64.StdEncoding.EncodeToString(uploadPdfBytes)
+
+//go:embed testdata/more.txt
+var uploadTxtBytes []byte
+var uploadTxtEnc = base64.StdEncoding.EncodeToString(uploadTxtBytes)
+
+var (
+	joeAuth = webapi.ConfigFileAuthenticator{
+		Username:      "joe",
+		Password:      "mama",
+		CurrentTokens: make(map[authentication.AuthToken]bool),
+	}
+	joeCreds = webapi.APIAuthCredientals{Username: "joe", Password: "mama"}
+)
+
 func TestAuthenticate(t *testing.T) {
 	mockLogger := slog.Default()
 
 	mockRequest := httptest.NewRequest(http.MethodPost, "/api/auth", nil)
 
-	auth := webapi.ConfigFileAuthenticator{
-		Username:      "joe",
-		Password:      "mama",
-		CurrentTokens: make(map[authentication.AuthToken]bool),
-	}
-	creds := webapi.APIAuthCredientals{Username: "joe", Password: "mama"}
-
 	mockDB := database.InMemory()
 
 	api := &webapi.Api{DB: mockDB}
 
-	response, err := api.Authenticate(&auth, creds, mockRequest, mockLogger)
+	response, err := api.Authenticate(&joeAuth, joeCreds, mockRequest, mockLogger)
 
 	found := false
 	for _, cookie := range response.Cookies {
@@ -49,32 +62,24 @@ func TestAuthenticate(t *testing.T) {
 
 func TestLogOut(t *testing.T) {
 	mockLogger := slog.Default()
-
-	auth := webapi.ConfigFileAuthenticator{
-		Username:      "joe",
-		Password:      "mama",
-		CurrentTokens: make(map[authentication.AuthToken]bool),
-	}
-	creds := webapi.APIAuthCredientals{Username: "joe", Password: "mama"}
-
 	mockDB := database.InMemory()
 
 	api := &webapi.Api{DB: mockDB}
 
-	token, err := auth.CreateToken(creds)
+	token, err := joeAuth.CreateToken(joeCreds)
 	assert.NoError(t, err, "No error in creating auth token")
 
 	// Make new response to revoke the token
 	revokeRequest := httptest.NewRequest(http.MethodGet, "/api/admin/logout", nil)
 	revokeRequest.AddCookie(&http.Cookie{Name: authentication.TokenCookieName, Value: token})
 
-	response, err := api.LogOut(&auth, revokeRequest, mockLogger)
+	response, err := api.LogOut(&joeAuth, revokeRequest, mockLogger)
 	assert.NoError(t, err, "No error in logging-out")
 	assert.Equal(t, http.StatusOK, response.Status)
 
 	unauthenticatedRequest := httptest.NewRequest(http.MethodGet, "/api/admin/confirm", nil)
 	unauthenticatedRequest.AddCookie(&http.Cookie{Name: authentication.TokenCookieName, Value: token})
-	resp, err := api.ConfirmAdmin(&auth, unauthenticatedRequest, mockLogger)
+	resp, err := api.ConfirmAdmin(&joeAuth, unauthenticatedRequest, mockLogger)
 	assert.NoError(t, err, "No error in unauthenticated request")
 	assert.Equal(t, http.StatusUnauthorized, resp.Status)
 }
@@ -153,6 +158,129 @@ func TestAllStatistics(t *testing.T) {
 	}
 }
 
+func TestListFiles(t *testing.T) {
+	mockDB := database.InMemory()
+	mockLogger := slog.Default()
+	api := &webapi.Api{DB: mockDB}
+	hostname := "machine01"
+	mockDB.UpdateLastSeen(hostname, 0)
+
+	token, err := joeAuth.CreateToken(joeCreds)
+	assert.NoError(t, err, "No error in creating auth token")
+	cookie := http.Cookie{Name: authentication.TokenCookieName, Value: token}
+
+	pdf1 := broadcast.AttachFile{
+		Hostname:    hostname,
+		Filename:    "file1",
+		Mime:        "application/pdf",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	pdf2 := broadcast.AttachFile{
+		Hostname:    hostname,
+		Filename:    "file2",
+		Mime:        "application/pdf",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/attach_file", nil)
+	req.AddCookie(&cookie)
+	api.AttachFile(pdf1, req, mockLogger)
+	resp, err := api.AttachFile(pdf2, req, mockLogger)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.Status)
+
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/list_files?hostname="+hostname, nil)
+	req.AddCookie(&cookie)
+
+	listresp, err := api.ListFiles(req, mockLogger)
+	assert.Equal(t, http.StatusOK, listresp.Status)
+	list := listresp.Body
+	assert.ElementsMatch(t, list, []string{pdf1.Filename, pdf2.Filename})
+}
+
+func TestRemovingFile(t *testing.T) {
+	mockDB := database.InMemory()
+	mockLogger := slog.Default()
+	api := &webapi.Api{DB: mockDB}
+	hostname := "machine09"
+
+	token, err := joeAuth.CreateToken(joeCreds)
+	assert.NoError(t, err, "No error in creating auth token")
+	cookie := http.Cookie{Name: authentication.TokenCookieName, Value: token}
+
+	mockDB.UpdateLastSeen(hostname, 0)
+
+	pdf := broadcast.AttachFile{
+		Hostname:    hostname,
+		Filename:    "verycoolfile",
+		Mime:        "application/pdf",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	// Add file
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/attach_file", nil)
+	req.AddCookie(&cookie)
+	_, err = api.AttachFile(pdf, req, mockLogger)
+	assert.NoError(t, err)
+
+	// Remove file
+	remreq := httptest.NewRequest(http.MethodPost, "/api/admin/remove_file", nil)
+	req.AddCookie(&cookie)
+	res, err := api.RemoveFile(broadcast.RemoveFile{Hostname: hostname, Filename: pdf.Filename}, remreq, mockLogger)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, res.Status)
+
+	// Confirm from list
+	listreq := httptest.NewRequest(http.MethodGet, "/api/admin/list_files?hostname="+hostname, nil)
+	listreq.AddCookie(&cookie)
+	listresp, err := api.ListFiles(listreq, mockLogger)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, listresp.Status)
+	list := listresp.Body
+	assert.Equal(t, list, []string{})
+}
+
+func TestAttachingFile(t *testing.T) {
+	mockDB := database.InMemory()
+	mockLogger := slog.Default()
+	api := &webapi.Api{DB: mockDB}
+
+	mockDB.UpdateLastSeen("testmachine", 0)
+
+	token, err := joeAuth.CreateToken(joeCreds)
+	assert.NoError(t, err, "No error in creating auth token")
+	cookie := http.Cookie{Name: authentication.TokenCookieName, Value: token}
+	payload := broadcast.AttachFile{
+		Hostname:    "testmachine",
+		Filename:    "testfile",
+		Mime:        "application/pdf",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	// request for adding file
+	req := httptest.NewRequest(http.MethodPost, "/api/admin/attach_file", nil)
+	req.AddCookie(&cookie)
+	resp, err := api.AttachFile(payload, req, mockLogger)
+	assert.NoError(t, err, "No error in valid request to attach a file")
+	if err != nil {
+		return
+	}
+	assert.Equal(t, http.StatusOK, resp.Status)
+
+	// request for getting file
+	req = httptest.NewRequest(http.MethodGet, "/api/admin/get_file?hostname=testmachine&file=testfile", nil)
+	req.AddCookie(&cookie)
+	getresp, err := api.GetFile(req, mockLogger)
+	assert.NoError(t, err, "No error in valid request to download file")
+	if err != nil {
+		return
+	}
+	assert.Equal(t, http.StatusOK, getresp.Status)
+	// Compare bytes of the files
+	assert.Equal(t, uploadPdfBytes, getresp.Body)
+}
+
 func TestServerEndpoints(t *testing.T) {
 	mockDB := database.InMemory()
 
@@ -211,6 +339,43 @@ func TestServerEndpoints(t *testing.T) {
 			expectedStatus: http.StatusOK,
 			headers:        map[string]string{"Cookie": "token=example_token"},
 		},
+		{
+			name:           "Test uploading file is authenticated",
+			method:         http.MethodPost,
+			endpoint:       "/api/admin/attach_file",
+			expectedStatus: http.StatusUnauthorized,
+			body:           []byte(`{"hostname":"n/a", "mime":"n/a", "file_enc":""}`),
+			headers:        map[string]string{"Cookie": "token=wrongtoken"},
+		},
+		{
+			name:           "Test downloading file is authenticated",
+			method:         http.MethodGet,
+			endpoint:       "/api/admin/get_file?hostname=test",
+			expectedStatus: http.StatusUnauthorized,
+			headers:        map[string]string{"Cookie": "token=wrongtoken"},
+		},
+		{
+			name:           "Test downloading file rejects faulty request",
+			method:         http.MethodGet,
+			endpoint:       "/api/admin/get_file?machine=wrong",
+			expectedStatus: http.StatusBadRequest,
+			headers:        map[string]string{"Cookie": "token=example_token"},
+		},
+		{
+			name:           "Test listing files is autheticated",
+			method:         http.MethodGet,
+			endpoint:       "/api/admin/list_files?machine=notauth",
+			expectedStatus: http.StatusUnauthorized,
+			headers:        map[string]string{"Cookie": "token=wrongtoken"},
+		},
+		{
+			name:           "Test removing files is autheticated",
+			method:         http.MethodPost,
+			endpoint:       "/api/admin/remove_file",
+			expectedStatus: http.StatusUnauthorized,
+			body:           []byte(`{"hostname":"bogus", "filename":"bogus"}`),
+			headers:        map[string]string{"Cookie": "token=wrongtoken"},
+		},
 	}
 
 	for _, tc := range tests {
@@ -223,9 +388,7 @@ func TestServerEndpoints(t *testing.T) {
 
 			server.ServeHTTP(recorder, request)
 
-			if status := recorder.Code; status != tc.expectedStatus {
-				t.Errorf("%s: expected status code %d, got %d", tc.name, tc.expectedStatus, status)
-			}
+			assert.Equal(t, tc.expectedStatus, recorder.Code, tc.name)
 		})
 	}
 }

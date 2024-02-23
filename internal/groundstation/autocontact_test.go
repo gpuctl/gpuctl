@@ -51,7 +51,24 @@ func (edb *ErrorDB) RemoveMachine(changes broadcast.RemoveMachine) error {
 	return nil
 }
 
+func (edb *ErrorDB) AttachFile(attach broadcast.AttachFile) error {
+	return nil
+}
+
+func (edb *ErrorDB) GetFile(hostname string, filename string) (broadcast.AttachFile, error) {
+	var file broadcast.AttachFile
+	return file, nil
+}
+
 func (edb *ErrorDB) Drop() error {
+	return nil
+}
+
+func (edb *ErrorDB) ListFiles(hostname string) ([]string, error) {
+	return nil, nil
+}
+
+func (edb *ErrorDB) RemoveFile(rem broadcast.RemoveFile) error {
 	return nil
 }
 
@@ -77,7 +94,7 @@ func TestPingHappy(t *testing.T) {
 		Level: slog.LevelDebug,
 	}))
 
-	success := ping("google.com", logger)
+	success := ping("8.8.8.8", logger)
 
 	if !success {
 		t.Error("Failed to ping google")

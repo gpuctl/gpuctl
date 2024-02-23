@@ -12,15 +12,17 @@ import {
   Tr,
 } from "@chakra-ui/react";
 import { EditableField } from "./EditableFields";
-import { useRemoveMachine } from "../Hooks/Hooks";
 import { WorkStationGroup } from "../Data";
+import { instKeys } from "../Utils/Utils";
+import { useRemoveMachine } from "../Hooks/Hooks";
+import { GS } from "../Pages/AdminPanel";
 
-type GroupInfoManagementProps = {
-  groups: WorkStationGroup[];
-};
-
-export const GroupInfoManagement: React.FC<GroupInfoManagementProps> = ({
+export const GroupInfoManagement = ({
+  GroupSelect,
   groups,
+}: {
+  GroupSelect: GS;
+  groups: WorkStationGroup[];
 }) => {
   const removeMachine = useRemoveMachine();
   const [copied, setCopied] = useState(false);
@@ -50,51 +52,57 @@ export const GroupInfoManagement: React.FC<GroupInfoManagementProps> = ({
             </Tr>
           </Thead>
           <Tbody>
-            {groups.flatMap((group) =>
-              group.workstations.map((workstation) => (
-                <Tr key={workstation.name}>
-                  <Td>{workstation.name}</Td>
-                  <EditableField
-                    workstation={workstation}
-                    fieldKey="group"
-                    placeholder="unknown"
-                  />
-                  <EditableField
-                    workstation={workstation}
-                    fieldKey="cpu"
-                    placeholder="unknown"
-                  />
-                  <EditableField
-                    workstation={workstation}
-                    fieldKey="motherboard"
-                    placeholder="unknown"
-                  />
-                  <EditableField
-                    workstation={workstation}
-                    fieldKey="notes"
-                    placeholder="none"
-                  />
-                  <Td>
-                    <Button
-                      colorScheme="red"
-                      onClick={() => removeMachine(workstation.name)}
-                    >
-                      Remove
-                    </Button>
-                  </Td>
-                  <Td>
+            {instKeys(
+              groups.flatMap((group) =>
+                group.workstations.map((workstation) => (k) => (
+                  <Tr key={k}>
+                    <Td>{workstation.name}</Td>
+                    <EditableField
+                      GroupSelect={GroupSelect}
+                      workstation={workstation}
+                      fieldKey="group"
+                      placeholder="unknown"
+                    />
+                    <EditableField
+                      GroupSelect={GroupSelect}
+                      workstation={workstation}
+                      fieldKey="cpu"
+                      placeholder="unknown"
+                    />
+                    <EditableField
+                      GroupSelect={GroupSelect}
+                      workstation={workstation}
+                      fieldKey="motherboard"
+                      placeholder="unknown"
+                    />
+                    <EditableField
+                      GroupSelect={GroupSelect}
+                      workstation={workstation}
+                      fieldKey="notes"
+                      placeholder="none"
+                    />
+                    <Td>
+                      <Button
+                        colorScheme="red"
+                        onClick={() => removeMachine(workstation.name)}
+                      >
+                        Remove
+                      </Button>
+                    </Td>
+                    <Td>
                     <Button
                       colorScheme="blue"
                       onClick={() =>
-                        copyToClipboard(`ssh ${workstation.name} shutdown`)
+                        copyToClipboard(`ssh ${workstation.name} shutdown now`)
                       }
                       disabled={copied}
                     >
                       {copied ? "Copied" : "Copy Shutdown Command"}
                     </Button>
                   </Td>
-                </Tr>
-              )),
+                  </Tr>
+                )),
+              ),
             )}
           </Tbody>
         </Table>

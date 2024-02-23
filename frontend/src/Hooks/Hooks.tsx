@@ -49,3 +49,20 @@ export const useModifyInfo = () => {
       body: JSON.stringify({ hostname, ...modification }),
     });
 };
+
+export type FieldKey = "cpu" | "motherboard" | "notes" | "group";
+
+export const useHandleSubmit = (
+  name: string,
+  fieldKey: FieldKey,
+  newValue: string,
+) => {
+  const modifyInfo = useModifyInfo();
+
+  modifyInfo(name, {
+    group: fieldKey === "group" ? newValue : null,
+    motherboard: fieldKey === "motherboard" ? newValue : null,
+    cpu: fieldKey === "cpu" ? newValue : null,
+    notes: fieldKey === "notes" ? newValue : null,
+  });
+};

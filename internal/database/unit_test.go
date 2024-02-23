@@ -6,6 +6,8 @@
 package database_test
 
 import (
+	_ "embed"
+	"encoding/base64"
 	"log/slog"
 	"math"
 	"reflect"
@@ -17,6 +19,14 @@ import (
 	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/stretchr/testify/assert"
 )
+
+//go:embed testdata/uploadtest.pdf
+var uploadPdfBytes []byte
+var uploadPdfEnc = base64.StdEncoding.EncodeToString(uploadPdfBytes)
+
+//go:embed testdata/more.txt
+var uploadTxtBytes []byte
+var uploadTxtEnc = base64.StdEncoding.EncodeToString(uploadTxtBytes)
 
 type unitTest struct {
 	Name string
@@ -36,8 +46,15 @@ var UnitTests = [...]unitTest{
 	{"OneGpu", oneGpu},
 	{"MachineInfoStartsEmpty", machineInfoStartsEmpty},
 	{"MachineInfoUpdatesWork", machineInfoUpdatesWork},
+	{"AttachingFiles", attachAndGetFile},
+	{"AttachingFilesNonexistentHost", attachFileToNonExistentHost},
+	{"GetFilesNoExist", gettingNonExistentFile},
+	{"ListFiles", listFiles},
+	{"RemoveFile", removeFile},
+	{"RemoveNonexistentFile", removeWrongFile},
 	{"MachinesCanBeRemoved", removingMachine},
 	{"InUseInformation", inUseInformation},
+	//{"RemovingMachineRemovesFiles", removingMachineRemoveFiles},
 }
 
 // fake data for adding during tests
@@ -497,4 +514,165 @@ func inUseInformation(t *testing.T, db database.Database) {
 		assert.Len(t, machine.Gpus, 1)
 		assert.True(t, statsNear(machine.Gpus[0], stat, context))
 	}
+}
+
+func attachAndGetFile(t *testing.T, db database.Database) {
+	fakeHost := "chipmunk"
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+	payload := broadcast.AttachFile{
+		Hostname:    fakeHost,
+		Mime:        "application/pdf",
+		Filename:    "test",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	// Put file in db
+	err = db.AttachFile(payload)
+	assert.NoError(t, err)
+
+	// Now get file
+	resp, err := db.GetFile(fakeHost, payload.Filename)
+	assert.NoError(t, err)
+	assert.Equal(t, uploadPdfEnc, resp.EncodedFile)
+	assert.Equal(t, "application/pdf", resp.Mime)
+	assert.Equal(t, fakeHost, resp.Hostname)
+}
+
+func gettingNonExistentFile(t *testing.T, db database.Database) {
+	fakeHost1 := "chipmunk"
+	fakeHost2 := "porcupine"
+	err := db.UpdateLastSeen(fakeHost1, time.Now().Unix())
+	assert.NoError(t, err)
+
+	_, err = db.GetFile(fakeHost1, "does not eexist")
+	assert.ErrorIs(t, err, database.ErrFileNotPresent)
+
+	_, err = db.GetFile(fakeHost2, "still doesnt exist")
+	assert.ErrorIs(t, err, database.ErrFileNotPresent)
+}
+
+func attachFileToNonExistentHost(t *testing.T, db database.Database) {
+	payload := broadcast.AttachFile{
+		Hostname:    "mystery",
+		Mime:        "application/pdf",
+		EncodedFile: uploadPdfEnc,
+	}
+	err := db.AttachFile(payload)
+	assert.ErrorIs(t, err, database.ErrNoSuchMachine)
+}
+
+func listFiles(t *testing.T, db database.Database) {
+	fakeHost := "chipmunk"
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+	pdf := broadcast.AttachFile{
+		Hostname:    fakeHost,
+		Mime:        "application/pdf",
+		Filename:    "testpdf",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	txt := broadcast.AttachFile{
+		Hostname:    fakeHost,
+		Mime:        "text/plain",
+		Filename:    "testtxt",
+		EncodedFile: uploadTxtEnc,
+	}
+
+	err = db.AttachFile(pdf)
+	assert.NoError(t, err)
+	err = db.AttachFile(txt)
+	assert.NoError(t, err)
+
+	files, err := db.ListFiles(fakeHost)
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(files))
+
+	assert.ElementsMatch(t, files, []string{pdf.Filename, txt.Filename})
+}
+
+func removeFile(t *testing.T, db database.Database) {
+	fakeHost := "chestnut"
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	pdf := broadcast.AttachFile{
+		Hostname:    fakeHost,
+		Mime:        "application/pdf",
+		Filename:    "filename",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	err = db.AttachFile(pdf)
+	assert.NoError(t, err)
+
+	err = db.RemoveFile(broadcast.RemoveFile{Hostname: fakeHost, Filename: pdf.Filename})
+	assert.NoError(t, err)
+
+	_, err = db.GetFile(fakeHost, pdf.Filename)
+	assert.ErrorIs(t, err, database.ErrFileNotPresent)
+}
+
+func removeWrongFile(t *testing.T, db database.Database) {
+	err := db.RemoveFile(broadcast.RemoveFile{Hostname: "mystery", Filename: "doesnt exist"})
+	assert.ErrorIs(t, err, database.ErrFileNotPresent)
+
+	err = db.UpdateLastSeen("real", time.Now().Unix())
+	assert.NoError(t, err)
+	err = db.RemoveFile(broadcast.RemoveFile{Hostname: "real", Filename: "doesnt exist"})
+	assert.ErrorIs(t, err, database.ErrFileNotPresent)
+}
+
+func additionRemoveOldFile(t *testing.T, db database.Database) {
+	fakeHost := "chestnut"
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	pdf1 := broadcast.AttachFile{
+		Hostname:    fakeHost,
+		Mime:        "application/pdf",
+		Filename:    "filename",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	text := broadcast.AttachFile{
+		Hostname:    fakeHost,
+		Mime:        "plain/text",
+		Filename:    "filename",
+		EncodedFile: uploadTxtEnc,
+	}
+
+	err = db.AttachFile(pdf1)
+	assert.NoError(t, err)
+	err = db.AttachFile(text)
+	assert.NoError(t, err)
+	files, err := db.ListFiles(fakeHost)
+	assert.Equal(t, 1, len(files))
+
+	file, err := db.GetFile(fakeHost, files[0])
+	assert.Equal(t, text, file)
+}
+
+// TODO: hook this test into the unit tests once in memory has the functionality
+func removingMachineRemoveFiles(t *testing.T, db database.Database) {
+	fakeHost := "chestnut"
+	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	assert.NoError(t, err)
+
+	pdf := broadcast.AttachFile{
+		Hostname:    fakeHost,
+		Mime:        "application/pdf",
+		Filename:    "filename",
+		EncodedFile: uploadPdfEnc,
+	}
+
+	err = db.AttachFile(pdf)
+	assert.NoError(t, err)
+
+	err = db.RemoveMachine(broadcast.RemoveMachine{Hostname: fakeHost})
+	assert.NoError(t, err)
+
+	_, err = db.GetFile(fakeHost, pdf.Filename)
+	assert.ErrorIs(t, err, database.ErrFileNotPresent)
 }
