@@ -1,6 +1,5 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { Box, Button, Heading, HStack, Input } from "@chakra-ui/react";
-import { AutoCompleteInput } from "@choc-ui/chakra-autocomplete";
 import { useAddMachine } from "../Hooks/Hooks";
 import { WorkStationGroup } from "../Data";
 import { GS } from "../Pages/AdminPanel";
@@ -13,22 +12,22 @@ export const AddMachineForm = ({
   groups: WorkStationGroup[];
 }) => {
   const [hostname, setHostname] = useState<string>("");
-  const [group, setGroup] = useState<string>("");
+  // const [group, setGroup] = useState<string>("");
   const addMachine = useAddMachine();
 
-  const ref = useRef<HTMLInputElement>(null);
+  // const ref = useRef<HTMLInputElement>(null);
 
   return (
     <Box w="100%">
       <Heading size="lg">Add a Machine:</Heading>
       <HStack w="100%">
         <Input
-          w="50%"
+          w="95%"
           placeholder="Hostname (e.g. mira05.doc.ic.ac.uk)"
           onChange={(e) => setHostname(e.target.value)}
           value={hostname}
         ></Input>
-        <GroupSelect
+        {/* <GroupSelect
           w="100%"
           onChange={(a) => {
             setGroup(a);
@@ -50,12 +49,12 @@ export const AddMachineForm = ({
             // }}
             value={group}
           ></AutoCompleteInput>
-        </GroupSelect>
+        </GroupSelect> */}
 
         <Button
           w="5%"
           onClick={() => {
-            addMachine(hostname, group);
+            addMachine(hostname, "Shared");
           }}
         >
           Add
