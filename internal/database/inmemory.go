@@ -1,8 +1,10 @@
 package database
 
 import (
+	"cmp"
 	"fmt"
 	"reflect"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -221,6 +223,7 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 		}
 		// Addressing potential duplicate PID handling
 		for _, proc := range sample.RunningProcesses {
+			// TODO: What if multiple samples have a process with the same PID?
 			processesMap[proc.Pid] = proc // Overwrites if duplicate, ensuring only the latest is kept
 		}
 	}
@@ -231,8 +234,8 @@ func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 		aggregatedProcesses = append(aggregatedProcesses, proc)
 	}
 	// Sorting to ensure deterministic order
-	sort.Slice(aggregatedProcesses, func(i, j int) bool {
-		return aggregatedProcesses[i].Pid < aggregatedProcesses[j].Pid
+	slices.SortFunc(aggregatedProcesses, func(a, b uplink.GPUProcInfo) int {
+		return cmp.Compare(a.Pid, b.Pid)
 	})
 
 	averagedSample := uplink.GPUStatSample{
@@ -261,7 +264,7 @@ func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {
 	defer m.mu.Unlock()
 
 	if _, exists := m.lastSeen[machine.Hostname]; exists {
-		return fmt.Errorf("machine with hostname %s already exists", machine.Hostname)
+		return ErrMachineFoundTwice
 	}
 
 	m.lastSeen[machine.Hostname] = time.Now().Unix()
@@ -292,7 +295,7 @@ func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) error {
 	}
 
 	if uuidToRemove == "" {
-		return fmt.Errorf("machine with hostname %s does not exist", machine.Hostname)
+		return ErrMachineNotPresent
 	}
 
 	delete(m.files, machine.Hostname)
@@ -308,12 +311,12 @@ func (m *inMemory) UpdateMachine(changes broadcast.ModifyMachine) error {
 	defer m.mu.Unlock()
 
 	if _, exists := m.lastSeen[changes.Hostname]; !exists {
-		return fmt.Errorf("machine with hostname %s does not exist", changes.Hostname)
+		return ErrMachineNotPresent
 	}
 
 	machine, exists := m.machines[changes.Hostname]
 	if !exists {
-		return fmt.Errorf("machine with hostname %s does not exist for update", changes.Hostname)
+		return ErrMachineNotPresent
 	}
 
 	if changes.CPU != nil {
