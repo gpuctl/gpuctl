@@ -1,3 +1,4 @@
+import React, { useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -9,6 +10,15 @@ import {
   Th,
   Thead,
   Tr,
+  useDisclosure,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  Input,
 } from "@chakra-ui/react";
 import { EditableField } from "./EditableFields";
 import { WorkStationGroup } from "../Data";
@@ -23,7 +33,27 @@ export const GroupInfoManagement = ({
   GroupSelect: GS;
   groups: WorkStationGroup[];
 }) => {
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const [copied, setCopied] = useState(false);
+  const [currentMachine, setCurrentMachine] = useState("");
+
   const removeMachine = useRemoveMachine();
+
+  const inputRef = useRef<HTMLInputElement>(null);
+  const copyToClipboard = (username: string) => {
+    const command = `ssh ${username}@${currentMachine} shutdown now`;
+    navigator.clipboard.writeText(command);
+    setCopied(true);
+    setTimeout(() => {
+      setCopied(false);
+    }, 3000);
+    onClose();
+  };
+
+  const handleShutdownClick = (machineName: string) => {
+    setCurrentMachine(machineName);
+    onOpen();
+  };
 
   return (
     <Box w="100%">
@@ -38,6 +68,7 @@ export const GroupInfoManagement = ({
               <Th>Motherboard</Th>
               <Th>Notes</Th>
               <Th>Action</Th>
+              <Th>Shutdown</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -82,6 +113,15 @@ export const GroupInfoManagement = ({
                         Remove
                       </Button>
                     </Td>
+                    <Td>
+                      <Button
+                        colorScheme="blue"
+                        onClick={() => handleShutdownClick(workstation.name)}
+                        disabled={copied}
+                      >
+                        {copied ? "Copied" : "Copy Shutdown Command"}
+                      </Button>
+                    </Td>
                   </Tr>
                 )),
               ),
@@ -89,6 +129,28 @@ export const GroupInfoManagement = ({
           </Tbody>
         </Table>
       </TableContainer>
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Enter Username</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <Input placeholder="Username" ref={inputRef} />
+          </ModalBody>
+          <ModalFooter>
+            <Button
+              colorScheme="blue"
+              mr={3}
+              onClick={() => copyToClipboard(inputRef.current?.value || "")}
+            >
+              Copy Command
+            </Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
     </Box>
   );
 };
