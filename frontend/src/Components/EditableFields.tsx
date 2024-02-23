@@ -45,11 +45,9 @@ export const EditableField = ({
           <AutoCompleteInput
             placeholder={"Unknown"}
             onSelect={() => {
-              console.log("SELECTED");
               setShouldFetch(false);
             }}
             onBlur={() => {
-              console.log("UNSELECTED");
               setShouldFetch(true);
             }}
             onChange={(a) => setGroupBacking(a.target.value)}
