@@ -3,14 +3,17 @@ import { useModifyInfo, FieldKey } from "../Hooks/Hooks";
 import { WorkStationData } from "../Data";
 import { AutoCompleteInput } from "@choc-ui/chakra-autocomplete";
 import { GS } from "../Pages/AdminPanel";
+import { useState } from "react";
 
 type EditableFieldProps = {
+  group: string;
   workstation: WorkStationData;
   fieldKey: FieldKey;
   placeholder: string;
 };
 
 export const EditableField = ({
+  group,
   workstation,
   fieldKey,
   placeholder,
@@ -30,11 +33,17 @@ export const EditableField = ({
     });
   };
 
+  const [groupBacking, setGroupBacking] = useState(group);
+
   return (
     <Td>
       {fieldKey === "group" ? (
         <GroupSelect onChange={handleSubmit}>
-          <AutoCompleteInput placeholder="Unknown"></AutoCompleteInput>
+          <AutoCompleteInput
+            placeholder={"Unknown"}
+            onChange={(a) => setGroupBacking(a.target.value)}
+            value={groupBacking}
+          ></AutoCompleteInput>
         </GroupSelect>
       ) : (
         <Editable
