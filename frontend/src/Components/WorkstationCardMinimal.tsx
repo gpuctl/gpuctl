@@ -5,6 +5,9 @@ import {
   Center,
   HStack,
   Heading,
+  Link,
+  LinkBox,
+  LinkOverlay,
   Tooltip,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -54,25 +57,27 @@ export const WorkstationCardMin = ({
                 <Tooltip placement="right-start" label={`Seen recently!`}>
                   <TimeIcon color={GREEN} />
                 </Tooltip>
-                <Box>{" " + cropString(name, 15)}</Box>
+                <Link href="#">{" " + cropString(name, 15)}</Link>
               </HStack>
             ) : (
-              <>{cropString(name, 17)}</>
+              <Link>{cropString(name, 17)}</Link>
             )}
           </Heading>
-
-          {gpus.map((s, i) => (
-            <Box key={i}>
-              <Heading size="md">{`${s.gpu_name} (${(
-                s.memory_total / 1000
-              ).toFixed(0)} GB)`}</Heading>
-              <p>{`${s.in_use ? `🔴 In-use (User: ${s.user})` : "🟢 Free"}`}</p>
-              <p>{`${s.gpu_util < 10 ? "🐌" : "🏎️" + "☁️".repeat(Math.ceil(s.gpu_util / 40))} GPU Usage: (${Math.round(s.gpu_util)}% Utilisation)`}</p>
-              <p>{`${s.gpu_temp < 80 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${Math.round(
-                s.gpu_temp,
-              )} °C (${Math.round(s.fan_speed)}% Fan Speed)`}</p>
-            </Box>
-          ))}
+          <LinkBox>
+            <LinkOverlay href="#" />
+            {gpus.map((s, i) => (
+              <Box key={i}>
+                <Heading size="md">{`${s.gpu_name} (${(
+                  s.memory_total / 1000
+                ).toFixed(0)} GB)`}</Heading>
+                <p>{`${s.in_use ? `🔴 In-use (User: ${s.user})` : "🟢 Free"}`}</p>
+                <p>{`${s.gpu_util < 10 ? "🐌" : "🏎️" + "☁️".repeat(Math.ceil(s.gpu_util / 40))} GPU Usage: (${Math.round(s.gpu_util)}% Utilisation)`}</p>
+                <p>{`${s.gpu_temp < 80 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${Math.round(
+                  s.gpu_temp,
+                )} °C (${Math.round(s.fan_speed)}% Fan Speed)`}</p>
+              </Box>
+            ))}
+          </LinkBox>
         </Box>
       </Box>
     </Center>
