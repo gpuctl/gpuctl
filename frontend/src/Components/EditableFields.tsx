@@ -31,9 +31,13 @@ export const EditableField = ({
     });
   };
 
-  // Given we now are not useing GroupSelect, there is a bit of code duplication
+  // Given we now are not using GroupSelect, there is a bit of code duplication
   // here, but be careful if you want to refactor it! 'group' (unlike the other
   // fields) is NOT stored in the workstation JSON!
+
+  // Auto-complete code removed in
+  // https://github.com/gpuctl/gpuctl/pull/220
+  // Go back there if you want to re-implement it
   return (
     <Td>
       {fieldKey === "group" ? (
@@ -49,23 +53,6 @@ export const EditableField = ({
           <EditableInput />
         </Editable>
       ) : (
-        // <GroupSelect onChange={handleSubmit}>
-        //   <AutoCompleteInput
-        //     ref={ref}
-        //     placeholder={"Unknown"}
-        //     onSelect={() => {
-        //       setTimeout(() => {
-        //         ref.current?.focus();
-        //       }, 1);
-        //       setShouldFetch(false);
-        //     }}
-        //     onBlur={() => {
-        //       setShouldFetch(true);
-        //     }}
-        //     onChange={(a) => setGroupBacking(a.target.value)}
-        //     value={groupBacking}
-        //   ></AutoCompleteInput>
-        // </GroupSelect>
         <Editable
           defaultValue={
             workstation[fieldKey as keyof WorkStationData] as string

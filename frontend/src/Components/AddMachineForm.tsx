@@ -15,6 +15,9 @@ export const AddMachineForm = ({
   const [group, setGroup] = useState<string>("");
   const addMachine = useAddMachine();
 
+  // Auto-complete code removed in
+  // https://github.com/gpuctl/gpuctl/pull/220
+  // Go back there if you want to re-implement it
   return (
     <Box w="100%">
       <Heading size="lg">Add a Machine:</Heading>
@@ -25,29 +28,6 @@ export const AddMachineForm = ({
           onChange={(e) => setHostname(e.target.value)}
           value={hostname}
         ></Input>
-        {/* <GroupSelect
-          w="100%"
-          onChange={(a) => {
-            setGroup(a);
-          }}
-        >
-          <AutoCompleteInput
-            ref={ref}
-            w="100%"
-            onChange={(e) => setGroup(e.target.value)}
-            placeholder="Group Name (e.g. shared)"
-            // onSelect={() => {
-            //   setTimeout(() => {
-            //     ref.current?.focus();
-            //   }, 1);
-            //   setShouldFetch(false);
-            // }}
-            // onBlur={() => {
-            //   setShouldFetch(true);
-            // }}
-            value={group}
-          ></AutoCompleteInput>
-        </GroupSelect> */}
         <Input
           w="40%"
           placeholder="Group Name (e.g. shared)"
