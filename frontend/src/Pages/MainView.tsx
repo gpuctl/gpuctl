@@ -69,13 +69,10 @@ const displayPartial = (
 
 export const MainView = ({ page }: { page: ViewPage }) => {
   const { isSignedIn } = useAuth();
-  const { setShouldFetch } = useStats();
 
   if (page === ViewPage.ADMIN && !isSignedIn()) {
     return <Navigate to={STATS_PATH + DEFAULT_VIEW} replace />;
   }
-
-  setShouldFetch(page !== ViewPage.ADMIN);
 
   return <ConfirmedMainView initial={page} />;
 };

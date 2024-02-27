@@ -3,7 +3,11 @@ import { Box, StyleProps, VStack } from "@chakra-ui/react";
 import { AddMachineForm } from "../Components/AddMachineForm";
 import { GroupInfoManagement } from "../Components/GroupInfoManagement";
 import { WorkStationGroup } from "../Data";
-import { AutoComplete } from "@choc-ui/chakra-autocomplete";
+import {
+  AutoComplete,
+  AutoCompleteItem,
+  AutoCompleteList,
+} from "@choc-ui/chakra-autocomplete";
 
 export const ADMIN_PATH = "/admin";
 
@@ -21,6 +25,9 @@ export type GS = ({
   }) => JSX.Element;
 
 export const AdminPanel: React.FC<AdminPanelProps> = ({ groups }) => {
+  // In a perfect world, we would use Choc auto-complete for group selection.
+  // For now though, we just use plain text entry, because the auto-complete
+  // component is being a huge pain.
   const GroupSelect = ({
     onChange,
     ...props
@@ -32,11 +39,11 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ groups }) => {
       values={groups.map((g) => g.name)}
     >
       <Box {...props} />
-      {/* <AutoCompleteList maxHeight="200px" overflow="scroll">
+      <AutoCompleteList maxHeight="200px" overflow="scroll">
         {groups.map((g, i) => (
           <AutoCompleteItem key={i} value={g.name}></AutoCompleteItem>
         ))}
-      </AutoCompleteList> */}
+      </AutoCompleteList>
     </AutoComplete>
   );
 

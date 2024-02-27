@@ -1,9 +1,7 @@
 import { Editable, EditableInput, EditablePreview, Td } from "@chakra-ui/react";
 import { useModifyInfo, FieldKey } from "../Hooks/Hooks";
 import { WorkStationData } from "../Data";
-import { AutoCompleteInput } from "@choc-ui/chakra-autocomplete";
 import { GS } from "../Pages/AdminPanel";
-import { useRef, useState } from "react";
 
 type EditableFieldProps = {
   group: string;
@@ -33,31 +31,41 @@ export const EditableField = ({
     });
   };
 
-  const [groupBacking, setGroupBacking] = useState(group);
-
-  const ref = useRef<HTMLInputElement>(null);
-
+  // Given we now are not useing GroupSelect, there is a bit of code duplication
+  // here, but be careful if you want to refactor it! 'group' (unlike the other
+  // fields) is NOT stored in the workstation JSON!
   return (
     <Td>
       {fieldKey === "group" ? (
-        <GroupSelect onChange={handleSubmit}>
-          <AutoCompleteInput
-            ref={ref}
-            placeholder={"Unknown"}
-            // onSelect={() => {
-            //   setTimeout(() => {
-            //     ref.current?.focus();
-            //   }, 1);
-            //   setShouldFetch(false);
-            // }}
-            // onBlur={() => {
-            //   setShouldFetch(true);
-            // }}
-            onChange={(a) => setGroupBacking(a.target.value)}
-            value={groupBacking}
-          ></AutoCompleteInput>
-        </GroupSelect>
+        <Editable
+          defaultValue={group}
+          placeholder={placeholder}
+          textColor={pickCol(group)}
+          onSubmit={(a) => {
+            handleSubmit(a);
+          }}
+        >
+          <EditablePreview />
+          <EditableInput />
+        </Editable>
       ) : (
+        // <GroupSelect onChange={handleSubmit}>
+        //   <AutoCompleteInput
+        //     ref={ref}
+        //     placeholder={"Unknown"}
+        //     onSelect={() => {
+        //       setTimeout(() => {
+        //         ref.current?.focus();
+        //       }, 1);
+        //       setShouldFetch(false);
+        //     }}
+        //     onBlur={() => {
+        //       setShouldFetch(true);
+        //     }}
+        //     onChange={(a) => setGroupBacking(a.target.value)}
+        //     value={groupBacking}
+        //   ></AutoCompleteInput>
+        // </GroupSelect>
         <Editable
           defaultValue={
             workstation[fieldKey as keyof WorkStationData] as string
@@ -66,11 +74,9 @@ export const EditableField = ({
           textColor={pickCol(
             workstation[fieldKey as keyof WorkStationData] as string,
           )}
-          // onCancel={(a) => {}}
           onSubmit={(a) => {
             handleSubmit(a);
           }}
-          // onEdit={() => setShouldFetch(false)}
         >
           <EditablePreview />
           <EditableInput />
