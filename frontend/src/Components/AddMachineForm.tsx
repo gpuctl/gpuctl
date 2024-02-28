@@ -44,22 +44,24 @@ export const AddMachineForm = ({
           w="5%"
           onClick={() => {
             setSpinner(true);
-            const cb = (stats: Validated<WorkStationGroup[]>) => {
+            const cb = (stats: Validated<WorkStationGroup[]>) =>
               validatedElim(stats, {
                 success: (s) => {
                   if (
-                    s
+                    !s
                       .flatMap((g) => g.workstations.map((w) => w.name))
                       .some((x) => x === hostname)
                   )
-                    setSpinner(false);
-                  else onNextFetch(cb);
+                    return false;
+
+                  setSpinner(false);
+                  return true;
                 },
                 failure: () => {
-                  onNextFetch(cb);
+                  return false;
                 },
               });
-            };
+
             onNextFetch(cb);
             addMachine(hostname, group === "" ? "Shared" : group);
           }}
