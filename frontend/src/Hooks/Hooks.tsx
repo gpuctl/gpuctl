@@ -1,13 +1,12 @@
 import { useToast } from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
 import { useAuth } from "../Providers/AuthProvider";
-import { validatedElim, validationElim } from "../Utils/Utils";
-import { useState } from "react";
+import { validatedElim } from "../Utils/Utils";
 
 const ADD_MACHINE_URL = "/add_workstation";
 const REMOVE_MACHINE_URL = "/rm_workstation";
 
-export const useAddMachine = (callback : () => void) => {
+export const useAddMachine = (callback: () => void) => {
   const toast = useToast();
   const { useAuthFetch } = useAuth();
   const [, addMachineAuth] = useAuthFetch(ADD_MACHINE_URL, (r) => {
