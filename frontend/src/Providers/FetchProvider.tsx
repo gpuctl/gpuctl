@@ -8,14 +8,18 @@ import { useInterval } from "@chakra-ui/react";
 
 const API_ALL_STATS_PATH = "/stats/all";
 
+type StatsCB = (s: Validated<WorkStationGroup[]>) => boolean;
+
 type FetchStatsCtx = {
   allStats: Validation<WorkStationGroup[]>;
   setShouldFetch: (b: boolean) => void;
+  onNextFetch: (f: StatsCB) => void;
 };
 
 const FetchStatsContext = createContext<FetchStatsCtx>({
   allStats: failure(Error("No fetch stats provider!")),
   setShouldFetch: () => {},
+  onNextFetch: () => {},
 });
 
 export const useStats = () => useContext(FetchStatsContext);
@@ -26,18 +30,35 @@ export const FetchStatsProvider = ({
   children: ReactNode[] | ReactNode;
 }) => {
   const [shouldFetch, setShouldFetch] = useState<boolean>(true);
-  const [stats, updateStats] = useJarJar(retrieveAllStats);
+  const [fetchCallback, setFetchCallback] = useState<StatsCB>(() => () => true);
+  const [stats, updateStats] = useJarJar(() => {
+    const cb = fetchCallback;
+    setFetchCallback(() => () => true);
+    return retrieveAllStats(cb);
+  });
+
   useInterval(() => {
     if (shouldFetch) {
       updateStats();
     }
   }, REFRESH_INTERVAL);
 
+  const mergeCallback = (f: StatsCB) => {
+    setFetchCallback(() => (stats: Validated<WorkStationGroup[]>) => {
+      fetchCallback(stats);
+      if (!f(stats)) {
+        mergeCallback(f);
+      }
+      return true;
+    });
+  };
+
   return (
     <FetchStatsContext.Provider
       value={{
         allStats: stats,
         setShouldFetch,
+        onNextFetch: mergeCallback,
       }}
     >
       {children}
@@ -47,10 +68,15 @@ export const FetchStatsProvider = ({
 
 // Currently does not attempt to do any validation of the returned GPU stats,
 // or indeed handle errors that might be thrown by the Promises
-const retrieveAllStats: () => Promise<
-  Validated<WorkStationGroup[]>
-> = async () =>
-  success(preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()));
+const retrieveAllStats: (
+  cb: StatsCB,
+) => Promise<Validated<WorkStationGroup[]>> = async (cb) => {
+  const stats = success(
+    preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()),
+  );
+  cb(stats);
+  return stats;
+};
 // USEFUL FOR TESTING, DON'T DELETE PLS
 // success(preProcess(EXAMPLE_DATA_1));
 

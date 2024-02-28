@@ -1,12 +1,31 @@
+import { useToast } from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
 import { useAuth } from "../Providers/AuthProvider";
+import { validatedElim } from "../Utils/Utils";
 
 const ADD_MACHINE_URL = "/add_workstation";
 const REMOVE_MACHINE_URL = "/rm_workstation";
 
-export const useAddMachine = () => {
+export const useAddMachine = (callback: () => void) => {
+  const toast = useToast();
   const { useAuthFetch } = useAuth();
-  const [, addMachineAuth] = useAuthFetch(ADD_MACHINE_URL);
+  const [, addMachineAuth] = useAuthFetch(ADD_MACHINE_URL, (r) => {
+    callback();
+    validatedElim(r, {
+      success: () => {},
+      failure: () => {
+        toast({
+          title: "Add machine failed",
+          description:
+            "Please check that the hostname is correct and fully qualified",
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+      },
+    });
+  });
+
   return (hostname: string, group: string) =>
     addMachineAuth({
       method: "POST",
