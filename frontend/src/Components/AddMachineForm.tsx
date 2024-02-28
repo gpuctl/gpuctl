@@ -4,7 +4,7 @@ import { useAddMachine } from "../Hooks/Hooks";
 import { WorkStationGroup } from "../Data";
 import { GS } from "../Pages/AdminPanel";
 import { useStats } from "../Providers/FetchProvider";
-import { validatedElim } from "../Utils/Utils";
+import { Validated, validatedElim } from "../Utils/Utils";
 
 export const AddMachineForm = ({
   GroupSelect,
@@ -44,7 +44,7 @@ export const AddMachineForm = ({
           w="5%"
           onClick={() => {
             setSpinner(true);
-            onNextFetch((stats) => {
+            const cb = (stats: Validated<WorkStationGroup[]>) => {
               validatedElim(stats, {
                 success: (s) => {
                   if (
@@ -53,10 +53,14 @@ export const AddMachineForm = ({
                       .some((x) => x === hostname)
                   )
                     setSpinner(false);
+                  else onNextFetch(cb);
                 },
-                failure: () => {},
+                failure: () => {
+                  onNextFetch(cb);
+                },
               });
-            });
+            };
+            onNextFetch(cb);
             addMachine(hostname, group === "" ? "Shared" : group);
           }}
         >
