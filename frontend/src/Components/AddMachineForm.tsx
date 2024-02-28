@@ -1,8 +1,10 @@
 import { useState } from "react";
-import { Box, Button, Heading, HStack, Input } from "@chakra-ui/react";
+import { Box, Button, Heading, HStack, Input, Spinner } from "@chakra-ui/react";
 import { useAddMachine } from "../Hooks/Hooks";
 import { WorkStationGroup } from "../Data";
 import { GS } from "../Pages/AdminPanel";
+import { useStats } from "../Providers/FetchProvider";
+import { validatedElim } from "../Utils/Utils";
 
 export const AddMachineForm = ({
   GroupSelect,
@@ -13,7 +15,11 @@ export const AddMachineForm = ({
 }) => {
   const [hostname, setHostname] = useState<string>("");
   const [group, setGroup] = useState<string>("");
-  const addMachine = useAddMachine();
+  const [spinner, setSpinner] = useState<boolean>(false);
+  const { onNextFetch } = useStats();
+  const addMachine = useAddMachine(() => {
+    setSpinner(false);
+  });
 
   // Auto-complete code removed in
   // https://github.com/gpuctl/gpuctl/pull/220
@@ -37,11 +43,26 @@ export const AddMachineForm = ({
         <Button
           w="5%"
           onClick={() => {
+            setSpinner(true);
+            onNextFetch((stats) => {
+              validatedElim(stats, {
+                success: (s) => {
+                  if (
+                    s
+                      .flatMap((g) => g.workstations.map((w) => w.name))
+                      .some((x) => x === hostname)
+                  )
+                    setSpinner(false);
+                },
+                failure: () => {},
+              });
+            });
             addMachine(hostname, group === "" ? "Shared" : group);
           }}
         >
           Add
         </Button>
+        {spinner ? <Spinner /> : <></>}
       </HStack>
     </Box>
   );

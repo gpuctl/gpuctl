@@ -11,11 +11,13 @@ const API_ALL_STATS_PATH = "/stats/all";
 type FetchStatsCtx = {
   allStats: Validation<WorkStationGroup[]>;
   setShouldFetch: (b: boolean) => void;
+  onNextFetch: (f: (v: Validated<WorkStationGroup[]>) => void) => void;
 };
 
 const FetchStatsContext = createContext<FetchStatsCtx>({
   allStats: failure(Error("No fetch stats provider!")),
   setShouldFetch: () => {},
+  onNextFetch: () => {},
 });
 
 export const useStats = () => useContext(FetchStatsContext);
@@ -26,7 +28,9 @@ export const FetchStatsProvider = ({
   children: ReactNode[] | ReactNode;
 }) => {
   const [shouldFetch, setShouldFetch] = useState<boolean>(true);
-  const [stats, updateStats] = useJarJar(retrieveAllStats);
+  const [fetchCallback, setFetchCallback] = useState<(v: Validation<WorkStationGroup[]>) => void>(() => () => {});
+  const [stats, updateStats] = useJarJar(() => retrieveAllStats(fetchCallback));
+
   useInterval(() => {
     if (shouldFetch) {
       updateStats();
@@ -38,6 +42,12 @@ export const FetchStatsProvider = ({
       value={{
         allStats: stats,
         setShouldFetch,
+        onNextFetch: (f) => {
+          setFetchCallback(() => (stats: Validated<WorkStationGroup[]>) => {
+            fetchCallback(stats);
+            f(stats);
+          });
+        },
       }}
     >
       {children}
@@ -47,10 +57,13 @@ export const FetchStatsProvider = ({
 
 // Currently does not attempt to do any validation of the returned GPU stats,
 // or indeed handle errors that might be thrown by the Promises
-const retrieveAllStats: () => Promise<
+const retrieveAllStats: (cb: (s: Validated<WorkStationGroup[]>) => void) => Promise<
   Validated<WorkStationGroup[]>
-> = async () =>
-  success(preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()));
+> = async (cb) =>{
+  const stats = success(preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()));
+  cb(stats)
+  return stats
+}
 // USEFUL FOR TESTING, DON'T DELETE PLS
 // success(preProcess(EXAMPLE_DATA_1));
 

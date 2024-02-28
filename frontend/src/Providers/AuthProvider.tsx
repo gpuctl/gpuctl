@@ -38,6 +38,7 @@ type AuthCtx = {
   logout: () => void;
   useAuthFetch: (
     path: string,
+    f?: (r: Validated<Response>) => void,
   ) => [Validation<Response>, (init?: RequestInit) => void];
 };
 
@@ -139,17 +140,28 @@ export const AuthProvider = ({
   };
 
   // This maybe should return the firing function...
-  const useAuthFetch = (path: string): [Validation<Response>, () => void] => {
+  const useAuthFetch = (
+    path: string,
+    callback?: (r: Validated<Response>) => void,
+  ): [Validation<Response>, () => void] => {
     const [resp, setResp] = useState<Validation<Response>>(loading());
 
-    const f = (init?: RequestInit | undefined) =>
+    const onResp = (r: Validated<Response>) => {
+      setResp(r);
+      if (callback) callback(r);
+    };
+
+    const f = (init?: RequestInit | undefined) => {
+      setResp(loading());
+
       fire(async () => {
         const r = await authFetch(path, init);
-        if (!r.ok && r.status === 401) {
-          logout();
-        }
-        setResp(success(r));
+        if (!r.ok) {
+          if (r.status === 401) logout();
+          onResp(failure(Error(`Request Failed: ${r.statusText}`)));
+        } else onResp(success(r));
       });
+    };
 
     return [resp, f];
   };
