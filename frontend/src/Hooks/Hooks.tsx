@@ -12,7 +12,15 @@ export const useAddMachine = (callback: () => void) => {
   const [, addMachineAuth] = useAuthFetch(ADD_MACHINE_URL, (r) => {
     callback();
     validatedElim(r, {
-      success: () => {},
+      success: () => {
+        toast({
+          title: "Add machine successful!",
+          description: "",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      },
       failure: () => {
         toast({
           title: "Add machine failed",
