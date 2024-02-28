@@ -45,8 +45,30 @@ export const useAddMachine = (callback: () => void) => {
 };
 
 export const useRemoveMachine = () => {
+  const toast = useToast();
   const { useAuthFetch } = useAuth();
-  const [, addMachineAuth] = useAuthFetch(REMOVE_MACHINE_URL);
+  const [, addMachineAuth] = useAuthFetch(REMOVE_MACHINE_URL, (r) => {
+    validatedElim(r, {
+      success: () => {
+        toast({
+          title: "Remove machine successful!",
+          description: "",
+          status: "success",
+          duration: 3000,
+          isClosable: true,
+        });
+      },
+      failure: (e) => {
+        toast({
+          title: "Remove machine failed",
+          description: `Please report this error to maintainers. ${e.message}`,
+          status: "error",
+          duration: 9000,
+          isClosable: true,
+        });
+      },
+    });
+  });
   return (hostname: string) =>
     addMachineAuth({
       method: "POST",
