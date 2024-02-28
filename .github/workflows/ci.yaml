@@ -39,7 +39,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 18
-          cache: 'npm'
+          cache: "npm"
           cache-dependency-path: frontend/package-lock.json
       - name: Install Frontend Dependencies
         run: npm ci
@@ -49,7 +49,7 @@ jobs:
       #
       - name: Run build
         run: make all -j$(nproc)
-      
+
       #
       # Go stuff
       #
@@ -71,13 +71,13 @@ jobs:
         #run: test 75 -le $(go tool cover -func=cover.out | tail -n 1 | grep -Eo "[[:space:]][[:digit:]]+")
       - name: Check Go Formatting
         run: test -z $(gofmt -l .)
-      
+
       #
       # Frontend
       #
-      - name: Build Frontend
-        run: npm run build
-        working-directory: ./frontend
+      # - name: Build Frontend
+      #   run: npm run build
+      #   working-directory: ./frontend
       - name: Run Frontend Tests
         working-directory: ./frontend
         run: npm test
@@ -94,7 +94,7 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: "1.22.x"
-      - run: make    
+      - run: make
       - run: go test ./... -short
 
   docker-build:
