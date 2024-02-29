@@ -54,6 +54,7 @@ func createTables(db *sql.DB) error {
 		CPU text,
 		Motherboard text,
 		Notes text,
+		Owner text,
 		LastSeen timestamp,
 		PRIMARY KEY (Hostname)
 	);`, DefaultGroup))
@@ -345,7 +346,7 @@ func (conn PostgresConn) LatestData() (broadcast.Workstations, error) {
 
 	groups := make(map[string][]broadcast.Workstation)
 	machines, err := tx.Query(`SELECT GroupName, Hostname, CPU, Motherboard,
-		Notes, LastSeen
+		Notes, Owner, LastSeen
 		FROM Machines`)
 	if err != nil {
 		return nil, errors.Join(err, tx.Rollback())
@@ -357,7 +358,7 @@ func (conn PostgresConn) LatestData() (broadcast.Workstations, error) {
 		var lastSeen time.Time
 
 		err = machines.Scan(&groupName, &machine.Name, &machine.CPU,
-			&machine.Motherboard, &machine.Notes, &lastSeen)
+			&machine.Motherboard, &machine.Notes, &machine.Owner, &lastSeen)
 		if err != nil {
 			return nil, errors.Join(err, tx.Rollback())
 		}
@@ -574,6 +575,19 @@ func (conn PostgresConn) UpdateMachine(machine broadcast.ModifyMachine) error {
 			SET GroupName=$1
 			WHERE Hostname=$2`,
 			*machine.Group, machine.Hostname,
+		)
+
+		if err != nil {
+			return errors.Join(err, tx.Rollback())
+		}
+	}
+
+	if machine.Owner != nil {
+		slog.Info("Changing Owner", "Hostname", machine.Hostname, "New Owner", *machine.Owner)
+		_, err = tx.Exec(`UPDATE Machines
+			SET Owner=$1
+			WHERE Hostname=$2`,
+			*machine.Owner, machine.Hostname,
 		)
 
 		if err != nil {
