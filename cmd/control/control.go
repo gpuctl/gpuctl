@@ -76,18 +76,22 @@ func main() {
 	errs := make(chan (error), 1)
 
 	go func() {
-		errs <- http.ListenAndServe(gsPort, gs)
+		err := http.ListenAndServe(gsPort, gs)
+		errs <- fmt.Errorf("groundstation: %w", err)
 	}()
 	go func() {
-		errs <- http.ListenAndServe(waPort, wa)
+		err := http.ListenAndServe(waPort, wa)
+		errs <- fmt.Errorf("webapi: %w", err)
 	}()
 	go func() {
-		errs <- database.DownsampleOverTime(conf.Database.DownsampleInterval, db)
+		err := database.DownsampleOverTime(conf.Database.DownsampleInterval, db)
+		errs <- fmt.Errorf("downsampler: %w", err)
 	}()
 	go func() {
 		monitorInterval := time.Duration(conf.Timeouts.MonitorInterval) * time.Second
 		deathTimeOut := time.Duration(conf.Timeouts.DeathTimeout) * time.Second
-		errs <- groundstation.MonitorForDeadMachines(monitorInterval, db, deathTimeOut, log, tunnelConf)
+		err := groundstation.MonitorForDeadMachines(monitorInterval, db, deathTimeOut, log, tunnelConf)
+		errs <- fmt.Errorf("dead machine monitor: %w", err)
 	}()
 
 	slog.Info("started servers")
