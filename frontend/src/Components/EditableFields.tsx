@@ -23,8 +23,10 @@ export const EditableField = ({
   fieldKey,
   placeholder,
   GroupSelect,
+  isEven,
 }: EditableFieldProps & {
   GroupSelect: GS;
+  isEven: boolean;
 }) => {
   const pickCol = (value: string) => (value ? "gray.600" : "gray.300");
   const modifyInfo = useModifyInfo();
@@ -53,6 +55,7 @@ export const EditableField = ({
         icon={<EditIcon />}
         aria-label="edit"
         onClick={onEdit}
+        bgColor={isEven ? "gray.100" : "white"}
       />
     );
   };
