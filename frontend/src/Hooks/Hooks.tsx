@@ -50,30 +50,36 @@ export const useRemoveMachine = () => {
   const [, addMachineAuth] = useAuthFetch(REMOVE_MACHINE_URL, (r) => {
     validatedElim(r, {
       success: (resp) => {
-        if (resp.status == 200)
-          toast({
-            title: "Remove machine successful!",
-            description: "",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
-        else if (resp.status == 512)
-          toast({
-            title: "SSH to machine failed",
-            description: `Ensure the monitor account details are authorised for that machine`,
-            status: "error",
-            duration: 9000,
-            isClosable: true,
-          });
-        else
-          toast({
-            title: "Remove machine failed with error ${resp.status}",
-            description: `Please report this error to maintainers. ${resp.text}`,
-            status: "error",
-            duration: 9000,
-            isClosable: true,
-          });
+        switch (resp.status) {
+          case 200: {
+            toast({
+              title: "Remove machine successful!",
+              description: "",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+            break;
+          }
+          case 512: {
+            toast({
+              title: "SSH to machine failed",
+              description: `Ensure the monitor account details are authorised for that machine`,
+              status: "error",
+              duration: 9000,
+              isClosable: true,
+            });
+            break;
+          }
+          default:
+            toast({
+              title: "Remove machine failed with error ${resp.status}",
+              description: `Please report this error to maintainers. ${resp.text}`,
+              status: "error",
+              duration: 9000,
+              isClosable: true,
+            });
+        }
       },
       failure: () => {},
     });
