@@ -1,7 +1,7 @@
 import { useToast } from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
 import { useAuth } from "../Providers/AuthProvider";
-import { validatedElim } from "../Utils/Utils";
+import { fire, validatedElim } from "../Utils/Utils";
 
 const ADD_MACHINE_URL = "/add_workstation";
 const REMOVE_MACHINE_URL = "/rm_workstation";
@@ -12,25 +12,26 @@ export const useAddMachine = (callback: () => void) => {
   const [, addMachineAuth] = useAuthFetch(ADD_MACHINE_URL, (r) => {
     callback();
     validatedElim(r, {
-      success: () => {
-        toast({
-          title: "Add machine successful!",
-          description: "",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
+      success: (resp) => {
+        if (resp.status == 200)
+          toast({
+            title: "Add machine successful!",
+            description: "",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+        else
+          toast({
+            title: "Add machine failed",
+            description:
+              "Please check that the hostname is correct and fully qualified",
+            status: "error",
+            duration: 9000,
+            isClosable: true,
+          });
       },
-      failure: () => {
-        toast({
-          title: "Add machine failed",
-          description:
-            "Please check that the hostname is correct and fully qualified",
-          status: "error",
-          duration: 9000,
-          isClosable: true,
-        });
-      },
+      failure: () => {},
     });
   });
 
@@ -45,8 +46,48 @@ export const useAddMachine = (callback: () => void) => {
 };
 
 export const useRemoveMachine = () => {
+  const toast = useToast();
   const { useAuthFetch } = useAuth();
-  const [, addMachineAuth] = useAuthFetch(REMOVE_MACHINE_URL);
+  const [, addMachineAuth] = useAuthFetch(REMOVE_MACHINE_URL, (r) => {
+    validatedElim(r, {
+      success: (resp) => {
+        switch (resp.status) {
+          case 200: {
+            toast({
+              title: "Remove machine successful!",
+              description: "",
+              status: "success",
+              duration: 3000,
+              isClosable: true,
+            });
+            break;
+          }
+          case 512: {
+            toast({
+              title: "SSH to machine failed",
+              description: `Ensure the monitor account details are authorised for that machine`,
+              status: "error",
+              duration: 9000,
+              isClosable: true,
+            });
+            break;
+          }
+          default:
+            fire(async () => {
+              const msg = await resp.text();
+              toast({
+                title: `Remove machine failed with error ${resp.status}`,
+                description: `Please report this error to maintainers. ${msg}`,
+                status: "error",
+                duration: 9000,
+                isClosable: true,
+              });
+            });
+        }
+      },
+      failure: () => {},
+    });
+  });
   return (hostname: string) =>
     addMachineAuth({
       method: "POST",
