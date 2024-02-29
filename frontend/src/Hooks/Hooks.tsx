@@ -12,25 +12,26 @@ export const useAddMachine = (callback: () => void) => {
   const [, addMachineAuth] = useAuthFetch(ADD_MACHINE_URL, (r) => {
     callback();
     validatedElim(r, {
-      success: () => {
-        toast({
-          title: "Add machine successful!",
-          description: "",
-          status: "success",
-          duration: 3000,
-          isClosable: true,
-        });
+      success: (resp) => {
+        if (resp.status == 200)
+          toast({
+            title: "Add machine successful!",
+            description: "",
+            status: "success",
+            duration: 3000,
+            isClosable: true,
+          });
+        else
+          toast({
+            title: "Add machine failed",
+            description:
+              "Please check that the hostname is correct and fully qualified",
+            status: "error",
+            duration: 9000,
+            isClosable: true,
+          });
       },
-      failure: () => {
-        toast({
-          title: "Add machine failed",
-          description:
-            "Please check that the hostname is correct and fully qualified",
-          status: "error",
-          duration: 9000,
-          isClosable: true,
-        });
-      },
+      failure: () => {},
     });
   });
 
