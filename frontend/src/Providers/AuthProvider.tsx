@@ -156,8 +156,8 @@ export const AuthProvider = ({
 
       fire(async () => {
         const r = await authFetch(path, init);
-        if (!r.ok) {
-          if (r.status === 401) logout();
+        if (r.status == 401) {
+          logout();
           onResp(failure(Error(`Request Failed: ${r.statusText}`)));
         } else onResp(success(r));
       });

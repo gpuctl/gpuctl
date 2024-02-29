@@ -1,7 +1,7 @@
 import { useToast } from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
 import { useAuth } from "../Providers/AuthProvider";
-import { validatedElim } from "../Utils/Utils";
+import { fire, validatedElim } from "../Utils/Utils";
 
 const ADD_MACHINE_URL = "/add_workstation";
 const REMOVE_MACHINE_URL = "/rm_workstation";
@@ -72,12 +72,15 @@ export const useRemoveMachine = () => {
             break;
           }
           default:
-            toast({
-              title: "Remove machine failed with error ${resp.status}",
-              description: `Please report this error to maintainers. ${resp.text}`,
-              status: "error",
-              duration: 9000,
-              isClosable: true,
+            fire(async () => {
+              const msg = await resp.text();
+              toast({
+                title: `Remove machine failed with error ${resp.status}`,
+                description: `Please report this error to maintainers. ${msg}`,
+                status: "error",
+                duration: 9000,
+                isClosable: true,
+              });
             });
         }
       },
