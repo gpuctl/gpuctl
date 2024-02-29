@@ -198,19 +198,29 @@ func (a *Api) GetFile(r *http.Request, l *slog.Logger) (*femto.Response[[]byte],
 }
 
 func (a *Api) removeMachine(rm broadcast.RemoveMachineInfo, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
+	const statusOnboardErr = 512
+	const statusDbErr = 513
+	const statusOnboardAndDbErr = 514
+
 	// log errors and continue regardless because we still want to attempt to remove from the db
 	deboardErr := a.deboard(rm, r, l)
-	if deboardErr != nil {
+	deboardErrOccurred := deboardErr != nil
+	if deboardErrOccurred {
 		slog.Error("Got error trying to deboard!", "err", deboardErr)
 	}
 	dbErr := a.DB.RemoveMachine(broadcast.RemoveMachine{Hostname: rm.Hostname})
-	if dbErr != nil {
+	dbErrOccurred := dbErr != nil
+	if dbErrOccurred {
 		slog.Error("Got error removing from the database!", "err", dbErr)
 	}
 
-	joined := errors.Join(deboardErr, dbErr)
-	if joined != nil {
-		return nil, joined
+	// XXX: return back errors in the form of a specific status code. Ugly imo...
+	if deboardErrOccurred && dbErrOccurred {
+		return &femto.EmptyBodyResponse{Status: statusOnboardAndDbErr}, nil
+	} else if dbErrOccurred {
+		return &femto.EmptyBodyResponse{Status: statusDbErr}, nil
+	} else if deboardErrOccurred {
+		return &femto.EmptyBodyResponse{Status: statusOnboardErr}, nil
 	}
 
 	return femto.Ok(types.Unit{})
