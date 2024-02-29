@@ -1,6 +1,7 @@
 package database
 
 import (
+	"log/slog"
 	"time"
 )
 
@@ -11,7 +12,7 @@ func DownsampleOverTime(interval int, database Database) error {
 		err := downsampleDatabase(database, t)
 
 		if err != nil {
-			return err
+			slog.Error("Got error whilst downsampling", "err", err)
 		}
 	}
 
