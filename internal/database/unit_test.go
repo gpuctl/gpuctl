@@ -390,6 +390,7 @@ func machineInfoStartsEmpty(t *testing.T, db database.Database) {
 	assert.Nil(t, machine.CPU)
 	assert.Nil(t, machine.Motherboard)
 	assert.Nil(t, machine.Notes)
+	assert.Nil(t, machine.Owner)
 }
 
 // changes to a machine are present in the result
@@ -403,12 +404,14 @@ func machineInfoUpdatesWork(t *testing.T, db database.Database) {
 	fakeCPU := "Intel 8080"
 	fakeMotherboard := "Connect-a-tron"
 	fakeNote := "Has a fan that is very loud!"
+	fakeOwner := "Billie"
 	fakeChange := broadcast.ModifyMachine{
 		Hostname:    fakeHost,
 		CPU:         &fakeCPU,
 		Motherboard: &fakeMotherboard,
 		Notes:       &fakeNote,
 		Group:       &fakeGroup,
+		Owner:       &fakeOwner,
 	}
 
 	err = db.UpdateMachine(fakeChange)
@@ -424,10 +427,12 @@ func machineInfoUpdatesWork(t *testing.T, db database.Database) {
 	assert.NotNil(t, machine.CPU)
 	assert.NotNil(t, machine.Motherboard)
 	assert.NotNil(t, machine.Notes)
+	assert.NotNil(t, machine.Owner)
 
 	assert.Equal(t, *machine.CPU, fakeCPU)
 	assert.Equal(t, *machine.Motherboard, fakeMotherboard)
 	assert.Equal(t, *machine.Notes, fakeNote)
+	assert.Equal(t, *machine.Owner, fakeOwner)
 	assert.Equal(t, group.Name, fakeGroup)
 }
 

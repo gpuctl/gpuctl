@@ -23,6 +23,7 @@ type ModifyMachine struct {
 	Motherboard *string `json:"motherboard"` // nullable - means no change
 	Notes       *string `json:"notes"`       // nullable - means no change
 	Group       *string `json:"group"`       // nullable - means no change
+	Owner       *string `json:"owner"`       // nullable - means no change
 }
 
 type AttachFile struct {
@@ -50,6 +51,7 @@ type Workstation struct {
 	CPU         *string       `json:"cpu"`         // cpu name (optional)
 	Motherboard *string       `json:"motherboard"` // motherboard (optional)
 	Notes       *string       `json:"notes"`       // general note (optional)
+	Owner       *string       `json:"owner"`       // person who "owns" this machine (optional)
 	LastSeen    time.Duration `json:"last_seen"`   // time since the machine was last seen
 	Gpus        []GPU         `json:"gpus"`
 }

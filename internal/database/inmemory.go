@@ -119,6 +119,7 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 			CPU:         info.CPU,
 			Motherboard: info.Motherboard,
 			Notes:       info.Notes,
+			Owner:       info.Owner,
 			LastSeen:    time.Since(time.Unix(m.lastSeen[machine], 0)),
 			Gpus:        gpus[machine],
 		}
@@ -341,6 +342,9 @@ func (m *inMemory) UpdateMachine(changes broadcast.ModifyMachine) error {
 	}
 	if changes.Notes != nil {
 		machine.Notes = changes.Notes
+	}
+	if changes.Owner != nil {
+		machine.Owner = changes.Owner
 	}
 	if changes.Group != nil {
 		machine.Group = changes.Group
