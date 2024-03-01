@@ -13,7 +13,9 @@ import {
 } from "@chakra-ui/react";
 import { WorkStationData } from "../Data";
 import { TimeIcon } from "@chakra-ui/icons";
-import { cropString, workstationBusy } from "../Utils/Utils";
+import { workstationBusy } from "../Utils/Utils";
+
+import { Link as ReactRouterLink, useSearchParams } from "react-router-dom";
 
 const LAST_SEEN_WARN_THRESH = 60 * 5;
 const GREEN = "#25D36B";
@@ -26,6 +28,10 @@ export const WorkstationCardMin = ({
   data: WorkStationData;
 }) => {
   const textCol = useColorModeValue("black", "white");
+
+  const [params] = useSearchParams();
+  params.append("selected", name);
+
   return (
     <Center>
       <Box
@@ -57,22 +63,37 @@ export const WorkstationCardMin = ({
                 <Tooltip placement="right-start" label={`Seen recently!`}>
                   <TimeIcon color={GREEN} />
                 </Tooltip>
-                <Link href="#">{" " + cropString(name, 15)}</Link>
+                <Link
+                  as={ReactRouterLink}
+                  to={{ search: params.toString() }}
+                  isTruncated
+                >
+                  {" " + name}
+                </Link>
               </HStack>
             ) : (
-              <Link>{cropString(name, 17)}</Link>
+              <Link
+                as={ReactRouterLink}
+                to={{ search: params.toString() }}
+                isTruncated
+              >
+                {name}
+              </Link>
             )}
           </Heading>
           <LinkBox>
-            <LinkOverlay href="#" />
+            <LinkOverlay
+              as={ReactRouterLink}
+              to={{ search: params.toString() }}
+            />
             {gpus.map((s, i) => (
               <Box key={i}>
                 <Heading size="md">{`${s.gpu_name} (${(
                   s.memory_total / 1000
                 ).toFixed(0)} GB)`}</Heading>
-                <p>{`${s.in_use ? `🔴 In-use (User: ${s.user})` : "🟢 Free"}`}</p>
-                <p>{`${s.gpu_util < 10 ? "🐌" : "🏎️" + "☁️".repeat(Math.ceil(s.gpu_util / 40))} GPU Usage: (${Math.round(s.gpu_util)}% Utilisation)`}</p>
-                <p>{`${s.gpu_temp < 80 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${Math.round(
+                <p>{`${s.in_use ? `🔴 In-use (User: ${s.user})` : "🟢 Available"}`}</p>
+                <p>{`${s.gpu_util < 10 ? "🐌" : "🏎️" + "☁️".repeat(Math.ceil(s.gpu_util / 40))} GPU Usage: ${Math.round(s.gpu_util)}%`}</p>
+                <p>{`${s.gpu_temp < 75 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${Math.round(
                   s.gpu_temp,
                 )} °C (${Math.round(s.fan_speed)}% Fan Speed)`}</p>
               </Box>

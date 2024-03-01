@@ -1,4 +1,14 @@
-import { Box, Heading, VStack } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  Modal,
+  ModalBody,
+  ModalCloseButton,
+  ModalContent,
+  ModalHeader,
+  ModalOverlay,
+  VStack,
+} from "@chakra-ui/react";
 import { DEFAULT_VIEW, ViewPage } from "../App";
 import { WorkStationGroup } from "../Data";
 import { Validation, validationElim } from "../Utils/Utils";
@@ -9,7 +19,7 @@ import { Navbar } from "../Components/Navbar";
 import { useAuth } from "../Providers/AuthProvider";
 import { STATS_PATH } from "../Config/Paths";
 import { AdminPanel } from "./AdminPanel";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useStats } from "../Providers/FetchProvider";
 
 const cardView = (stats: WorkStationGroup[]) => (
@@ -70,11 +80,36 @@ const displayPartial = (
 export const MainView = ({ page }: { page: ViewPage }) => {
   const { isSignedIn } = useAuth();
 
+  const [params, setPs] = useSearchParams();
+
   if (page === ViewPage.ADMIN && !isSignedIn()) {
     return <Navigate to={STATS_PATH + DEFAULT_VIEW} replace />;
   }
 
-  return <ConfirmedMainView initial={page} />;
+  const selected = params.get("selected");
+
+  return (
+    <>
+      <ConfirmedMainView initial={page} />
+      <Modal
+        size="xl"
+        isOpen={selected !== null}
+        onClose={() => {
+          setPs((ps) => {
+            ps.delete("selected");
+            return ps;
+          });
+        }}
+      >
+        <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(15px)" />
+        <ModalContent>
+          <ModalHeader>MODAL</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>Body!</ModalBody>
+        </ModalContent>
+      </Modal>
+    </>
+  );
 };
 
 export const ConfirmedMainView = ({ initial }: { initial: ViewPage }) => {
