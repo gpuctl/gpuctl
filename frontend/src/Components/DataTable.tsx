@@ -13,34 +13,36 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { WorkStationGroup } from "../Data";
+import { GPUStats, WorkStationGroup } from "../Data";
 import { useState } from "react";
 import { useForceUpdate } from "framer-motion";
+import { keepIf } from "../Utils/Utils";
+
+// default to show group, machine_name, gpu_name, isFree, brand, and memory_total
+export const COLS: Record<string, boolean> = {
+  Group: true,
+  "Machine Name": true,
+  "GPU Name": true,
+  Free: true,
+  "GPU Brand": true,
+  "Driver Version": false,
+  "Memory Total": true,
+  "Memory Utilisation": false,
+  "GPU Utililisation": false,
+  "Memory Used": false,
+  "Fan Speed": false,
+  "GPU Temperature": false,
+  "Memory Temperature": false,
+  "GPU Voltage": false,
+  "Power Draw": false,
+  "GPU Clock": false,
+  "Max GPU Clock": false,
+  "Memory Clock": false,
+  "Max Memory Clock": false,
+};
 
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
-  // default to show group, machine_name, gpu_name, isFree, brand, and memory_total
-  const cols: Record<string, Boolean> = {
-    Group: true,
-    "Machine name": true,
-    "GPU name": true,
-    Free: true,
-    "GPU brand": true,
-    "Driver version": false,
-    "Memory total": true,
-    "Memory utilisation": false,
-    "GPU utililisation": false,
-    "Memory used": false,
-    "Fan speed": false,
-    "GPU temperature": false,
-    "Memory temperature": false,
-    "GPU voltage": false,
-    "Power draw": false,
-    "GPU clock": false,
-    "Max GPU clock": false,
-    "Memory clock": false,
-    "Max memory clock": false,
-  };
-  const [shownColumns, setter] = useState(cols);
+  const [shownColumns, setter] = useState(COLS);
   const [refresh] = useForceUpdate();
 
   return (
@@ -96,70 +98,14 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                     19; //size of gpu
                   return (
                     <Tr key={id}>
-                      {shownColumns["Group"] ? (
-                        <Td key={id}> {group_name}</Td>
-                      ) : null}
-                      {shownColumns["Machine name"] ? (
-                        <Td key={id + 1}> {workstation_name}</Td>
-                      ) : null}
-                      {shownColumns["GPU name"] ? (
-                        <Td key={id + 2}> {gpu.gpu_name}</Td>
-                      ) : null}
-                      {shownColumns["Free"] ? (
-                        <Td key={id + 3}> {gpu.in_use ? "❌" : "✅"}</Td>
-                      ) : null}
-                      {shownColumns["GPU brand"] ? (
-                        <Td key={id + 4}> {gpu.gpu_brand}</Td>
-                      ) : null}
-                      {shownColumns["Driver version"] ? (
-                        <Td key={id + 5}> {gpu.driver_ver}</Td>
-                      ) : null}
-                      {shownColumns["Memory total"] ? (
-                        <Td key={id + 6}> {Math.round(gpu.memory_total)}</Td>
-                      ) : null}
-                      {shownColumns["Memory utilisation"] ? (
-                        <Td key={id + 7}> {Math.round(gpu.memory_util)}</Td>
-                      ) : null}
-                      {shownColumns["GPU utilisation"] ? (
-                        <Td key={id + 8}> {Math.round(gpu.gpu_util)}</Td>
-                      ) : null}
-                      {shownColumns["Memory used"] ? (
-                        <Td key={id + 9}> {Math.round(gpu.memory_used)}</Td>
-                      ) : null}
-                      {shownColumns["Fan speed"] ? (
-                        <Td key={id + 10}> {Math.round(gpu.fan_speed)}</Td>
-                      ) : null}
-                      {shownColumns["GPU temperature"] ? (
-                        <Td key={id + 11}> {Math.round(gpu.gpu_temp)}</Td>
-                      ) : null}
-                      {shownColumns["Memory temperature"] ? (
-                        <Td key={id + 12}> {Math.round(gpu.memory_temp)}</Td>
-                      ) : null}
-                      {shownColumns["GPU voltage"] ? (
-                        <Td key={id + 13}>
-                          {Math.round(gpu.graphics_voltage)}
-                        </Td>
-                      ) : null}
-                      {shownColumns["Power draw"] ? (
-                        <Td key={id + 14}> {Math.round(gpu.power_draw)}</Td>
-                      ) : null}
-                      {shownColumns["GPU clock"] ? (
-                        <Td key={id + 15}> {Math.round(gpu.graphics_clock)}</Td>
-                      ) : null}
-                      {shownColumns["Max GPU clock"] ? (
-                        <Td key={id + 16}>
-                          {Math.round(gpu.max_graphics_clock)}
-                        </Td>
-                      ) : null}
-                      {shownColumns["Memory clock"] ? (
-                        <Td key={id + 17}> {Math.round(gpu.memory_clock)}</Td>
-                      ) : null}
-                      {shownColumns["Max memory clock"] ? (
-                        <Td key={id + 18}>
-                          {" "}
-                          {Math.round(gpu.max_memory_clock)}
-                        </Td>
-                      ) : null}
+                      {tablify(
+                        shownColumns,
+                        gpu,
+                        group_name,
+                        workstation_name,
+                      ).map((s, i) =>
+                        s === null ? null : <Td key={i}>{s}</Td>,
+                      )}
                     </Tr>
                   );
                 }),
@@ -171,3 +117,45 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
     </div>
   );
 };
+
+const tablify = (
+  shownColumns: Record<string, boolean>,
+  gpu: GPUStats,
+  group_name?: string,
+  workstation_name?: string,
+): (string | null)[] => [
+  keepIf(shownColumns["Group"], group_name ?? null),
+  keepIf(shownColumns["Machine Name"], workstation_name ?? null),
+  keepIf(shownColumns["GPU Name"], gpu.gpu_name),
+  keepIf(shownColumns["Free"], gpu.in_use ? "❌" : "✅"),
+  keepIf(shownColumns["GPU Brand"], gpu.gpu_brand),
+  keepIf(shownColumns["Driver Version"], gpu.driver_ver),
+  keepIf(shownColumns["Memory Total"], Math.round(gpu.memory_total).toString()),
+  keepIf(
+    shownColumns["Memory Utilisation"],
+    Math.round(gpu.memory_util).toString(),
+  ),
+  keepIf(shownColumns["GPU Utilisation"], Math.round(gpu.gpu_util).toString()),
+  keepIf(shownColumns["Memory Used"], Math.round(gpu.memory_used).toString()),
+  keepIf(shownColumns["Fan Speed"], Math.round(gpu.fan_speed).toString()),
+  keepIf(shownColumns["GPU Temperature"], Math.round(gpu.gpu_temp).toString()),
+  keepIf(
+    shownColumns["Memory Temperature"],
+    Math.round(gpu.memory_temp).toString(),
+  ),
+  keepIf(
+    shownColumns["GPU Voltage"],
+    Math.round(gpu.graphics_voltage).toString(),
+  ),
+  keepIf(shownColumns["Power Draw"], Math.round(gpu.power_draw).toString()),
+  keepIf(shownColumns["GPU Clock"], Math.round(gpu.graphics_clock).toString()),
+  keepIf(
+    shownColumns["Max GPU Clock"],
+    Math.round(gpu.max_graphics_clock).toString(),
+  ),
+  keepIf(shownColumns["Memory Clock"], Math.round(gpu.memory_clock).toString()),
+  keepIf(
+    shownColumns["Max Memory Clock"],
+    Math.round(gpu.max_memory_clock).toString(),
+  ),
+];

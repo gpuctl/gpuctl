@@ -1,69 +1,74 @@
 import * as d3 from "d3";
 import { ScaleLinear } from "d3";
-import { useMemo } from "react";
-import { inlineLog } from "../Utils/Utils";
+import { useMemo, useRef } from "react";
+import { useDims } from "../Utils/Hooks";
+import { Box } from "@chakra-ui/react";
 
 const AXIS_MARGIN = { x: 20, y: 20 };
 
-export const Graph = ({
-  width,
-  height,
-  data,
-}: {
-  width: number;
-  height: number;
-  data: { x: number; y: number }[];
-}) => {
-  const minX = Math.min(...data.map(({ x }) => x));
-  const maxX = Math.max(...data.map(({ x }) => x));
-  const minY = Math.min(...data.map(({ y }) => y));
-  const maxY = Math.max(...data.map(({ y }) => y));
+export const Graph = ({ data }: { data: { x: number; y: number }[][] }) => {
+  const minX = Math.min(...data.flatMap((d) => d.map(({ x }) => x)));
+  const maxX = Math.max(...data.flatMap((d) => d.map(({ x }) => x)));
+  const minY = Math.min(...data.flatMap((d) => d.map(({ y }) => y)));
+  const maxY = Math.max(...data.flatMap((d) => d.map(({ y }) => y)));
+
+  const ref = useRef<HTMLHeadingElement>(null);
+
+  const { w: width, h: height } = useDims(ref);
+
+  const innerWidth = width - AXIS_MARGIN.x * 2;
+  const innerHeight = height - AXIS_MARGIN.y * 2;
 
   const xScale: ScaleLinear<number, number> = d3
     .scaleLinear()
     .domain([minX, maxX])
-    .range([0, width]);
+    .range([0, innerWidth]);
 
   const yScale: ScaleLinear<number, number> = d3
     .scaleLinear()
     .domain([maxY, minY])
-    .range([0, height]);
+    .range([0, innerHeight]);
 
   const lineBuilder = d3
     .line()
     .x(([x]) => xScale(x))
     .y(([, y]) => yScale(y));
 
-  const linePath = lineBuilder(data.map(({ x, y }) => [x, y]));
-
-  console.log(`Attempted to create a graph. ${linePath}`);
+  const linePaths = data.map((d) => lineBuilder(d.map(({ x, y }) => [x, y])));
 
   return (
-    <svg width={width + AXIS_MARGIN.x * 2} height={height + AXIS_MARGIN.y * 2}>
-      <g
-        width={width}
-        height={height}
-        transform={`translate(${AXIS_MARGIN.x}, ${AXIS_MARGIN.y})`}
-      >
-        <g transform={`translate(0, 0)`} shapeRendering={"geometricPrecision"}>
-          <Axis scale={yScale} pixelsPerTick={40} vertical={true} />
-        </g>
-
+    <Box minWidth={200} minHeight={200} ref={ref}>
+      <svg width={width} height={height}>
         <g
-          transform={`translate(0, ${height})`}
-          shapeRendering={"geometricPrecision"}
+          width={innerWidth}
+          height={innerHeight}
+          transform={`translate(${AXIS_MARGIN.x}, ${AXIS_MARGIN.y})`}
         >
-          <Axis scale={xScale} pixelsPerTick={40} vertical={false} />
-        </g>
+          <g
+            transform={`translate(0, 0)`}
+            shapeRendering={"geometricPrecision"}
+          >
+            <Axis scale={yScale} pixelsPerTick={40} vertical={true} />
+          </g>
 
-        <path
-          d={linePath ?? undefined}
-          stroke="blue"
-          fill="none"
-          strokeWidth={3}
-        />
-      </g>
-    </svg>
+          <g
+            transform={`translate(0, ${innerHeight})`}
+            shapeRendering={"geometricPrecision"}
+          >
+            <Axis scale={xScale} pixelsPerTick={40} vertical={false} />
+          </g>
+
+          {linePaths.map((p, i) => (
+            <path
+              d={p ?? undefined}
+              stroke={["blue", "red", "green", "orange", "purple"][i % 5]}
+              fill="none"
+              strokeWidth={3}
+            />
+          ))}
+        </g>
+      </svg>
+    </Box>
   );
 };
 

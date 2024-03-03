@@ -170,6 +170,8 @@ export const orElse = <T, U>(v: Validation<T>, e: () => U) =>
 export const validateNullable = <T,>(x: T | null | undefined): Validated<T> =>
   x === null || x === undefined ? failure(Error("Was null!")) : success(x);
 
+export const keepIf = <T,>(b: boolean, x: T) => (b ? x : null);
+
 // A mechine is busy if all gpus are in use
 // This utility really does not fit in this file...
 export const workstationBusy = (gs: GPUStats[]) => {
