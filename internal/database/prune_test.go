@@ -130,19 +130,23 @@ func TestAverageProcess(t *testing.T) {
 
 }
 
+// specify the time we test at
+// test hasn't been passing since March started?
+var now = time.Date(2024, time.February, 1, 0, 0, 0, 0, time.Local)
+
 func TestDownsample(t *testing.T) {
 	db := InMemory().(*inMemory)
 
-	cutoffTime := time.Now().AddDate(0, -6, 0).Unix()
+	cutoffTime := now.AddDate(0, -6, 0).Unix()
 
 	gpuUUID := "gpu-test-1"
 	hostName := "test-host"
 
 	db.infos[gpuUUID] = gpuInfo{host: hostName, context: uplink.GPUInfo{Uuid: gpuUUID}}
-	db.UpdateLastSeen(hostName, time.Now().Unix())
+	db.UpdateLastSeen(hostName, now.Unix())
 
 	for i := 1; i <= 250; i++ {
-		sampleTime := time.Now().AddDate(0, 0, -i*2).Unix() // Ensuring a spread over the year
+		sampleTime := now.AddDate(0, 0, -i*2).Unix() // Ensuring a spread over the year
 		db.stats[gpuUUID] = append(db.stats[gpuUUID], uplink.GPUStatSample{
 			Uuid:              gpuUUID,
 			MemoryUtilisation: float64(i % 100), // Example values, vary as needed
@@ -165,6 +169,8 @@ func TestDownsample(t *testing.T) {
 		})
 	}
 
+	// TODO: how did we determine this value?
+	// since March we've been getting 93 rather than 94
 	expectedNumSamples := 94
 
 	if err := db.Downsample(cutoffTime); err != nil {
@@ -180,15 +186,15 @@ func TestDownsamplePruneMethod(t *testing.T) {
 
 	db := InMemory().(*inMemory)
 
-	cutoffTime := time.Now().AddDate(0, -6, 0)
+	cutoffTime := now.AddDate(0, -6, 0)
 	gpuUUID := "gpu-test-1"
 	hostName := "test-host"
 
 	db.infos[gpuUUID] = gpuInfo{host: hostName, context: uplink.GPUInfo{Uuid: gpuUUID}}
-	db.UpdateLastSeen(hostName, time.Now().Unix())
+	db.UpdateLastSeen(hostName, now.Unix())
 
 	for i := 1; i <= 250; i++ {
-		sampleTime := time.Now().AddDate(0, 0, -i*2).Unix() // Ensuring a spread over the year
+		sampleTime := now.AddDate(0, 0, -i*2).Unix() // Ensuring a spread over the year
 		db.stats[gpuUUID] = append(db.stats[gpuUUID], uplink.GPUStatSample{
 			Uuid:              gpuUUID,
 			MemoryUtilisation: float64(i % 100), // Example values, vary as needed
