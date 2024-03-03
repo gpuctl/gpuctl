@@ -17,7 +17,7 @@ export const useAddMachine = (callback: () => void) => {
     callback();
     validatedElim(r, {
       success: (resp) => {
-        if (resp.status == 200)
+        if (resp.status === 200)
           toast({
             title: "Add machine successful!",
             description: "",
