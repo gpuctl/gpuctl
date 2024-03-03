@@ -37,6 +37,7 @@ export const EditableField = ({
       motherboard: fieldKey === "motherboard" ? newValue : null,
       cpu: fieldKey === "cpu" ? newValue : null,
       notes: fieldKey === "notes" ? newValue : null,
+      owner: fieldKey === "owner" ? newValue : null,
     });
   };
 

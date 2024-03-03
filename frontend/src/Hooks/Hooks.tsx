@@ -103,6 +103,7 @@ export type ModifyData = {
   motherboard: string | null;
   cpu: string | null;
   notes: string | null;
+  owner: string | null;
 };
 
 export const useModifyInfo = () => {
@@ -118,7 +119,7 @@ export const useModifyInfo = () => {
     });
 };
 
-export type FieldKey = "cpu" | "motherboard" | "notes" | "group";
+export type FieldKey = "cpu" | "motherboard" | "notes" | "group" | "owner";
 
 export const useHandleSubmit = (
   name: string,
@@ -132,5 +133,6 @@ export const useHandleSubmit = (
     motherboard: fieldKey === "motherboard" ? newValue : null,
     cpu: fieldKey === "cpu" ? newValue : null,
     notes: fieldKey === "notes" ? newValue : null,
+    owner: fieldKey === "owner" ? newValue : null,
   });
 };
