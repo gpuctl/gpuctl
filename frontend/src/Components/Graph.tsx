@@ -37,7 +37,7 @@ export const Graph = ({ data }: { data: { x: number; y: number }[][] }) => {
   const linePaths = data.map((d) => lineBuilder(d.map(({ x, y }) => [x, y])));
 
   return (
-    <Box minWidth={200} minHeight={200} ref={ref}>
+    <Box minWidth={200} minHeight={400} ref={ref}>
       <svg width={width} height={height}>
         <g
           width={innerWidth}
@@ -89,7 +89,7 @@ export const Axis = ({
 
   const ticks = useMemo(() => {
     const diff = Math.abs(range[1] - range[0]);
-    const numberOfTicksTarget = Math.round(diff / pixelsPerTick);
+    const numberOfTicksTarget = 10; // Math.round(diff / pixelsPerTick);
 
     return scale.ticks(numberOfTicksTarget).map((value) => ({
       value,

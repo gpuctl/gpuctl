@@ -118,7 +118,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   );
 };
 
-const tablify = (
+export const tablify = (
   shownColumns: Record<string, boolean>,
   gpu: GPUStats,
   group_name?: string,

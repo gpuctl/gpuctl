@@ -8,6 +8,7 @@ import {
   Modal,
   ModalBody,
   ModalCloseButton,
+  MenuOptionGroup,
   ModalContent,
   ModalHeader,
   ModalOverlay,
@@ -15,19 +16,31 @@ import {
   Table,
   TableContainer,
   Tbody,
+  Td,
   Th,
   Thead,
   Tr,
+  MenuItemOption,
 } from "@chakra-ui/react";
 import { useSearchParams } from "react-router-dom";
 import { Graph } from "./Graph";
 import { useHistoryStats } from "../Hooks/Hooks";
 import { useState } from "react";
 import { GraphField } from "../Data";
-import { enumVals, mapSuccess, success, validationElim } from "../Utils/Utils";
+import {
+  all,
+  cropString,
+  enumVals,
+  mapSuccess,
+  success,
+  transpose,
+  validationElim,
+} from "../Utils/Utils";
 import { Text } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
-// import { COLS } from "./DataTable";
+import { useStats } from "../Providers/FetchProvider";
+import { COLS, tablify } from "./DataTable";
+import { useForceUpdate } from "framer-motion";
 
 const USE_FAKE_STATS = true;
 
@@ -44,8 +57,6 @@ const GRAPH_FIELDS = enumVals(GraphField);
 export const WorkstationView = ({ hostname }: { hostname: string }) => {
   const [, setPs] = useSearchParams();
 
-  // const [shownColumns, setter] = useState(COLS);
-
   return (
     <Modal
       size="xl"
@@ -56,31 +67,107 @@ export const WorkstationView = ({ hostname }: { hostname: string }) => {
           return ps;
         });
       }}
+      scrollBehavior="inside"
     >
       <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(15px)" />
-      <ModalContent>
+      <ModalContent minWidth="80%" minHeight="80%">
         <ModalHeader>{`${hostname}`}</ModalHeader>
         <ModalCloseButton />
         <ModalBody>
           <SimpleGrid columns={2} spacing={5}>
-            <Box>
-              <TableContainer>
-                <Table variant="striped">
-                  <Thead>
-                    <Tr>
-                      <Th>Field</Th>
-                      <Th>GPU 0</Th>
-                    </Tr>
-                  </Thead>
-                  <Tbody></Tbody>
-                </Table>
-              </TableContainer>
-            </Box>
+            <StatsTable hostname={hostname}></StatsTable>
             <StatsGraph hostname={hostname} />
           </SimpleGrid>
         </ModalBody>
       </ModalContent>
     </Modal>
+  );
+};
+
+const StatsTable = ({ hostname }: { hostname: string }) => {
+  const [shownColumns, setter] = useState(
+    Object.fromEntries(Object.keys(COLS).map((k) => [k, true])),
+  );
+
+  const { allStats } = useStats();
+  const [refresh] = useForceUpdate();
+
+  return (
+    <Box>
+      <Menu closeOnSelect={false}>
+        <MenuButton as={Button} colorScheme="blue">
+          Columns
+        </MenuButton>
+        <MenuList overflowY="scroll" maxHeight="200">
+          <MenuOptionGroup
+            type="checkbox"
+            defaultValue={Object.keys(shownColumns).filter(
+              (key) => shownColumns[key],
+            )}
+            onChange={(props) => {
+              Object.keys(shownColumns).forEach((col) => {
+                shownColumns[col] = props.includes(col);
+              });
+              setter(shownColumns);
+              refresh();
+            }}
+          >
+            {Object.keys(shownColumns).map((col, i) => {
+              return (
+                <MenuItemOption value={col} key={i}>
+                  {` ${col} `}
+                </MenuItemOption>
+              );
+            })}
+          </MenuOptionGroup>
+        </MenuList>
+      </Menu>
+
+      {validationElim(allStats, {
+        success: (s) => {
+          const gpus = s.flatMap((g) =>
+            g.workstations
+              .filter((w) => w.name === hostname)
+              .flatMap((w) => w.gpus),
+          );
+
+          const tabGpus = transpose(
+            gpus.map((g) => tablify(shownColumns, g)),
+          ).map((r) => all(r));
+
+          return (
+            <TableContainer>
+              <Table variant="striped">
+                <Thead>
+                  <Tr>
+                    <Th>Field</Th>
+                    <Th>GPU 0</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {tabGpus.map((fs, i) =>
+                    fs === null ? (
+                      <></>
+                    ) : (
+                      <Tr key={i}>
+                        <Td>{Object.keys(COLS)[i]}</Td>
+                        {fs.map((f, j) => (
+                          <Td key={j}>
+                            {cropString(f, Math.round(35 / fs.length))}
+                          </Td>
+                        ))}
+                      </Tr>
+                    ),
+                  )}
+                </Tbody>
+              </Table>
+            </TableContainer>
+          );
+        },
+        failure: () => <Text>Failure fetching data! Retrying...</Text>,
+        loading: () => <Text>Fetching data...</Text>,
+      })}
+    </Box>
   );
 };
 
@@ -121,7 +208,9 @@ const StatsGraph = ({ hostname }: { hostname: string }) => {
       </Menu>
       {validationElim(statsToDisplay, {
         success: (s) => <Graph data={[s]}></Graph>,
-        failure: () => <Text>Failed to fetch historical data for graph!</Text>,
+        failure: () => (
+          <Text>Failed to fetch historical data for graph! Retrying...</Text>
+        ),
         loading: () => <Text>Fetching data...</Text>,
       })}
     </Box>

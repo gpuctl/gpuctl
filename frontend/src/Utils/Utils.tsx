@@ -172,6 +172,15 @@ export const validateNullable = <T,>(x: T | null | undefined): Validated<T> =>
 
 export const keepIf = <T,>(b: boolean, x: T) => (b ? x : null);
 
+export const transpose = <T,>(m: T[][]): T[][] =>
+  m.length === 0 ? m : m[0].map((_, i) => m.map((row) => row[i]));
+
+export const all = <T,>(x: (T | null)[]): T[] | null =>
+  x.reduce<T[] | null>(
+    (p, c) => (c === null ? null : p?.concat([c]) ?? null),
+    [],
+  );
+
 // A mechine is busy if all gpus are in use
 // This utility really does not fit in this file...
 export const workstationBusy = (gs: GPUStats[]) => {
