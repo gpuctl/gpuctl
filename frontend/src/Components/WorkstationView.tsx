@@ -28,6 +28,7 @@ import { useHistoryStats } from "../Hooks/Hooks";
 import { useState } from "react";
 import { GraphField } from "../Data";
 import {
+  Validation,
   all,
   cropString,
   enumVals,
@@ -176,14 +177,17 @@ const StatsGraph = ({ hostname }: { hostname: string }) => {
 
   const historyStats = useHistoryStats(hostname);
 
-  const statsToDisplay = USE_FAKE_STATS
-    ? success(FAKE_STATS)
+  const statsToDisplay: Validation<
+    {
+      x: number;
+      y: number;
+    }[][]
+  > = USE_FAKE_STATS
+    ? success([FAKE_STATS])
     : mapSuccess(historyStats, (s) =>
-        s.map(({ timestamp, sample }) => ({
-          x: timestamp,
-          // TODO: Support machines with multiple GPUs/no GPUs
-          y: sample[0][field],
-        })),
+        s.map(({ timestamp, sample }) =>
+          sample.map((s) => ({ x: timestamp, y: s[field] })),
+        ),
       );
 
   return (
@@ -207,7 +211,7 @@ const StatsGraph = ({ hostname }: { hostname: string }) => {
         </MenuList>
       </Menu>
       {validationElim(statsToDisplay, {
-        success: (s) => <Graph data={[s]}></Graph>,
+        success: (s) => <Graph data={s}></Graph>,
         failure: () => (
           <Text>Failed to fetch historical data for graph! Retrying...</Text>
         ),

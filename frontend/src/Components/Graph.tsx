@@ -88,8 +88,9 @@ export const Axis = ({
   const range = scale.range();
 
   const ticks = useMemo(() => {
-    const diff = Math.abs(range[1] - range[0]);
-    const numberOfTicksTarget = 10; // Math.round(diff / pixelsPerTick);
+    // const diff = Math.abs(range[1] - range[0]);
+    // const numberOfTicksTarget = Math.round(diff / pixelsPerTick);
+    const numberOfTicksTarget = 10;
 
     return scale.ticks(numberOfTicksTarget).map((value) => ({
       value,
