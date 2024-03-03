@@ -67,6 +67,7 @@ export const GroupInfoManagement = ({
               <Th>CPU</Th>
               <Th>Motherboard</Th>
               <Th>Notes</Th>
+              <Th>Owner</Th>
               <Th>Action</Th>
               <Th>Shutdown</Th>
             </Tr>
@@ -106,6 +107,14 @@ export const GroupInfoManagement = ({
                       group={group.name}
                       workstation={workstation}
                       fieldKey="notes"
+                      placeholder="none"
+                      isEven={k % 2 == 0}
+                    />
+                    <EditableField
+                      GroupSelect={GroupSelect}
+                      group={group.name}
+                      workstation={workstation}
+                      fieldKey="owner"
                       placeholder="none"
                       isEven={k % 2 == 0}
                     />

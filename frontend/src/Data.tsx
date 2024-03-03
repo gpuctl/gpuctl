@@ -10,6 +10,7 @@ export type WorkStationData = {
   cpu: string;
   motherboard: string;
   notes: string;
+  owner: string;
   gpus: GPUStats[];
   last_seen: number;
 };
@@ -52,6 +53,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "i7-7700k",
         motherboard: "ASUS ROG STRIX Z790-A",
         notes: "noisy fan",
+        owner: "",
         last_seen: 500,
         gpus: [
           {
@@ -82,6 +84,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "Ryzen 5800X",
         motherboard: "Z790 AORUS XTREME X",
         notes: "",
+        owner: "Bob Barker",
         last_seen: 260,
         gpus: [
           {
@@ -133,6 +136,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "Intel Pentium 2",
         motherboard: "Acer Veriton M4630G MT",
         notes: "scheduled for replacement 2024",
+        owner: "Kermit",
         last_seen: 30000000000,
         gpus: [
           {
@@ -164,6 +168,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         motherboard: "",
         notes:
           "We don't particularly like this one, but it always works and we can't really bin it",
+        owner: "",
         last_seen: 90000000000,
         gpus: [
           {
@@ -215,6 +220,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "AMD Z1 Extreme",
         motherboard: "Ticket to Ride: Europe",
         notes: "Please don't use this unless you absolutely have to",
+        owner: "Mort",
         last_seen: 40000000000,
         gpus: [
           {
@@ -250,6 +256,7 @@ export const EXAMPLE_DATA_1: WorkStationGroup[] = [
         cpu: "AMD 4800S",
         motherboard: "AMD 4800S Desktop Kit",
         notes: "",
+        owner: "",
         last_seen: 180000000123,
         gpus: [
           {
