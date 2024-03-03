@@ -1,7 +1,12 @@
 import { Box, Heading, VStack } from "@chakra-ui/react";
 import { DEFAULT_VIEW, ViewPage } from "../App";
 import { WorkStationGroup } from "../Data";
-import { Validation, validationElim } from "../Utils/Utils";
+import {
+  Validation,
+  validateNullable,
+  validatedElim,
+  validationElim,
+} from "../Utils/Utils";
 import { ColumnGrid } from "../Components/ColumnGrid";
 import { TableTab } from "../Components/DataTable";
 import { WorkstationCardMin } from "../Components/WorkstationCardMinimal";
@@ -9,7 +14,7 @@ import { Navbar } from "../Components/Navbar";
 import { useAuth } from "../Providers/AuthProvider";
 import { STATS_PATH } from "../Config/Paths";
 import { AdminPanel } from "./AdminPanel";
-import { Navigate } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { useStats } from "../Providers/FetchProvider";
 import { WorkstationView } from "../Components/WorkstationView";
 
@@ -70,15 +75,21 @@ const displayPartial = (
 
 export const MainView = ({ page }: { page: ViewPage }) => {
   const { isSignedIn } = useAuth();
+  const [params] = useSearchParams();
 
   if (page === ViewPage.ADMIN && !isSignedIn()) {
     return <Navigate to={STATS_PATH + DEFAULT_VIEW} replace />;
   }
 
+  const hostname = params.get("selected");
+
   return (
     <>
       <ConfirmedMainView initial={page} />
-      <WorkstationView />
+      {validatedElim(validateNullable(hostname), {
+        success: (h) => <WorkstationView hostname={h} />,
+        failure: () => <></>,
+      })}
     </>
   );
 };

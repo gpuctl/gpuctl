@@ -38,6 +38,19 @@ export type GPUStats = {
   user: string;
 };
 
+export enum GraphField {
+  MEMORY_UTIL = "memory_util",
+  GPU_UTIL = "gpu_util",
+  MEMORY_USED = "memory_used",
+  FAN_SPEED = "fan_speed",
+  GPU_TEMP = "gpu_temp",
+  MEMORY_TEMP = "memory_temp",
+  GRAPHICS_VOLTAGE = "graphics_voltage",
+  POWER_DRAW = "power_draw",
+  GRAPHICS_CLOCK = "graphics_clock",
+  MEMORY_CLOCK = "memory_clock",
+}
+
 export type DurationDeltas = {
   hostname: string;
   seconds_since: number;

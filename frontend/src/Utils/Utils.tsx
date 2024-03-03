@@ -167,7 +167,11 @@ export const mapSuccess = <T, U>(
 export const orElse = <T, U>(v: Validation<T>, e: () => U) =>
   v.tag === VTag.Success ? v.data : e();
 
+export const validateNullable = <T,>(x: T | null | undefined): Validated<T> =>
+  x === null || x === undefined ? failure(Error("Was null!")) : success(x);
+
 // A mechine is busy if all gpus are in use
+// This utility really does not fit in this file...
 export const workstationBusy = (gs: GPUStats[]) => {
   return gs.every((g) => {
     return g.in_use;

@@ -2,7 +2,10 @@ import { useToast } from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
 import { GPUStats } from "../Data";
 import { useAuth } from "../Providers/AuthProvider";
-import { fire, validatedElim } from "../Utils/Utils";
+import { fire, validatedElim, Validation } from "../Utils/Utils";
+import { API_URL } from "../App";
+import { useJarJar } from "../Utils/Hooks";
+import { useInterval } from "@chakra-ui/react";
 
 const ADD_MACHINE_URL = "/add_workstation";
 const REMOVE_MACHINE_URL = "/rm_workstation";
@@ -138,10 +141,22 @@ export const useHandleSubmit = (
 
 export type HistoryStats = {
   timestamp: number;
-  samples: GPUStats[];
+  sample: GPUStats[];
 };
 
-// WIP
-// export const useHistoryStats = (hostname: string) => {
-//   const [stats, setStats] = useState<Validation<HistoryStats[]>>(loading());
-// };
+const GRAPH_REFRESH_INTERVAL = 5000;
+
+export const useHistoryStats = (
+  hostname: string,
+): Validation<HistoryStats[]> => {
+  const [stats, updateStats] = useJarJar<HistoryStats[]>(
+    async () =>
+      await (await fetch(API_URL + `/stats/historical/${hostname}`)).json(),
+  );
+
+  useInterval(() => {
+    updateStats();
+  }, GRAPH_REFRESH_INTERVAL);
+
+  return stats;
+};
