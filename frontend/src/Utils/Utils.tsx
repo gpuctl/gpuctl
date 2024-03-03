@@ -76,8 +76,8 @@ enum VTag {
 //   loading: true;
 //   error: null;
 // }-style design might seem more natural, but TypeScript's flow typing does
-// not appear to be up to the challenge of reasoning from data == null towards
-// loading: false and error: null
+// not appear to be up to the challenge of reasoning from error == null and
+// loading == false towards data: T
 
 export type Success<T> = {
   tag: VTag.Success;
