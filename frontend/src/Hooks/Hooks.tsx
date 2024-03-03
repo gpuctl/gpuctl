@@ -1,5 +1,6 @@
 import { useToast } from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
+import { GPUStats } from "../Data";
 import { useAuth } from "../Providers/AuthProvider";
 import { fire, validatedElim } from "../Utils/Utils";
 
@@ -134,3 +135,13 @@ export const useHandleSubmit = (
     notes: fieldKey === "notes" ? newValue : null,
   });
 };
+
+export type HistoryStats = {
+  timestamp: number;
+  samples: GPUStats[];
+};
+
+// WIP
+// export const useHistoryStats = (hostname: string) => {
+//   const [stats, setStats] = useState<Validation<HistoryStats[]>>(loading());
+// };
