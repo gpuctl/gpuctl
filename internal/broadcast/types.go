@@ -3,8 +3,6 @@ package broadcast
 
 import (
 	"time"
-
-	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 // frontend<->web-api types
@@ -98,7 +96,7 @@ type HistoricalData []HistoricalDataPoint
 
 type HistoricalDataPoint struct {
 	Timestamp int64 `json:"timestamp"`
-	Sample []uplink.GPUStatSample `json:"sample"`
+	Sample    GPU `json:"sample"`
 }
 
 type AggregateData struct {

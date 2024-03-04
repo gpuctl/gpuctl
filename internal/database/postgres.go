@@ -721,10 +721,91 @@ func (conn PostgresConn) RemoveFile(remove broadcast.RemoveFile) error {
 	return err
 }
 
-// TODO: add implementations for the functions
 func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
-	return broadcast.HistoricalData{}, errors.New("NOT IMPLEMENTED FOR IN-MEMORY")
+	var data broadcast.HistoricalData
+	samples, err := conn.db.Query(`SELECT s.Received,
+		s.MemoryUtilisation,
+		s.GpuUtilisation,
+		s.MemoryUsed,
+		s.FanSpeed,
+		s.Temp,
+		s.MemoryTemp,
+		s.GraphicsVoltage,
+		s.PowerDraw,
+		s.GraphicsClock,
+		s.MaxGraphicsClock,
+		s.MemoryClock,
+		s.MaxMemoryClock,
+		s.InUse,
+		s.UserName
+		FROM Stats s
+		INNER JOIN GPUs g ON g.Uuid = s.Gpu
+		WHERE g.Machine=$1`,
+		hostname,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	for samples.Next() {
+		var sample broadcast.GPU
+		var timestamp int64
+
+		err = samples.Scan(&timestamp,
+			&sample.MemoryUtilisation,
+			&sample.GPUUtilisation,
+			&sample.MemoryUsed,
+			&sample.FanSpeed,
+			&sample.Temp,
+			&sample.MemoryTemp,
+			&sample.GraphicsVoltage,
+			&sample.PowerDraw,
+			&sample.GraphicsClock,
+			&sample.MaxGraphicsClock,
+			&sample.MemoryClock,
+			&sample.MaxMemoryClock,
+			&sample.InUse,
+			&sample.User,
+		)
+		if err != nil {
+			return nil, err
+		}
+		data = append(data,
+			broadcast.HistoricalDataPoint{
+				Timestamp: timestamp,
+				Sample:    sample,
+			},
+		)
+	}
+
+	return data, nil
 }
-func (conn PostgresConn) AggregateData() (broadcast.AggregateData, error) {
-	return broadcast.AggregateData{}, errors.New("NOT IMPLEMENTED FOR IN-MEMORY")
+func (conn PostgresConn) AggregateData(days int) (broadcast.AggregateData, error) {
+	// TODO: add functionality for this to be variable
+	var data broadcast.AggregateData
+	threshold := time.Now().AddDate(0, -days, 0).Unix()
+
+	samples, err := conn.db.Query(`SELECT s.Received,
+		s.MemoryUtilisation,
+		s.GpuUtilisation,
+		s.MemoryUsed,
+		s.FanSpeed,
+		s.Temp,
+		s.MemoryTemp,
+		s.GraphicsVoltage,
+		s.PowerDraw,
+		s.GraphicsClock,
+		s.MaxGraphicsClock,
+		s.MemoryClock,
+		s.MaxMemoryClock,
+		s.InUse,
+		s.UserName
+		FROM Stats s
+		WHERE s.Received > $1`,
+		threshold,
+	)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

@@ -426,6 +426,6 @@ func (m *inMemory) RemoveFile(remove broadcast.RemoveFile) error {
 func (m *inMemory) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
 	return broadcast.HistoricalData{}, errors.New("NOT IMPLEMENTED FOR IN-MEMORY")
 }
-func (m *inMemory) AggregateData() (broadcast.AggregateData, error) {
+func (m *inMemory) AggregateData(days int) (broadcast.AggregateData, error) {
 	return broadcast.AggregateData{}, errors.New("NOT IMPLEMENTED FOR IN-MEMORY")
 }

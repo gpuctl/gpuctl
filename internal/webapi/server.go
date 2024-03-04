@@ -100,7 +100,9 @@ func (a *Api) historicalData(r *http.Request, l *slog.Logger) (*femto.Response[b
 }
 
 func (a *Api) aggregateData(r *http.Request, l *slog.Logger) (*femto.Response[broadcast.AggregateData], error) {
-	data, err := a.DB.AggregateData()
+	// TODO: add functionality for variable number of days
+	days := 7
+	data, err := a.DB.AggregateData(days)
 	if err != nil {
 		return nil, err
 	}
