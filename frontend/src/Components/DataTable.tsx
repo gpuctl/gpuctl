@@ -145,39 +145,62 @@ export const tablify = (
   gpu: GPUStats,
   group_name?: string,
   workstation_name?: string,
-): (string | null)[] => [
-  keepIf(shownColumns["Group"], group_name ?? null),
-  keepIf(shownColumns["Machine Name"], workstation_name ?? null),
-  keepIf(shownColumns["GPU Name"], gpu.gpu_name),
-  keepIf(shownColumns["Free"], gpu.in_use ? "❌" : "✅"),
-  keepIf(shownColumns["GPU Brand"], gpu.gpu_brand),
-  keepIf(shownColumns["Driver Version"], gpu.driver_ver),
-  keepIf(shownColumns["Memory Total"], Math.round(gpu.memory_total).toString()),
-  keepIf(
-    shownColumns["Memory Utilisation"],
-    Math.round(gpu.memory_util).toString(),
-  ),
-  keepIf(shownColumns["GPU Utilisation"], Math.round(gpu.gpu_util).toString()),
-  keepIf(shownColumns["Memory Used"], Math.round(gpu.memory_used).toString()),
-  keepIf(shownColumns["Fan Speed"], Math.round(gpu.fan_speed).toString()),
-  keepIf(shownColumns["GPU Temperature"], Math.round(gpu.gpu_temp).toString()),
-  keepIf(
-    shownColumns["Memory Temperature"],
-    Math.round(gpu.memory_temp).toString(),
-  ),
-  keepIf(
-    shownColumns["GPU Voltage"],
-    Math.round(gpu.graphics_voltage).toString(),
-  ),
-  keepIf(shownColumns["Power Draw"], Math.round(gpu.power_draw).toString()),
-  keepIf(shownColumns["GPU Clock"], Math.round(gpu.graphics_clock).toString()),
-  keepIf(
-    shownColumns["Max GPU Clock"],
-    Math.round(gpu.max_graphics_clock).toString(),
-  ),
-  keepIf(shownColumns["Memory Clock"], Math.round(gpu.memory_clock).toString()),
-  keepIf(
-    shownColumns["Max Memory Clock"],
-    Math.round(gpu.max_memory_clock).toString(),
-  ),
-];
+): (string | null)[] =>
+  (group_name === undefined ? [] : [keepIf(shownColumns["Group"], group_name)])
+    .concat(
+      workstation_name === undefined
+        ? []
+        : [keepIf(shownColumns["Machine Name"], workstation_name)],
+    )
+    .concat([
+      keepIf(shownColumns["GPU Name"], gpu.gpu_name),
+      keepIf(shownColumns["Free"], gpu.in_use ? "❌" : "✅"),
+      keepIf(shownColumns["GPU Brand"], gpu.gpu_brand),
+      keepIf(shownColumns["Driver Version"], gpu.driver_ver),
+      keepIf(
+        shownColumns["Memory Total"],
+        Math.round(gpu.memory_total).toString(),
+      ),
+      keepIf(
+        shownColumns["Memory Utilisation"],
+        Math.round(gpu.memory_util).toString(),
+      ),
+      keepIf(
+        shownColumns["GPU Utilisation"],
+        Math.round(gpu.gpu_util).toString(),
+      ),
+      keepIf(
+        shownColumns["Memory Used"],
+        Math.round(gpu.memory_used).toString(),
+      ),
+      keepIf(shownColumns["Fan Speed"], Math.round(gpu.fan_speed).toString()),
+      keepIf(
+        shownColumns["GPU Temperature"],
+        Math.round(gpu.gpu_temp).toString(),
+      ),
+      keepIf(
+        shownColumns["Memory Temperature"],
+        Math.round(gpu.memory_temp).toString(),
+      ),
+      keepIf(
+        shownColumns["GPU Voltage"],
+        Math.round(gpu.graphics_voltage).toString(),
+      ),
+      keepIf(shownColumns["Power Draw"], Math.round(gpu.power_draw).toString()),
+      keepIf(
+        shownColumns["GPU Clock"],
+        Math.round(gpu.graphics_clock).toString(),
+      ),
+      keepIf(
+        shownColumns["Max GPU Clock"],
+        Math.round(gpu.max_graphics_clock).toString(),
+      ),
+      keepIf(
+        shownColumns["Memory Clock"],
+        Math.round(gpu.memory_clock).toString(),
+      ),
+      keepIf(
+        shownColumns["Max Memory Clock"],
+        Math.round(gpu.max_memory_clock).toString(),
+      ),
+    ]);
