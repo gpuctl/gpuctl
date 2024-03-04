@@ -715,7 +715,6 @@ func additionRemoveOldFile(t *testing.T, db database.Database) {
 	assert.Equal(t, text, file)
 }
 
-// TODO: hook this test into the unit tests once in memory has the functionality
 func removingMachineRemoveFiles(t *testing.T, db database.Database) {
 	fakeHost := "chestnut"
 	fakeGroup := "Shared"

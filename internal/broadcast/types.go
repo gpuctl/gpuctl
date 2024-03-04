@@ -91,3 +91,15 @@ type WorkstationSeen struct {
 	Hostname string
 	LastSeen int64
 }
+
+type HistoricalData []HistoricalDataPoint
+
+type HistoricalDataPoint struct {
+	Timestamp int64 `json:"timestamp"`
+	Samples   []GPU `json:"sample"`
+}
+
+type AggregateData struct {
+	PercentUsed int    `json:"percent_used"`
+	TotalEnergy uint64 `json:"total_energy"` // Joules
+}

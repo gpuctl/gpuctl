@@ -720,3 +720,148 @@ func (conn PostgresConn) RemoveFile(remove broadcast.RemoveFile) error {
 	}
 	return err
 }
+
+func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
+	data := broadcast.HistoricalData{}
+	samples, err := conn.db.Query(`SELECT
+		s.Gpu,
+		s.Received,
+		s.MemoryUtilisation,
+		s.GpuUtilisation,
+		s.MemoryUsed,
+		s.FanSpeed,
+		s.Temp,
+		s.MemoryTemp,
+		s.GraphicsVoltage,
+		s.PowerDraw,
+		s.GraphicsClock,
+		s.MaxGraphicsClock,
+		s.MemoryClock,
+		s.MaxMemoryClock,
+		s.InUse,
+		s.UserName
+		FROM Stats s
+		INNER JOIN GPUs g ON g.Uuid = s.Gpu
+		WHERE g.Machine=$1
+		ORDER BY s.Received, s.Gpu`,
+		hostname,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// XXX: I hate, HATE what is below this comment, but it has to be done because we
+	//  	need to pass each gpu in its own list to the front-end
+	// NOTE: what we do here is that we accumulate over the stats and package all samples by their insert time
+
+	currtimestamp := time.Now()
+	currpoint := broadcast.HistoricalDataPoint{}
+
+	for samples.Next() {
+		var sample broadcast.GPU
+		var timestamp time.Time
+
+		err = samples.Scan(
+			&sample.Uuid,
+			&timestamp,
+			&sample.MemoryUtilisation,
+			&sample.GPUUtilisation,
+			&sample.MemoryUsed,
+			&sample.FanSpeed,
+			&sample.Temp,
+			&sample.MemoryTemp,
+			&sample.GraphicsVoltage,
+			&sample.PowerDraw,
+			&sample.GraphicsClock,
+			&sample.MaxGraphicsClock,
+			&sample.MemoryClock,
+			&sample.MaxMemoryClock,
+			&sample.InUse,
+			&sample.User,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		if timestamp != currtimestamp {
+			// dump current bucket into `data`
+			data = append(data, currpoint)
+			currtimestamp = timestamp
+			currpoint.Timestamp = timestamp.Unix()
+			currpoint.Samples = []broadcast.GPU{}
+		}
+		currpoint.Samples = append(currpoint.Samples, sample)
+	}
+	data = append(data, currpoint)
+
+	return data[1:], nil
+}
+func (conn PostgresConn) AggregateData(days int) (broadcast.AggregateData, error) {
+	// TODO: add functionality for this to be variable
+	var data broadcast.AggregateData
+	threshold := time.Now().AddDate(0, 0, -days).Unix()
+
+	samples, err := conn.db.Query(`SELECT s.Received,
+		s.PowerDraw,
+		s.InUse
+		FROM Stats s
+		WHERE s.Received > $1
+		ORDER BY s.Received`,
+		threshold,
+	)
+	if err != nil {
+		return data, err
+	}
+
+	// XXX: I hate EVERYTHING about the rest of this function,
+	//  	but idk how to write a better SQL query
+	lastseen := make(map[string]time.Time)
+	usage := make(map[string]int64)
+	totalTime := make(map[string]int64)
+	totalEnergy := float64(0)
+	for samples.Next() {
+		var t time.Time
+		var powerDraw float64
+		var inUse bool
+		var uuid string
+		err = samples.Scan(&t, &powerDraw, &inUse)
+		if err != nil {
+			return data, err
+		}
+		if prev, ok := lastseen[uuid]; ok {
+			delta := t.Sub(prev).Seconds()
+
+			if sum, ok := usage[uuid]; inUse && ok {
+				usage[uuid] = sum + int64(delta)
+			} else if inUse {
+				usage[uuid] = int64(delta)
+			}
+
+			if sum, ok := totalTime[uuid]; ok {
+				totalTime[uuid] = sum + int64(delta)
+			} else {
+				totalTime[uuid] = int64(delta)
+			}
+
+			totalEnergy += powerDraw * delta
+		}
+		lastseen[uuid] = t
+	}
+
+	// sum up usage
+	totalt := int64(0)
+	usedt := int64(0)
+	for uuid, totalTime := range totalTime {
+		totalt += totalTime
+		if ut, ok := usage[uuid]; ok {
+			usedt += ut
+		}
+	}
+
+	// return results
+	if totalt != 0 {
+		data.PercentUsed = int(usedt) / int(totalt)
+	}
+	data.TotalEnergy = uint64(totalEnergy)
+	return data, nil
+}

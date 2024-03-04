@@ -72,6 +72,14 @@ func (edb *ErrorDB) RemoveFile(rem broadcast.RemoveFile) error {
 	return nil
 }
 
+func (edb *ErrorDB) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
+	return nil, nil
+}
+
+func (edb *ErrorDB) AggregateData(days int) (broadcast.AggregateData, error) {
+	return broadcast.AggregateData{}, nil
+}
+
 func TestPing(t *testing.T) {
 	logger := slog.Default()
 

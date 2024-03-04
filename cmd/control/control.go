@@ -84,8 +84,8 @@ func main() {
 		errs <- fmt.Errorf("webapi: %w", err)
 	}()
 	go func() {
-		err := database.DownsampleOverTime(conf.Database.DownsampleInterval, db)
-		errs <- fmt.Errorf("downsampler: %w", err)
+		//err := database.DownsampleOverTime(conf.Database.DownsampleInterval, db)
+		//errs <- fmt.Errorf("downsampler: %w", err)
 	}()
 	go func() {
 		monitorInterval := time.Duration(conf.Timeouts.MonitorInterval) * time.Second

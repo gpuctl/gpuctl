@@ -14,6 +14,7 @@ var (
 	ErrGpuNotPresent     = errors.New("appending to non present gpu")
 	ErrNoSuchMachine     = errors.New("could not find given machine")
 	ErrFileNotPresent    = errors.New("no file found")
+	ErrNotImplemented    = errors.New("method not implemented")
 )
 
 // default group to give to machines with a null or empty group
@@ -50,4 +51,8 @@ type Database interface {
 	GetFile(hostname string, filename string) (broadcast.AttachFile, error)
 	RemoveFile(broadcast.RemoveFile) error
 	ListFiles(hostname string) ([]string, error)
+
+	// Historical and aggregate data for graphs
+	HistoricalData(hostname string) (broadcast.HistoricalData, error)
+	AggregateData(days int) (broadcast.AggregateData, error)
 }

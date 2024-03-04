@@ -420,3 +420,11 @@ func (m *inMemory) RemoveFile(remove broadcast.RemoveFile) error {
 	delete(m.files[remove.Hostname], remove.Filename)
 	return nil
 }
+
+// TODO: add implementations for the functions
+func (m *inMemory) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
+	return broadcast.HistoricalData{}, ErrNotImplemented
+}
+func (m *inMemory) AggregateData(days int) (broadcast.AggregateData, error) {
+	return broadcast.AggregateData{}, ErrNotImplemented
+}

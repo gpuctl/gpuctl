@@ -43,7 +43,7 @@ import { useStats } from "../Providers/FetchProvider";
 import { GPU_FIELDS, tablify } from "./DataTable";
 import { useForceUpdate } from "framer-motion";
 
-const USE_FAKE_STATS = true;
+const USE_FAKE_STATS = false;
 
 const FAKE_STATS = [
   { x: 1, y: 90 },
@@ -184,11 +184,17 @@ const StatsGraph = ({ hostname }: { hostname: string }) => {
     }[][]
   > = USE_FAKE_STATS
     ? success([FAKE_STATS])
-    : mapSuccess(historyStats, (s) =>
-        s.map(({ timestamp, sample }) =>
-          sample.map((s) => ({ x: timestamp, y: s[GPU_FIELDS[field]] })),
-        ),
-      );
+    : mapSuccess(historyStats, (hist) => {
+        const minTS = Math.min(...hist.map(({ timestamp }) => timestamp));
+        return transpose(
+          hist.map(({ timestamp, sample }) =>
+            sample.map((s) => ({
+              x: timestamp - minTS,
+              y: s[GPU_FIELDS[field]],
+            })),
+          ),
+        );
+      });
 
   return (
     <Box>
