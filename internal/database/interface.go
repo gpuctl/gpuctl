@@ -50,4 +50,8 @@ type Database interface {
 	GetFile(hostname string, filename string) (broadcast.AttachFile, error)
 	RemoveFile(broadcast.RemoveFile) error
 	ListFiles(hostname string) ([]string, error)
+
+	// Historical and aggregate data for graphs
+	HistoricalData(hostname string) (broadcast.HistoricalData, error)
+	AggregateData() (broadcast.AggregateData, error)
 }

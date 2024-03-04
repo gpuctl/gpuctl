@@ -720,3 +720,11 @@ func (conn PostgresConn) RemoveFile(remove broadcast.RemoveFile) error {
 	}
 	return err
 }
+
+// TODO: add implementations for the functions
+func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
+	return broadcast.HistoricalData{}, errors.New("NOT IMPLEMENTED FOR IN-MEMORY")
+}
+func (conn PostgresConn) AggregateData() (broadcast.AggregateData, error) {
+	return broadcast.AggregateData{}, errors.New("NOT IMPLEMENTED FOR IN-MEMORY")
+}

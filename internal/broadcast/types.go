@@ -3,6 +3,8 @@ package broadcast
 
 import (
 	"time"
+
+	"github.com/gpuctl/gpuctl/internal/uplink"
 )
 
 // frontend<->web-api types
@@ -90,4 +92,14 @@ type RemoveMachineInfo struct {
 type WorkstationSeen struct {
 	Hostname string
 	LastSeen int64
+}
+
+type HistoricalData []HistoricalDataPoint
+
+type HistoricalDataPoint struct {
+	Timestamp int64 `json:"timestamp"`
+	Sample []uplink.GPUStatSample `json:"sample"`
+}
+
+type AggregateData struct {
 }
