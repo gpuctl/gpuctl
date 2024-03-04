@@ -56,6 +56,8 @@ var UnitTests = [...]unitTest{
 	{"MachinesWithSamplesCanBeRemoved", removingMachineAndSamples},
 	{"InUseInformation", inUseInformation},
 	{"RemovingMachineRemovesFiles", removingMachineRemoveFiles},
+	{"AddMachineAddsMachines", addingMachines},
+	{"DoesNotUpdateNonexistentMachines", doesNotUpdateNonexistentMachines},
 }
 
 // fake data for adding during tests
@@ -568,8 +570,10 @@ func inUseInformation(t *testing.T, db database.Database) {
 
 func attachAndGetFile(t *testing.T, db database.Database) {
 	fakeHost := "chipmunk"
-	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	fakeGroup := "Shared"
+	err := db.NewMachine(broadcast.NewMachine{Hostname: fakeHost, Group: &fakeGroup})
 	assert.NoError(t, err)
+
 	payload := broadcast.AttachFile{
 		Hostname:    fakeHost,
 		Mime:        "application/pdf",
@@ -592,7 +596,8 @@ func attachAndGetFile(t *testing.T, db database.Database) {
 func gettingNonExistentFile(t *testing.T, db database.Database) {
 	fakeHost1 := "chipmunk"
 	fakeHost2 := "porcupine"
-	err := db.UpdateLastSeen(fakeHost1, time.Now().Unix())
+	fakeGroup := "Shared"
+	err := db.NewMachine(broadcast.NewMachine{Hostname: fakeHost1, Group: &fakeGroup})
 	assert.NoError(t, err)
 
 	_, err = db.GetFile(fakeHost1, "does not eexist")
@@ -614,7 +619,8 @@ func attachFileToNonExistentHost(t *testing.T, db database.Database) {
 
 func listFiles(t *testing.T, db database.Database) {
 	fakeHost := "chipmunk"
-	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	fakeGroup := "Shared"
+	err := db.NewMachine(broadcast.NewMachine{Hostname: fakeHost, Group: &fakeGroup})
 	assert.NoError(t, err)
 	pdf := broadcast.AttachFile{
 		Hostname:    fakeHost,
@@ -644,7 +650,8 @@ func listFiles(t *testing.T, db database.Database) {
 
 func removeFile(t *testing.T, db database.Database) {
 	fakeHost := "chestnut"
-	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	fakeGroup := "Shared"
+	err := db.NewMachine(broadcast.NewMachine{Hostname: fakeHost, Group: &fakeGroup})
 	assert.NoError(t, err)
 
 	pdf := broadcast.AttachFile{
@@ -665,18 +672,22 @@ func removeFile(t *testing.T, db database.Database) {
 }
 
 func removeWrongFile(t *testing.T, db database.Database) {
-	err := db.RemoveFile(broadcast.RemoveFile{Hostname: "mystery", Filename: "doesnt exist"})
+	fakeHost := "real"
+	fakeGroup := "Shared"
+	err := db.NewMachine(broadcast.NewMachine{Hostname: fakeHost, Group: &fakeGroup})
+	assert.NoError(t, err)
+
+	err = db.RemoveFile(broadcast.RemoveFile{Hostname: "mystery", Filename: "doesnt exist"})
 	assert.ErrorIs(t, err, database.ErrFileNotPresent)
 
-	err = db.UpdateLastSeen("real", time.Now().Unix())
-	assert.NoError(t, err)
 	err = db.RemoveFile(broadcast.RemoveFile{Hostname: "real", Filename: "doesnt exist"})
 	assert.ErrorIs(t, err, database.ErrFileNotPresent)
 }
 
 func additionRemoveOldFile(t *testing.T, db database.Database) {
 	fakeHost := "chestnut"
-	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	fakeGroup := "Shared"
+	err := db.NewMachine(broadcast.NewMachine{Hostname: fakeHost, Group: &fakeGroup})
 	assert.NoError(t, err)
 
 	pdf1 := broadcast.AttachFile{
@@ -707,7 +718,8 @@ func additionRemoveOldFile(t *testing.T, db database.Database) {
 // TODO: hook this test into the unit tests once in memory has the functionality
 func removingMachineRemoveFiles(t *testing.T, db database.Database) {
 	fakeHost := "chestnut"
-	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	fakeGroup := "Shared"
+	err := db.NewMachine(broadcast.NewMachine{Hostname: fakeHost, Group: &fakeGroup})
 	assert.NoError(t, err)
 
 	pdf := broadcast.AttachFile{
@@ -725,4 +737,32 @@ func removingMachineRemoveFiles(t *testing.T, db database.Database) {
 
 	_, err = db.GetFile(fakeHost, pdf.Filename)
 	assert.ErrorIs(t, err, database.ErrFileNotPresent)
+}
+
+func addingMachines(t *testing.T, db database.Database) {
+	fakeHost := "chestnut"
+	fakeGroup := "someGroup"
+	err := db.NewMachine(broadcast.NewMachine{Hostname: fakeHost, Group: &fakeGroup})
+	assert.NoError(t, err)
+
+	seen, err := db.LatestData()
+	assert.NoError(t, err)
+
+	assert.Equal(t, 1, len(seen))
+	assert.Equal(t, seen[0].Name, fakeGroup)
+	assert.Equal(t, 1, len(seen[0].Workstations))
+	assert.Equal(t, seen[0].Workstations[0].Name, fakeHost)
+}
+
+func doesNotUpdateNonexistentMachines(t *testing.T, db database.Database) {
+	fakeHost := "chestnut"
+	group := "disregarded"
+	payload := broadcast.ModifyMachine{Hostname: fakeHost, Group: &group}
+
+	err := db.UpdateMachine(payload)
+	assert.NoError(t, err)
+
+	seen, err := db.LastSeen()
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(seen))
 }

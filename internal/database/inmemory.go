@@ -326,7 +326,8 @@ func (m *inMemory) UpdateMachine(changes broadcast.ModifyMachine) error {
 	defer m.mu.Unlock()
 
 	if _, exists := m.lastSeen[changes.Hostname]; !exists {
-		return ErrMachineNotPresent
+		// if machine does not exist, just return without doing anything
+		return nil
 	}
 
 	machine, exists := m.machines[changes.Hostname]
