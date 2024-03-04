@@ -39,16 +39,16 @@ export type GPUStats = {
 };
 
 export enum GraphField {
-  MEMORY_UTIL = "memory_util",
-  GPU_UTIL = "gpu_util",
-  MEMORY_USED = "memory_used",
-  FAN_SPEED = "fan_speed",
-  GPU_TEMP = "gpu_temp",
-  MEMORY_TEMP = "memory_temp",
-  GRAPHICS_VOLTAGE = "graphics_voltage",
-  POWER_DRAW = "power_draw",
-  GRAPHICS_CLOCK = "graphics_clock",
-  MEMORY_CLOCK = "memory_clock",
+  MEMORY_UTIL = "Memory Utilisation",
+  GPU_UTIL = "GPU Utilisation",
+  MEMORY_USED = "Memory Used",
+  FAN_SPEED = "Fan Speed",
+  GPU_TEMP = "GPU Temperature",
+  MEMORY_TEMP = "Memory Temperature",
+  GRAPHICS_VOLTAGE = "GPU Voltage",
+  POWER_DRAW = "Power Draw",
+  GRAPHICS_CLOCK = "GPU Clock",
+  MEMORY_CLOCK = "Memory Clock",
 }
 
 export type DurationDeltas = {

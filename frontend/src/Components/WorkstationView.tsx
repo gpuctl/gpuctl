@@ -186,7 +186,7 @@ const StatsGraph = ({ hostname }: { hostname: string }) => {
     ? success([FAKE_STATS])
     : mapSuccess(historyStats, (s) =>
         s.map(({ timestamp, sample }) =>
-          sample.map((s) => ({ x: timestamp, y: s[field] })),
+          sample.map((s) => ({ x: timestamp, y: s[GPU_FIELDS[field]] })),
         ),
       );
 
