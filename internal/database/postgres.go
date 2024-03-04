@@ -722,8 +722,10 @@ func (conn PostgresConn) RemoveFile(remove broadcast.RemoveFile) error {
 }
 
 func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
-	var data broadcast.HistoricalData
-	samples, err := conn.db.Query(`SELECT s.Received,
+	data := broadcast.HistoricalData{}
+	samples, err := conn.db.Query(`SELECT
+		s.Gpu,
+		s.Received,
 		s.MemoryUtilisation,
 		s.GpuUtilisation,
 		s.MemoryUsed,
@@ -740,18 +742,28 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 		s.UserName
 		FROM Stats s
 		INNER JOIN GPUs g ON g.Uuid = s.Gpu
-		WHERE g.Machine=$1`,
+		WHERE g.Machine=$1
+		ORDER BY s.Received`,
 		hostname,
 	)
 	if err != nil {
 		return nil, err
 	}
 
+	// XXX: I hate, HATE what is below this comment, but it has to be done because we
+	//  	need to pass each gpu in its own list to the front-end
+	// NOTE: what we do here is that we accumulate over the stats and package all samples by their insert time
+
+	currtimestamp := time.Now()
+	currpoint := broadcast.HistoricalDataPoint{}
+
 	for samples.Next() {
 		var sample broadcast.GPU
-		var timestamp int64
+		var timestamp time.Time
 
-		err = samples.Scan(&timestamp,
+		err = samples.Scan(
+			&sample.Uuid,
+			&timestamp,
 			&sample.MemoryUtilisation,
 			&sample.GPUUtilisation,
 			&sample.MemoryUsed,
@@ -770,20 +782,24 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 		if err != nil {
 			return nil, err
 		}
-		data = append(data,
-			broadcast.HistoricalDataPoint{
-				Timestamp: timestamp,
-				Sample:    sample,
-			},
-		)
-	}
 
-	return data, nil
+		if timestamp != currtimestamp {
+			// dump current bucket into `data`
+			data = append(data, currpoint)
+			currtimestamp = timestamp
+			currpoint.Timestamp = timestamp.Unix()
+			currpoint.Samples = []broadcast.GPU{}
+		}
+		currpoint.Samples = append(currpoint.Samples, sample)
+	}
+	data = append(data, currpoint)
+
+	return data[1:], nil
 }
 func (conn PostgresConn) AggregateData(days int) (broadcast.AggregateData, error) {
 	// TODO: add functionality for this to be variable
 	var data broadcast.AggregateData
-	threshold := time.Now().AddDate(0, -days, 0).Unix()
+	threshold := time.Now().AddDate(0, 0, -days).Unix()
 
 	samples, err := conn.db.Query(`SELECT s.Received,
 		s.PowerDraw,

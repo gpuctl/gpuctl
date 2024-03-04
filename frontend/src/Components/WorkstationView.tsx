@@ -43,7 +43,7 @@ import { useStats } from "../Providers/FetchProvider";
 import { GPU_FIELDS, tablify } from "./DataTable";
 import { useForceUpdate } from "framer-motion";
 
-const USE_FAKE_STATS = true;
+const USE_FAKE_STATS = false;
 
 const FAKE_STATS = [
   { x: 1, y: 90 },

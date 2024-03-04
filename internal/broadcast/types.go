@@ -96,7 +96,7 @@ type HistoricalData []HistoricalDataPoint
 
 type HistoricalDataPoint struct {
 	Timestamp int64 `json:"timestamp"`
-	Sample    GPU   `json:"sample"`
+	Samples   []GPU `json:"sample"`
 }
 
 type AggregateData struct {
