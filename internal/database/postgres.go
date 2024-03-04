@@ -743,7 +743,7 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 		FROM Stats s
 		INNER JOIN GPUs g ON g.Uuid = s.Gpu
 		WHERE g.Machine=$1
-		ORDER BY s.Received`,
+		ORDER BY s.Received, s.Gpu`,
 		hostname,
 	)
 	if err != nil {
