@@ -37,7 +37,7 @@ const encodeFile = (file: Uint8Array) => {
   return btoa(binaryString);
 };
 
-export const useUploadFile = (callback: ((r: Validated<Response>) => void)) => {
+export const useUploadFile = (callback: (r: Validated<Response>) => void) => {
   const { useAuthFetch } = useAuth();
   const [, uploadFileAuth] = useAuthFetch(UPLOAD_FILE_URL, callback);
 

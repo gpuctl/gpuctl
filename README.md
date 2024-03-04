@@ -23,7 +23,6 @@ The recommended way to deploy is using Docker and Docker Compose.
 
 4. Create docker volumes for persistent data:
 
-
    ```
    docker volume create caddy_data
    docker volume create postgres_data
@@ -73,8 +72,8 @@ Most of the tests have no service dependencies, and can be run with
 Running all the tests with requires access to a postgres installation and role
 with permission to create tables in a database. The tests are configured to
 connect to a database called `postgres` owned by the role `postgres` at
-`localhost` (ie. `postgres://postgres@localhost/postgres`). It will *ERASE* the
-contents of this database as part of test cleanup, so *DO NOT* use it for
+`localhost` (ie. `postgres://postgres@localhost/postgres`). It will _ERASE_ the
+contents of this database as part of test cleanup, so _DO NOT_ use it for
 deployment. You can override this by setting the `TEST_URL` environment
 variable.
 
