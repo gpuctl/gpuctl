@@ -786,26 +786,66 @@ func (conn PostgresConn) AggregateData(days int) (broadcast.AggregateData, error
 	threshold := time.Now().AddDate(0, -days, 0).Unix()
 
 	samples, err := conn.db.Query(`SELECT s.Received,
-		s.MemoryUtilisation,
-		s.GpuUtilisation,
-		s.MemoryUsed,
-		s.FanSpeed,
-		s.Temp,
-		s.MemoryTemp,
-		s.GraphicsVoltage,
 		s.PowerDraw,
-		s.GraphicsClock,
-		s.MaxGraphicsClock,
-		s.MemoryClock,
-		s.MaxMemoryClock,
-		s.InUse,
-		s.UserName
+		s.InUse
 		FROM Stats s
-		WHERE s.Received > $1`,
+		WHERE s.Received > $1
+		ORDER BY s.Received`,
 		threshold,
 	)
 	if err != nil {
-		return nil, err
+		return data, err
 	}
+
+	// XXX: I hate EVERYTHING about the rest of this function,
+	//  	but idk how to write a better SQL query
+	lastseen := make(map[string]time.Time)
+	usage := make(map[string]int64)
+	totalTime := make(map[string]int64)
+	totalEnergy := float64(0)
+	for samples.Next() {
+		var t time.Time
+		var powerDraw float64
+		var inUse bool
+		var uuid string
+		err = samples.Scan(&t, &powerDraw, &inUse)
+		if err != nil {
+			return data, err
+		}
+		if prev, ok := lastseen[uuid]; ok {
+			delta := t.Sub(prev).Seconds()
+
+			if sum, ok := usage[uuid]; inUse && ok {
+				usage[uuid] = sum + int64(delta)
+			} else if inUse {
+				usage[uuid] = int64(delta)
+			}
+
+			if sum, ok := totalTime[uuid]; ok {
+				totalTime[uuid] = sum + int64(delta)
+			} else {
+				totalTime[uuid] = int64(delta)
+			}
+
+			totalEnergy += powerDraw * delta
+		}
+		lastseen[uuid] = t
+	}
+
+	// sum up usage
+	totalt := int64(0)
+	usedt := int64(0)
+	for uuid, totalTime := range totalTime {
+		totalt += totalTime
+		if ut, ok := usage[uuid]; ok {
+			usedt += ut
+		}
+	}
+
+	// return results
+	if totalt != 0 {
+		data.PercentUsed = int(usedt) / int(totalt)
+	}
+	data.TotalEnergy = uint64(totalEnergy)
 	return data, nil
 }
