@@ -184,11 +184,20 @@ const StatsGraph = ({ hostname }: { hostname: string }) => {
     }[][]
   > = USE_FAKE_STATS
     ? success([FAKE_STATS])
-    : mapSuccess(historyStats, (s) =>
-        s.map(({ timestamp, sample }) =>
-          sample.map((s) => ({ x: timestamp, y: s[GPU_FIELDS[field]] })),
-        ),
-      );
+    : mapSuccess(historyStats, (hist) => {
+        const minTS = Math.min(...hist.map(({ timestamp }) => timestamp));
+        return transpose(
+          hist.map(({ timestamp, sample }) =>
+            sample.map((s) => ({
+              x: timestamp - minTS,
+              y: s[GPU_FIELDS[field]],
+            })),
+          ),
+        );
+      });
+
+  // console.log(statsToDisplay);
+  console.log(statsToDisplay);
 
   return (
     <Box>
