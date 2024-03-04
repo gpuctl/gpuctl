@@ -2,7 +2,7 @@ import { useToast } from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
 import { GPUStats } from "../Data";
 import { useAuth } from "../Providers/AuthProvider";
-import { fire, validatedElim, Validation } from "../Utils/Utils";
+import { fire, success, validatedElim, Validation } from "../Utils/Utils";
 import { API_URL } from "../App";
 import { useJarJar } from "../Utils/Hooks";
 import { useInterval } from "@chakra-ui/react";
@@ -151,11 +151,12 @@ const GRAPH_REFRESH_INTERVAL = 5000;
 export const useHistoryStats = (
   hostname: string,
 ): Validation<HistoryStats[]> => {
-  const [stats, updateStats] = useJarJar<HistoryStats[]>(
-    async () =>
+  const [stats, updateStats] = useJarJar<HistoryStats[]>(async () =>
+    success(
       await (
         await fetch(API_URL + `/stats/historical?hostname=${hostname}`)
       ).json(),
+    ),
   );
 
   useInterval(() => {

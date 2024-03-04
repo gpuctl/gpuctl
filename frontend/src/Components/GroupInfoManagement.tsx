@@ -116,7 +116,7 @@ export const GroupInfoManagement = ({
                       workstation={workstation}
                       fieldKey="owner"
                       placeholder="none"
-                      isEven={k % 2 == 0}
+                      isEven={k % 2 === 0}
                     />
                     <Td>
                       <Button
