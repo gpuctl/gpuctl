@@ -80,15 +80,18 @@ export const GroupInfoManagement = ({
             {instKeys(
               groups.flatMap((group) =>
                 group.workstations.map((workstation) => (k) => {
-                  const paramsCopy : URLSearchParams = Object.assign({}, params);
-                  paramsCopy.append("selected", workstation.name);
+                  const newParams = new URLSearchParams(
+                    Object.fromEntries(Array.from(params.entries())),
+                  );
+                  newParams.append("selected", workstation.name);
+
                   return (
                     <Tr key={workstation.name}>
                       <Td>
                         {" "}
                         <Link
                           as={ReactRouterLink}
-                          to={{ search: paramsCopy.toString() }}
+                          to={{ search: newParams.toString() }}
                         >
                           {workstation.name}{" "}
                         </Link>

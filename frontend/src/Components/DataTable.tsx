@@ -123,13 +123,16 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                       j * gpus.length +
                       k) *
                     19; //size of gpu
-                  const paramsCopy = Object.assign({}, params);
-                  paramsCopy.append("selected", workstation_name);
+                  const newParams = new URLSearchParams(
+                    Object.fromEntries(Array.from(params.entries())),
+                  );
+                  newParams.append("selected", workstation_name);
+
                   return (
                     <LinkBox>
                       <LinkOverlay
                         as={ReactRouterLink}
-                        to={{ search: paramsCopy.toString() }}
+                        to={{ search: newParams.toString() }}
                       />
                       <Tr key={id}>
                         {tablify(
