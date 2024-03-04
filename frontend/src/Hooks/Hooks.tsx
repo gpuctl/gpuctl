@@ -151,7 +151,9 @@ export const useHistoryStats = (
 ): Validation<HistoryStats[]> => {
   const [stats, updateStats] = useJarJar<HistoryStats[]>(
     async () =>
-      await (await fetch(API_URL + `/stats/historical/${hostname}`)).json(),
+      await (
+        await fetch(API_URL + `/stats/historical?hostname=${hostname}`)
+      ).json(),
   );
 
   useInterval(() => {
