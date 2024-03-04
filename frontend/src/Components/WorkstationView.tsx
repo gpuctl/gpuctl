@@ -40,7 +40,7 @@ import {
 import { Text } from "@chakra-ui/react";
 import { ChevronDownIcon } from "@chakra-ui/icons";
 import { useStats } from "../Providers/FetchProvider";
-import { COLS, tablify } from "./DataTable";
+import { GPU_FIELDS, tablify } from "./DataTable";
 import { useForceUpdate } from "framer-motion";
 
 const USE_FAKE_STATS = true;
@@ -87,7 +87,7 @@ export const WorkstationView = ({ hostname }: { hostname: string }) => {
 
 const StatsTable = ({ hostname }: { hostname: string }) => {
   const [shownColumns, setter] = useState(
-    Object.fromEntries(Object.keys(COLS).map((k) => [k, true])),
+    Object.fromEntries(Object.keys(GPU_FIELDS).map((k) => [k, true])),
   );
 
   const { allStats } = useStats();
@@ -151,7 +151,7 @@ const StatsTable = ({ hostname }: { hostname: string }) => {
                       <></>
                     ) : (
                       <Tr key={i}>
-                        <Td>{Object.keys(COLS)[i]}</Td>
+                        <Td>{Object.keys(GPU_FIELDS)[i]}</Td>
                         {fs.map((f, j) => (
                           <Td key={j}>
                             {cropString(f, Math.round(35 / fs.length))}

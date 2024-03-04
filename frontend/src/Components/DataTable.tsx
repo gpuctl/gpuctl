@@ -18,31 +18,53 @@ import { useState } from "react";
 import { useForceUpdate } from "framer-motion";
 import { keepIf } from "../Utils/Utils";
 
-// default to show group, machine_name, gpu_name, isFree, brand, and memory_total
-export const COLS: Record<string, boolean> = {
-  Group: true,
-  "Machine Name": true,
-  "GPU Name": true,
-  Free: true,
-  "GPU Brand": true,
-  "Driver Version": false,
-  "Memory Total": true,
-  "Memory Utilisation": false,
-  "GPU Utililisation": false,
-  "Memory Used": false,
-  "Fan Speed": false,
-  "GPU Temperature": false,
-  "Memory Temperature": false,
-  "GPU Voltage": false,
-  "Power Draw": false,
-  "GPU Clock": false,
-  "Max GPU Clock": false,
-  "Memory Clock": false,
-  "Max Memory Clock": false,
-};
+export const GPU_FIELDS = {
+  "GPU Name": "gpu_name",
+  Free: "free",
+  "GPU Brand": "gpu_brand",
+  "Driver Version": "driver_ver",
+  "Memory Total": "memory_total",
+  "Memory Utilisation": "memory_util",
+  "GPU Utilisation": "gpu_util",
+  "Memory Used": "memory_used",
+  "Fan Speed": "fan_speed",
+  "GPU Temperature": "gpu_temp",
+  "Memory Temperature": "memory_temp",
+  "GPU Voltage": "graphics_voltage",
+  "Power Draw": "power_draw",
+  "GPU Clock": "graphics_clock",
+  "Max GPU Clock": "max_graphics_clock",
+  "Memory Clock": "memory_clock",
+  "Max Memory Clock": "max_memory_clock",
+} as const;
 
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
-  const [shownColumns, setter] = useState(COLS);
+  // default to show group, machine_name, gpu_name, isFree, brand, and memory_total
+  const SHOWN_COLS: {
+    [_ in keyof typeof GPU_FIELDS | "Group" | "Machine Name"]: boolean;
+  } = {
+    Group: true,
+    "Machine Name": true,
+    "GPU Name": true,
+    Free: true,
+    "GPU Brand": true,
+    "Driver Version": false,
+    "Memory Total": true,
+    "Memory Utilisation": false,
+    "GPU Utilisation": false,
+    "Memory Used": false,
+    "Fan Speed": false,
+    "GPU Temperature": false,
+    "Memory Temperature": false,
+    "GPU Voltage": false,
+    "Power Draw": false,
+    "GPU Clock": false,
+    "Max GPU Clock": false,
+    "Memory Clock": false,
+    "Max Memory Clock": false,
+  };
+
+  const [shownColumns, setter] = useState<Record<string, boolean>>(SHOWN_COLS);
   const [refresh] = useForceUpdate();
 
   return (

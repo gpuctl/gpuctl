@@ -1,5 +1,3 @@
-import { GPUStats } from "../Data";
-
 /** Create an array of numbers that span between a given minimum and maximum */
 export const range = (min: number, max: number) =>
   Array.from(Array(max - min).keys()).map((x) => x + min);
@@ -180,11 +178,3 @@ export const all = <T,>(x: (T | null)[]): T[] | null =>
     (p, c) => (c === null ? null : p?.concat([c]) ?? null),
     [],
   );
-
-// A mechine is busy if all gpus are in use
-// This utility really does not fit in this file...
-export const workstationBusy = (gs: GPUStats[]) => {
-  return gs.every((g) => {
-    return g.in_use;
-  });
-};

@@ -11,14 +11,20 @@ import {
   Tooltip,
   useColorModeValue,
 } from "@chakra-ui/react";
-import { WorkStationData } from "../Data";
+import { GPUStats, WorkStationData } from "../Data";
 import { TimeIcon } from "@chakra-ui/icons";
-import { workstationBusy } from "../Utils/Utils";
 
 import { Link as ReactRouterLink, useSearchParams } from "react-router-dom";
 
 const LAST_SEEN_WARN_THRESH = 60 * 5;
 const GREEN = "#25D36B";
+
+// A mechine is busy if all gpus are in use
+const workstationBusy = (gs: GPUStats[]) => {
+  return gs.every((g) => {
+    return g.in_use;
+  });
+};
 
 export const WorkstationCardMin = ({
   width,
