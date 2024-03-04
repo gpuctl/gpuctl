@@ -101,5 +101,5 @@ type HistoricalDataPoint struct {
 
 type AggregateData struct {
 	PercentUsed int    `json:"percent_used"`
-	TotalEnergy uint64 `json:"total_energy"`
+	TotalEnergy uint64 `json:"total_energy"` // Joules
 }
