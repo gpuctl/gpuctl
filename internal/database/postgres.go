@@ -138,7 +138,7 @@ func (conn PostgresConn) UpdateLastSeen(host string, given_time int64) error {
 		}
 	} else if errors.Is(err, sql.ErrNoRows) {
 		// this machine isn't in the db, so add it
-		err = createMachine(host, now, tx)
+		err = createMachine(host, DefaultGroup, now, tx)
 		if err != nil {
 			return errors.Join(err, tx.Rollback())
 		}
@@ -160,10 +160,10 @@ func getLastSeen(host string, tx *sql.Tx) (lastSeen time.Time, err error) {
 
 // TODO: in future we may want to consider a list for machines to wait on
 // before insertion into the database
-func createMachine(host string, now time.Time, tx *sql.Tx) (err error) {
-	_, err = tx.Exec(`INSERT INTO Machines (Hostname, LastSeen)
-		VALUES ($1, $2)`,
-		host, now)
+func createMachine(host string, group string, now time.Time, tx *sql.Tx) (err error) {
+	_, err = tx.Exec(`INSERT INTO Machines (Hostname, GroupName, LastSeen)
+		VALUES ($1, $2, $3)`,
+		host, group, now)
 	return
 }
 
@@ -455,13 +455,20 @@ func getGpus(host string, tx *sql.Tx) ([]broadcast.GPU, error) {
 	return result, nil
 }
 
-// Create new machine
-func (conn PostgresConn) NewMachine(machine broadcast.NewMachine) (err error) {
-	_, err = conn.db.Exec(`INSERT INTO Machines (Hostname, GroupName)
-		VALUES ($1, $2)`,
-		machine.Hostname, machine.Group,
-	)
-	return
+func (conn PostgresConn) NewMachine(machine broadcast.NewMachine) error {
+	tx, err := conn.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// we have not seen this machine yet, so give it 0 timestamp
+	timestamp := time.Unix(0, 0)
+
+	err = createMachine(machine.Hostname, *machine.Group, timestamp, tx)
+	if err != nil {
+		return err
+	}
+	return tx.Commit()
 }
 
 func (conn PostgresConn) RemoveMachine(machine broadcast.RemoveMachine) error {

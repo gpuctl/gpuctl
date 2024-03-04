@@ -124,8 +124,8 @@ func (a *Api) addMachine(machine broadcast.NewMachine, r *http.Request, l *slog.
 	if err != nil {
 		return nil, err
 	}
-	modify := broadcast.ModifyMachine{Hostname: machine.Hostname, Group: machine.Group}
-	_, err = a.modifyMachineInfo(modify, r, l)
+
+	err = a.DB.NewMachine(machine)
 	if err != nil {
 		return nil, err
 	}
