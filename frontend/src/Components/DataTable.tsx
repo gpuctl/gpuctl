@@ -1,5 +1,7 @@
 import {
   Button,
+  LinkBox,
+  LinkOverlay,
   Menu,
   MenuButton,
   MenuItemOption,
@@ -17,6 +19,8 @@ import { GPUStats, WorkStationGroup } from "../Data";
 import { useState } from "react";
 import { useForceUpdate } from "framer-motion";
 import { keepIf } from "../Utils/Utils";
+
+import { Link as ReactRouterLink, useSearchParams } from "react-router-dom";
 
 export const GPU_FIELDS = {
   "GPU Name": "gpu_name",
@@ -66,6 +70,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
 
   const [shownColumns, setter] = useState<Record<string, boolean>>(SHOWN_COLS);
   const [refresh] = useForceUpdate();
+  const [params] = useSearchParams();
 
   return (
     <div>
@@ -118,17 +123,25 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                       j * gpus.length +
                       k) *
                     19; //size of gpu
+                  const paramsCopy = Object.assign({}, params);
+                  paramsCopy.append("selected", workstation_name);
                   return (
-                    <Tr key={id}>
-                      {tablify(
-                        shownColumns,
-                        gpu,
-                        group_name,
-                        workstation_name,
-                      ).map((s, i) =>
-                        s === null ? null : <Td key={i}>{s}</Td>,
-                      )}
-                    </Tr>
+                    <LinkBox>
+                      <LinkOverlay
+                        as={ReactRouterLink}
+                        to={{ search: paramsCopy.toString() }}
+                      />
+                      <Tr key={id}>
+                        {tablify(
+                          shownColumns,
+                          gpu,
+                          group_name,
+                          workstation_name,
+                        ).map((s, i) =>
+                          s === null ? null : <Td key={i}>{s}</Td>,
+                        )}
+                      </Tr>
+                    </LinkBox>
                   );
                 }),
               ),
