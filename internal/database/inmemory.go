@@ -2,7 +2,6 @@ package database
 
 import (
 	"cmp"
-	"errors"
 	"fmt"
 	"reflect"
 	"slices"
@@ -424,8 +423,8 @@ func (m *inMemory) RemoveFile(remove broadcast.RemoveFile) error {
 
 // TODO: add implementations for the functions
 func (m *inMemory) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
-	return broadcast.HistoricalData{}, errors.New("NOT IMPLEMENTED FOR IN-MEMORY")
+	return broadcast.HistoricalData{}, ErrNotImplemented
 }
 func (m *inMemory) AggregateData(days int) (broadcast.AggregateData, error) {
-	return broadcast.AggregateData{}, errors.New("NOT IMPLEMENTED FOR IN-MEMORY")
+	return broadcast.AggregateData{}, ErrNotImplemented
 }

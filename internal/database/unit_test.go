@@ -765,3 +765,9 @@ func doesNotUpdateNonexistentMachines(t *testing.T, db database.Database) {
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(seen))
 }
+
+func testHistoricalData(t *testing.T, db database.Database) {
+}
+
+func testAggregateData(t *testing.T, db database.Database) {
+}

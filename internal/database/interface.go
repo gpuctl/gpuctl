@@ -14,6 +14,7 @@ var (
 	ErrGpuNotPresent     = errors.New("appending to non present gpu")
 	ErrNoSuchMachine     = errors.New("could not find given machine")
 	ErrFileNotPresent    = errors.New("no file found")
+	ErrNotImplemented    = errors.New("method not implemented")
 )
 
 // default group to give to machines with a null or empty group
