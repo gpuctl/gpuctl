@@ -111,10 +111,26 @@ export type ModifyData = {
 };
 
 export const useModifyInfo = () => {
+  const toast = useToast();
   const { useAuthFetch } = useAuth();
-  const [, addMachineAuth] = useAuthFetch(STATS_PATH + "/modify");
+  const [, modifyAuth] = useAuthFetch(STATS_PATH + "/modify", (r) => {
+    validatedElim(r, {
+      success: (r) => {
+        if (!r.ok) {
+          toast({
+            title: `Updating workstation information failed with error ${r.status}`,
+            description: `Please inform the maintainers`,
+            status: "error",
+            duration: 9000,
+            isClosable: true,
+          });
+        }
+      },
+      failure: () => {},
+    });
+  });
   return (hostname: string, modification: ModifyData) =>
-    addMachineAuth({
+    modifyAuth({
       method: "POST",
       headers: {
         "Content-Type": "application/json",
