@@ -196,9 +196,6 @@ const StatsGraph = ({ hostname }: { hostname: string }) => {
         );
       });
 
-  // console.log(statsToDisplay);
-  console.log(statsToDisplay);
-
   return (
     <Box>
       <Menu>
