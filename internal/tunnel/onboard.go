@@ -29,6 +29,13 @@ type Config struct {
 	KeyCallback ssh.HostKeyCallback
 }
 
+// install dir data dir appended with the username
+// this covers issues with subsequent deployments as different users not
+// having permissions to overwrite old data directories
+func (conf Config) installDir() string {
+	return conf.DataDir + conf.User
+}
+
 // Onboard will copy over and start the satellite on a remote machine, via SSH.
 //
 // - hostname must be an amd64 linux system
@@ -47,8 +54,8 @@ func Onboard(
 	}
 	defer client.Close()
 
-	// -- Make the data dir --
-	err = runCommand(client, "mkdir -p "+conf.DataDir)
+	// -- Make the install dir --
+	err = runCommand(client, "mkdir -p "+conf.installDir())
 	if err != nil {
 		return fmt.Errorf("failed to mkdir: %w", err)
 	}
@@ -61,7 +68,7 @@ func Onboard(
 
 	err = scpClient.CopyToRemote(
 		bytes.NewReader(assets.SatelliteAmd64Linux),
-		conf.DataDir+"/satellite",
+		conf.installDir()+"/satellite",
 		&scp.FileTransferOption{Perm: 0o755},
 	)
 	if err != nil {
@@ -75,7 +82,7 @@ func Onboard(
 	}
 	err = scpClient.CopyToRemote(
 		strings.NewReader(configToml),
-		conf.DataDir+"/satellite.toml",
+		conf.installDir()+"/satellite.toml",
 		&scp.FileTransferOption{},
 	)
 	if err != nil {
@@ -101,10 +108,10 @@ func RestartSatellite(hostname string, conf Config) error {
 }
 
 func startSatellite(client *ssh.Client, conf Config) error {
-	dataDir := conf.DataDir
+	installDir := conf.installDir()
 	command := fmt.Sprintf(
 		"nohup %s/satellite >> %s/satellite.log 2>> %s/satellite.err < /dev/null &",
-		dataDir, dataDir, dataDir,
+		installDir, installDir, installDir,
 	)
 	return runCommand(client, command)
 }
