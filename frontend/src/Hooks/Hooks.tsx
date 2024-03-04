@@ -1,7 +1,11 @@
 import { useToast } from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
+import { GPUStats } from "../Data";
 import { useAuth } from "../Providers/AuthProvider";
-import { fire, validatedElim } from "../Utils/Utils";
+import { fire, validatedElim, Validation } from "../Utils/Utils";
+import { API_URL } from "../App";
+import { useJarJar } from "../Utils/Hooks";
+import { useInterval } from "@chakra-ui/react";
 
 const ADD_MACHINE_URL = "/add_workstation";
 const REMOVE_MACHINE_URL = "/rm_workstation";
@@ -13,7 +17,7 @@ export const useAddMachine = (callback: () => void) => {
     callback();
     validatedElim(r, {
       success: (resp) => {
-        if (resp.status == 200)
+        if (resp.status === 200)
           toast({
             title: "Add machine successful!",
             description: "",
@@ -135,4 +139,28 @@ export const useHandleSubmit = (
     notes: fieldKey === "notes" ? newValue : null,
     owner: fieldKey === "owner" ? newValue : null,
   });
+};
+
+export type HistoryStats = {
+  timestamp: number;
+  sample: GPUStats[];
+};
+
+const GRAPH_REFRESH_INTERVAL = 5000;
+
+export const useHistoryStats = (
+  hostname: string,
+): Validation<HistoryStats[]> => {
+  const [stats, updateStats] = useJarJar<HistoryStats[]>(
+    async () =>
+      await (
+        await fetch(API_URL + `/stats/historical?hostname=${hostname}`)
+      ).json(),
+  );
+
+  useInterval(() => {
+    updateStats();
+  }, GRAPH_REFRESH_INTERVAL);
+
+  return stats;
 };

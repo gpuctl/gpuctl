@@ -84,7 +84,7 @@ export const GroupInfoManagement = ({
                       workstation={workstation}
                       fieldKey="group"
                       placeholder="unknown"
-                      isEven={k % 2 == 0}
+                      isEven={k % 2 === 0}
                     />
                     <EditableField
                       GroupSelect={GroupSelect}
@@ -92,7 +92,7 @@ export const GroupInfoManagement = ({
                       workstation={workstation}
                       fieldKey="cpu"
                       placeholder="unknown"
-                      isEven={k % 2 == 0}
+                      isEven={k % 2 === 0}
                     />
                     <EditableField
                       GroupSelect={GroupSelect}
@@ -100,7 +100,7 @@ export const GroupInfoManagement = ({
                       workstation={workstation}
                       fieldKey="motherboard"
                       placeholder="unknown"
-                      isEven={k % 2 == 0}
+                      isEven={k % 2 === 0}
                     />
                     <EditableField
                       GroupSelect={GroupSelect}
@@ -108,7 +108,7 @@ export const GroupInfoManagement = ({
                       workstation={workstation}
                       fieldKey="notes"
                       placeholder="none"
-                      isEven={k % 2 == 0}
+                      isEven={k % 2 === 0}
                     />
                     <EditableField
                       GroupSelect={GroupSelect}

@@ -1,5 +1,3 @@
-import { GPUStats } from "../Data";
-
 /** Create an array of numbers that span between a given minimum and maximum */
 export const range = (min: number, max: number) =>
   Array.from(Array(max - min).keys()).map((x) => x + min);
@@ -76,8 +74,8 @@ enum VTag {
 //   loading: true;
 //   error: null;
 // }-style design might seem more natural, but TypeScript's flow typing does
-// not appear to be up to the challenge of reasoning from data == null towards
-// loading: false and error: null
+// not appear to be up to the challenge of reasoning from error == null and
+// loading == false towards data: T
 
 export type Success<T> = {
   tag: VTag.Success;
@@ -167,9 +165,16 @@ export const mapSuccess = <T, U>(
 export const orElse = <T, U>(v: Validation<T>, e: () => U) =>
   v.tag === VTag.Success ? v.data : e();
 
-// A mechine is busy if all gpus are in use
-export const workstationBusy = (gs: GPUStats[]) => {
-  return gs.every((g) => {
-    return g.in_use;
-  });
-};
+export const validateNullable = <T,>(x: T | null | undefined): Validated<T> =>
+  x === null || x === undefined ? failure(Error("Was null!")) : success(x);
+
+export const keepIf = <T,>(b: boolean, x: T) => (b ? x : null);
+
+export const transpose = <T,>(m: T[][]): T[][] =>
+  m.length === 0 ? m : m[0].map((_, i) => m.map((row) => row[i]));
+
+export const all = <T,>(x: (T | null)[]): T[] | null =>
+  x.reduce<T[] | null>(
+    (p, c) => (c === null ? null : p?.concat([c]) ?? null),
+    [],
+  );

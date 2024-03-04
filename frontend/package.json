@@ -11,10 +11,12 @@
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "@types/d3": "^7.4.3",
     "@types/jest": "^27.5.2",
     "@types/node": "^16.18.71",
     "@types/react": "^18.2.48",
     "@types/react-dom": "^18.2.18",
+    "d3": "^7.8.5",
     "framer-motion": "^10.18.0",
     "localforage": "^1.10.0",
     "match-sorter": "^6.3.3",
@@ -41,6 +43,11 @@
     "extends": [
       "react-app",
       "react-app/jest"
+    ]
+  },
+  "jest": {
+    "transformIgnorePatterns": [
+      "/node_modules/(?!(d3|d3-array|d3-axis|d3-brush|d3-dispatch|d3-drag|d3-selection|d3-interpolate|d3-color|d3-transition|d3-timer|d3-ease|d3-chord|d3-path|d3-contour|d3-delaunay|d3-dsv|d3-fetch|d3-force|d3-quadtree|d3-format|d3-geo|d3-hierarchy|d3-polygon|d3-random|d3-scale|d3-time|d3-time-format|d3-scale-chromatic|d3-shape|d3-zoom|delaunator|robust-predicates|internmap)/)"
     ]
   },
   "browserslist": {
