@@ -1,7 +1,6 @@
 import {
   Button,
-  LinkBox,
-  LinkOverlay,
+  Link,
   Menu,
   MenuButton,
   MenuItemOption,
@@ -129,11 +128,11 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                   newParams.append("selected", workstation_name);
 
                   return (
-                    <LinkBox>
-                      <LinkOverlay
-                        as={ReactRouterLink}
-                        to={{ search: newParams.toString() }}
-                      />
+                    <Link
+                      as={ReactRouterLink}
+                      to={{ search: newParams.toString() }}
+                      display="contents"
+                    >
                       <Tr key={id}>
                         {tablify(
                           shownColumns,
@@ -144,7 +143,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                           s === null ? null : <Td key={i}>{s}</Td>,
                         )}
                       </Tr>
-                    </LinkBox>
+                    </Link>
                   );
                 }),
               ),
