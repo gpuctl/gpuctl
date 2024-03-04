@@ -2,13 +2,88 @@ import { useToast } from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
 import { GPUStats } from "../Data";
 import { useAuth } from "../Providers/AuthProvider";
-import { fire, validatedElim, Validation } from "../Utils/Utils";
+import { fire, Validated, validatedElim, Validation } from "../Utils/Utils";
 import { API_URL } from "../App";
 import { useJarJar } from "../Utils/Hooks";
 import { useInterval } from "@chakra-ui/react";
 
 const ADD_MACHINE_URL = "/add_workstation";
 const REMOVE_MACHINE_URL = "/rm_workstation";
+
+const GET_ALL_FILES_URL = "/list_files";
+const UPLOAD_FILE_URL = "/attach_file";
+const REMOVE_FILE_URL = "/remove_file";
+const GET_SPECIFIC_FILE_URL = "/get_file";
+
+export const useGetAllFiles = (
+  hostname: string,
+  callback: (r: Validated<Response>) => void,
+) => {
+  const { useAuthFetch } = useAuth();
+  const [, getAllFilesAuth] = useAuthFetch(
+    GET_ALL_FILES_URL + "?hostname=" + hostname,
+    callback,
+  );
+
+  return () => getAllFilesAuth({ method: "GET" });
+};
+
+const encodeFile = (file: Uint8Array) => {
+  let binaryString = "";
+  const len = file.byteLength;
+  for (let i = 0; i < len; i++) {
+    binaryString += String.fromCharCode(file[i]);
+  }
+  return btoa(binaryString);
+};
+
+export const useUploadFile = (callback: ((r: Validated<Response>) => void)) => {
+  const { useAuthFetch } = useAuth();
+  const [, uploadFileAuth] = useAuthFetch(UPLOAD_FILE_URL, callback);
+
+  return (hostname: string, mime: string, filename: string, file: Uint8Array) =>
+    uploadFileAuth({
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        hostname,
+        mime,
+        filename,
+        file_enc: encodeFile(file),
+      }),
+    });
+};
+
+export const useRemoveFile = () => {
+  const { useAuthFetch } = useAuth();
+  const [, removeFileAuth] = useAuthFetch(REMOVE_FILE_URL);
+  return (hostname: string, filename: string) =>
+    removeFileAuth({
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ hostname, filename }),
+    });
+};
+
+export const useGetSpecificFile = (
+  hostname: string,
+  filename: string,
+  callback: (r: Validated<Response>) => void,
+) => {
+  const { useAuthFetch } = useAuth();
+  const [, getSpecificFileAuth] = useAuthFetch(
+    GET_SPECIFIC_FILE_URL + "?hostname=" + hostname + "&file=" + filename,
+    callback,
+  );
+  return () =>
+    getSpecificFileAuth({
+      method: "GET",
+    });
+};
 
 export const useAddMachine = (callback: () => void) => {
   const toast = useToast();

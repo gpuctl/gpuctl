@@ -96,12 +96,13 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 
 	cookies := []http.Cookie{{
 		Name:     authentication.TokenCookieName,
+		Domain:   "localhost",
 		Value:    token,
 		Path:     "/",
 		MaxAge:   3600,
 		HttpOnly: true,
-		Secure:   true,
-		SameSite: http.SameSiteStrictMode,
+		Secure:   false, // TODO: If I leave this in the PR, I did goofed up.
+		SameSite: http.SameSiteNoneMode,
 	}}
 
 	return &femto.EmptyBodyResponse{Cookies: cookies, Status: http.StatusAccepted}, nil
@@ -152,14 +153,15 @@ func (a *Api) RemoveFile(rem broadcast.RemoveFile, r *http.Request, l *slog.Logg
 func (a *Api) ListFiles(r *http.Request, l *slog.Logger) (*femto.Response[[]string], error) {
 	hostname := r.URL.Query().Get("hostname")
 	if hostname == "" {
-		return &femto.Response[[]string]{Status: http.StatusBadRequest}, nil
+		return &femto.Response[[]string]{Status: http.StatusBadRequest, Body: make([]string, 0), Headers: map[string]string{"Content-Type": "application/json"}}, nil
 	}
 
 	// TODO: make sure that we are returning sensible json
 	files, err := a.DB.ListFiles(hostname)
 	if err != nil {
-
+		return nil, err
 	}
+
 	return femto.Ok[[]string](files)
 
 }

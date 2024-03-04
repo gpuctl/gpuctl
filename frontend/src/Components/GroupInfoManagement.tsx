@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -19,11 +19,20 @@ import {
   ModalBody,
   ModalCloseButton,
   Input,
+  List,
+  ListItem,
+  Flex,
 } from "@chakra-ui/react";
 import { EditableField } from "./EditableFields";
 import { WorkStationGroup } from "../Data";
-import { instKeys } from "../Utils/Utils";
-import { useRemoveMachine } from "../Hooks/Hooks";
+import { instKeys, validateNullable, validatedElim } from "../Utils/Utils";
+import {
+  useGetAllFiles,
+  useGetSpecificFile,
+  useRemoveFile,
+  useRemoveMachine,
+  useUploadFile,
+} from "../Hooks/Hooks";
 import { GS } from "../Pages/AdminPanel";
 
 export const GroupInfoManagement = ({
@@ -33,10 +42,17 @@ export const GroupInfoManagement = ({
   GroupSelect: GS;
   groups: WorkStationGroup[];
 }) => {
+  const {
+    isOpen: isFilesModalOpen,
+    onOpen: onFilesModalOpen,
+    onClose: onFilesModalClose,
+  } = useDisclosure();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [copied, setCopied] = useState(false);
   const [currentMachine, setCurrentMachine] = useState("");
+  const [currentFile, setCurrentFile] = useState("");
 
+  const [files, setFiles] = useState<any[]>([]); // TODO: Change this any
   const removeMachine = useRemoveMachine();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -55,6 +71,110 @@ export const GroupInfoManagement = ({
     onOpen();
   };
 
+  const useDownload = () => {
+    const downloader = useGetSpecificFile(
+      currentMachine,
+      currentFile,
+      (response) => {
+        validatedElim(response, {
+          success: async (r) => {
+            // here the response should have given an attached file through the attachment header stuff
+            // let's download
+
+            if (r.status == 200) {
+              const downloadLink = document.createElement("a");
+              downloadLink.href = URL.createObjectURL(
+                new Blob([await r.arrayBuffer()]),
+              );
+              downloadLink.download = currentFile;
+              downloadLink.click();
+            }
+          },
+          failure: () => {
+            // alert("Failure");
+          },
+        });
+      },
+    );
+
+    return () => downloader();
+  };
+
+  const download = useDownload();
+
+  const handleSpecificFileDownload = (filename: string) => {
+    return () => {
+      setCurrentFile(filename);
+    };
+  };
+
+  useEffect(() => {
+    download();
+  }, [currentFile]);
+
+  const useViewFiles = () => {
+    const getFiles = useGetAllFiles(currentMachine, (response) => {
+      validatedElim(response, {
+        success: async (r) => {
+          setFiles(await r.json());
+        },
+        failure: () => {
+          // alert("Failure");
+        },
+      });
+    });
+    return () => getFiles();
+  };
+
+  const view = useViewFiles();
+
+  const handleViewFiles = (name: string) => {
+    return () => {
+      setCurrentMachine(name);
+      onFilesModalOpen();
+    };
+  };
+
+  useEffect(() => {
+    if (currentMachine) {
+      view();
+    }
+  }, [currentMachine]);
+
+  // ...
+
+  const uploadFile = useUploadFile((response) => {
+    validatedElim(response, {
+      success: () => {
+        view();
+      },
+      failure: () => {
+        // alert("Failure");
+      },
+    });
+  });
+
+  const removeFile = useRemoveFile();
+
+  const handleFileUpload = (name: string) => {
+    return async (event: React.ChangeEvent<HTMLInputElement>) => {
+      if (!event.target.files) return;
+      const file = event.target.files[0];
+
+      const arrayBuffer = await file.arrayBuffer();
+      const uint8Array = new Uint8Array(arrayBuffer);
+
+      uploadFile(name, file.type, file.name, uint8Array);
+    };
+  };
+
+  const handleFileRemoval = (name: string, filename: string) => {
+    return (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+      removeFile(name, filename);
+      setFiles(files.filter((i) => i != filename));
+    };
+  };
+
   return (
     <Box w="100%">
       <Heading size="lg">Group & Info Management:</Heading>
@@ -70,6 +190,7 @@ export const GroupInfoManagement = ({
               <Th>Owner</Th>
               <Th>Action</Th>
               <Th>Shutdown</Th>
+              <Th>Files</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -135,6 +256,14 @@ export const GroupInfoManagement = ({
                         {copied ? "Copied" : "Copy Shutdown Command"}
                       </Button>
                     </Td>
+                    <Td>
+                      <Button
+                        colorScheme="green"
+                        onClick={handleViewFiles(workstation.name)}
+                      >
+                        Files
+                      </Button>
+                    </Td>
                   </Tr>
                 )),
               ),
@@ -161,6 +290,50 @@ export const GroupInfoManagement = ({
             <Button variant="ghost" onClick={onClose}>
               Cancel
             </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+      <Modal
+        isOpen={isFilesModalOpen}
+        onClose={onFilesModalClose}
+        size="xl"
+        isCentered
+      >
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Files</ModalHeader>
+          <ModalCloseButton />
+          <ModalBody>
+            <List spacing={3}>
+              {files.map((file, index) => (
+                <ListItem
+                  key={index}
+                  display="flex"
+                  justifyContent="space-between"
+                  alignItems="center"
+                >
+                  <Box flex="1">{file}</Box>
+                  <Flex alignItems="center" gap="2">
+                    <Button
+                      colorScheme="blue"
+                      onClick={handleSpecificFileDownload(file)}
+                    >
+                      Download
+                    </Button>
+                    <Button
+                      colorScheme="red"
+                      size="sm"
+                      onClick={handleFileRemoval(currentMachine, file)}
+                    >
+                      X
+                    </Button>
+                  </Flex>
+                </ListItem>
+              ))}
+            </List>
+          </ModalBody>
+          <ModalFooter>
+            <Input type="file" onChange={handleFileUpload(currentMachine)} />
           </ModalFooter>
         </ModalContent>
       </Modal>
