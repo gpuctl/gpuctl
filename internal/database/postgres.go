@@ -162,7 +162,9 @@ func getLastSeen(host string, tx *sql.Tx) (lastSeen time.Time, err error) {
 // before insertion into the database
 func createMachine(host string, group string, now time.Time, tx *sql.Tx) (err error) {
 	_, err = tx.Exec(`INSERT INTO Machines (Hostname, GroupName, LastSeen)
-		VALUES ($1, $2, $3)`,
+		VALUES ($1, $2, $3)
+		ON CONFLICT (Hostname) DO UPDATE
+		SET (Hostname, GroupName) = (EXCLUDED.Hostname, EXCLUDED.GroupName)`,
 		host, group, now)
 	return
 }
