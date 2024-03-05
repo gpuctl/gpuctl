@@ -21,12 +21,17 @@ import {
   Thead,
   Tr,
   MenuItemOption,
+  Spacer,
+  RangeSlider,
+  RangeSliderTrack,
+  RangeSliderFilledTrack,
+  RangeSliderThumb,
 } from "@chakra-ui/react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Graph } from "./Graph";
 import { useHistoryStats } from "../Hooks/Hooks";
 import { useState } from "react";
-import { GraphField, WorkStationData, WorkStationGroup } from "../Data";
+import { GraphField, WorkStationData } from "../Data";
 import {
   Validation,
   all,
@@ -96,7 +101,7 @@ export const WorkstationView = ({ hostname }: { hostname: string }) => {
               <SimpleGrid columns={2} spacing={5}>
                 <StatsTable stats={wstat}></StatsTable>
                 <Box>
-                  <StatsGraph hostname={hostname} />
+                  <StatsGraphPanel hostname={hostname} />
                   <AdminDetails stats={wstat} group_name={name}></AdminDetails>
                 </Box>
               </SimpleGrid>
@@ -178,7 +183,7 @@ const StatsTable = ({ stats }: { stats: WorkStationData }) => {
   );
 };
 
-const StatsGraph = ({ hostname }: { hostname: string }) => {
+const StatsGraphPanel = ({ hostname }: { hostname: string }) => {
   const [field, setField] = useState<GraphField>(GraphField.GPU_UTIL);
 
   const historyStats = useHistoryStats(hostname);
@@ -203,7 +208,7 @@ const StatsGraph = ({ hostname }: { hostname: string }) => {
       });
 
   return (
-    <Box>
+    <Box w="100%">
       <Menu>
         <MenuButton
           as={Button}
@@ -222,8 +227,9 @@ const StatsGraph = ({ hostname }: { hostname: string }) => {
           ))}
         </MenuList>
       </Menu>
+      <Spacer height={5} />
       {validationElim(statsToDisplay, {
-        success: (s) => <Graph data={s}></Graph>,
+        success: (s) => <StatsGraph stats={s}></StatsGraph>,
         failure: () => (
           <Text>Failed to fetch historical data for graph! Retrying...</Text>
         ),
@@ -309,5 +315,38 @@ const AdminDetails = ({
         </Tr>
       </Tbody>
     </Table>
+  );
+};
+
+const StatsGraph = ({ stats }: { stats: { x: number; y: number }[][] }) => {
+  const maxTS =
+    stats.length === 0 ? 0 : Math.max(...stats[0].map(({ x }) => x));
+
+  const [startTS, setStartTS] = useState(0);
+  const [endTS, setEndTS] = useState(maxTS);
+
+  const filtered = stats.map((s) =>
+    s.filter(({ x }) => startTS <= x && x <= endTS),
+  );
+
+  return (
+    <>
+      <Graph data={filtered} xlabel="Seconds Since Added"></Graph>
+      <RangeSlider
+        defaultValue={[0, maxTS]}
+        min={0}
+        max={maxTS}
+        onChange={([min, max]) => {
+          setStartTS(min);
+          setEndTS(max);
+        }}
+      >
+        <RangeSliderTrack>
+          <RangeSliderFilledTrack />
+        </RangeSliderTrack>
+        <RangeSliderThumb index={0} />
+        <RangeSliderThumb index={1} />
+      </RangeSlider>
+    </>
   );
 };
