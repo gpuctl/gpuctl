@@ -783,12 +783,12 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 			return nil, err
 		}
 
-		if timestamp != currtimestamp {
-			// dump current bucket into `data`
+		// Separate into different buckets based on the timestamp (error upto second)
+		if !timestamp.Round(time.Second).Equal(currtimestamp.Round(time.Second)) {
 			data = append(data, currpoint)
 			currtimestamp = timestamp
 			currpoint.Timestamp = timestamp.Unix()
-			currpoint.Samples = []broadcast.GPU{}
+			currpoint.Samples = make([]broadcast.GPU, 0)
 		}
 		currpoint.Samples = append(currpoint.Samples, sample)
 	}
