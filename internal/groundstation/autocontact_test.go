@@ -158,6 +158,12 @@ func TestMonitor(t *testing.T) {
 }
 
 func TestMonitorCantSSH(t *testing.T) {
+	t.Parallel()
+	// TODO: Mock out pinger to allow this.
+	if os.Getenv("CI") != "" {
+		t.Skip("Cannot ping on CI")
+	}
+
 	db := database.InMemory()
 
 	logger := slog.Default()
