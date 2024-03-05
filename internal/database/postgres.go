@@ -635,7 +635,7 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 	for rows.Next() {
 		var seen_instance broadcast.WorkstationSeen
 
-		err := rows.Scan(&seen_instance.Hostname, &seen_instance.Hostname)
+		err := rows.Scan(&seen_instance.Hostname, &seen_instance.LastSeen)
 		if err != nil {
 			return nil, err
 		}
