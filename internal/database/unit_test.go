@@ -17,6 +17,8 @@ import (
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -63,7 +65,7 @@ var UnitTests = [...]unitTest{
 // fake data for adding during tests
 // TODO: update with processes when they're implemented
 var fakeDataInfo = uplink.GPUInfo{
-	Uuid:          "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	Uuid:          uuid.MustParse("7d86d61f-acb4-a007-7535-203264c18e6a"),
 	Name:          "GT 1030",
 	Brand:         "NVidia",
 	DriverVersion: "v1.4.5",
@@ -72,7 +74,7 @@ var fakeDataInfo = uplink.GPUInfo{
 
 // Two fake data samples for THE SAME gpu
 var fakeDataSample = uplink.GPUStatSample{
-	Uuid:              "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	Uuid:              uuid.MustParse("7d86d61f-acb4-a007-7535-203264c18e6a"),
 	MemoryUtilisation: 25.4,
 	GPUUtilisation:    63.5,
 	MemoryUsed:        1.24,
@@ -88,7 +90,7 @@ var fakeDataSample = uplink.GPUStatSample{
 	RunningProcesses:  nil,
 }
 var fakeDataSample2 = uplink.GPUStatSample{
-	Uuid:              "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	Uuid:              uuid.MustParse("7d86d61f-acb4-a007-7535-203264c18e6a"),
 	MemoryUtilisation: 2,
 	GPUUtilisation:    6,
 	MemoryUsed:        1.2,
@@ -353,7 +355,7 @@ func testLastSeen2(t *testing.T, db database.Database) {
 }
 
 func testAppendDataPointMissingGPU(t *testing.T, db database.Database) {
-	err := db.AppendDataPoint(uplink.GPUStatSample{Uuid: "bogus_uuid_blah"})
+	err := db.AppendDataPoint(uplink.GPUStatSample{Uuid: uuid.MustParse("00bb654e-1823-46ae-a26c-e884e2f00ff4")})
 	assert.Error(t, err)
 	assert.EqualError(t, err, database.ErrGpuNotPresent.Error())
 }
@@ -515,7 +517,7 @@ func removingMachineAndSamples(t *testing.T, db database.Database) {
 // db layer handles process information
 func inUseInformation(t *testing.T, db database.Database) {
 	fakeHost := "hamster"
-	fakeUuid := "jeff's phone no."
+	fakeUuid := uuid.MustParse("9adb69f0-1b1c-43ce-babe-99821d2cead0")
 
 	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
 	assert.NoError(t, err)

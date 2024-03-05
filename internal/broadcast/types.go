@@ -3,6 +3,8 @@ package broadcast
 
 import (
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // frontend<->web-api types
@@ -57,25 +59,25 @@ type Workstation struct {
 }
 
 type GPU struct {
-	Uuid              string  `json:"uuid"`
-	Name              string  `json:"gpu_name"`
-	Brand             string  `json:"gpu_brand"`
-	DriverVersion     string  `json:"driver_ver"`
-	MemoryTotal       uint64  `json:"memory_total"`
-	MemoryUtilisation float64 `json:"memory_util"`        // Percentage of memory used
-	GPUUtilisation    float64 `json:"gpu_util"`           // Percentage of memory used
-	MemoryUsed        float64 `json:"memory_used"`        // In megabytes
-	FanSpeed          float64 `json:"fan_speed"`          // Percentage of fan speed
-	Temp              float64 `json:"gpu_temp"`           // Celcius
-	MemoryTemp        float64 `json:"memory_temp"`        // Celcius
-	GraphicsVoltage   float64 `json:"graphics_voltage"`   // Volts
-	PowerDraw         float64 `json:"power_draw"`         // Watts
-	GraphicsClock     float64 `json:"graphics_clock"`     // Mhz
-	MaxGraphicsClock  float64 `json:"max_graphics_clock"` // Mhz
-	MemoryClock       float64 `json:"memory_clock"`       // Mhz
-	MaxMemoryClock    float64 `json:"max_memory_clock"`   // Mhz
-	InUse             bool    `json:"in_use"`             // is this gpu being used?
-	User              string  `json:"user"`               // iff it's being used, who is using this gpu
+	Uuid              uuid.UUID `json:"uuid"`
+	Name              string    `json:"gpu_name"`
+	Brand             string    `json:"gpu_brand"`
+	DriverVersion     string    `json:"driver_ver"`
+	MemoryTotal       uint64    `json:"memory_total"`
+	MemoryUtilisation float64   `json:"memory_util"`        // Percentage of memory used
+	GPUUtilisation    float64   `json:"gpu_util"`           // Percentage of memory used
+	MemoryUsed        float64   `json:"memory_used"`        // In megabytes
+	FanSpeed          float64   `json:"fan_speed"`          // Percentage of fan speed
+	Temp              float64   `json:"gpu_temp"`           // Celcius
+	MemoryTemp        float64   `json:"memory_temp"`        // Celcius
+	GraphicsVoltage   float64   `json:"graphics_voltage"`   // Volts
+	PowerDraw         float64   `json:"power_draw"`         // Watts
+	GraphicsClock     float64   `json:"graphics_clock"`     // Mhz
+	MaxGraphicsClock  float64   `json:"max_graphics_clock"` // Mhz
+	MemoryClock       float64   `json:"memory_clock"`       // Mhz
+	MaxMemoryClock    float64   `json:"max_memory_clock"`   // Mhz
+	InUse             bool      `json:"in_use"`             // is this gpu being used?
+	User              string    `json:"user"`               // iff it's being used, who is using this gpu
 }
 
 type OnboardReq struct {

@@ -10,6 +10,8 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/procinfo"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+
+	"github.com/google/uuid"
 )
 
 const (
@@ -276,10 +278,14 @@ func (xml NvidiaSmiLog) ExtractGPUInfo() ([]uplink.GPUInfo, error) {
 		if err != nil {
 			return nil, err
 		}
+		uuid, err := parseUuid(gpu.Uuid)
+		if err != nil {
+			return nil, err
+		}
 
 		res = append(res,
 			uplink.GPUInfo{
-				Uuid:          gpu.Uuid,
+				Uuid:          uuid,
 				Name:          gpu.ProductName,
 				Brand:         gpu.ProductBrand,
 				DriverVersion: xml.DriverVersion,
@@ -320,6 +326,8 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 		err = errors.Join(err, err_)
 		maxMFreq, err_ := parseFloatWithUnit(gpu.MaxClocks.MemClock, "max mem clock")
 		err = errors.Join(err, err_)
+		uuid, err_ := parseUuid(gpu.Uuid)
+		err = errors.Join(err, err_)
 
 		// report back catastrophic failures
 		if err != nil {
@@ -347,7 +355,7 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 		}
 
 		curr := uplink.GPUStatSample{
-			Uuid:              gpu.Uuid,
+			Uuid:              uuid,
 			MemoryUtilisation: memUtil,
 			GPUUtilisation:    gpuUtil,
 			MemoryUsed:        memoryUsed,
@@ -366,6 +374,13 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 		res = append(res, curr)
 	}
 	return res, nil
+}
+
+// convert nvidia uuid to standard uuid
+// nvidia include an unneeded GPU- on the front of all their uuids
+func parseUuid(input string) (uuid.UUID, error) {
+	after, _ := strings.CutPrefix(input, "GPU-")
+	return uuid.Parse(after)
 }
 
 // Helper function for extracting GPU data such as available memory and fan speed

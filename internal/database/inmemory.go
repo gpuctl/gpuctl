@@ -12,6 +12,8 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+
+	"github.com/google/uuid"
 )
 
 type gpuInfo struct {
@@ -21,8 +23,8 @@ type gpuInfo struct {
 
 type inMemory struct {
 	machines map[string]broadcast.ModifyMachine         // maps from hostname to machine info
-	infos    map[string]gpuInfo                         // maps from uuids to context info
-	stats    map[string][]uplink.GPUStatSample          // maps from uuids to slices of stats, allowing tracking of multiple datapoints
+	infos    map[uuid.UUID]gpuInfo                      // maps from uuids to context info
+	stats    map[uuid.UUID][]uplink.GPUStatSample       // maps from uuids to slices of stats, allowing tracking of multiple datapoints
 	lastSeen map[string]time.Time                       // map from hostname to last seen time
 	files    map[string]map[string]broadcast.AttachFile // maps from hostname to attached files
 	mu       sync.Mutex                                 // mutex
@@ -31,8 +33,8 @@ type inMemory struct {
 func InMemory() Database {
 	return &inMemory{
 		machines: make(map[string]broadcast.ModifyMachine),
-		infos:    make(map[string]gpuInfo),
-		stats:    make(map[string][]uplink.GPUStatSample),
+		infos:    make(map[uuid.UUID]gpuInfo),
+		stats:    make(map[uuid.UUID][]uplink.GPUStatSample),
 		lastSeen: make(map[string]time.Time),
 		files:    make(map[string]map[string]broadcast.AttachFile),
 	}
@@ -287,7 +289,7 @@ func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	uuidsToRemove := make([]string, 0)
+	uuidsToRemove := make([]uuid.UUID, 0)
 	for uuid, info := range m.infos {
 		if info.host == machine.Hostname {
 			uuidsToRemove = append(uuidsToRemove, uuid)

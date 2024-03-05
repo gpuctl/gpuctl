@@ -2,6 +2,8 @@ package uplink
 
 import (
 	"github.com/gpuctl/gpuctl/internal/procinfo"
+
+	"github.com/google/uuid"
 )
 
 // TODO: change to "/gs-api/gpu-stats"
@@ -15,16 +17,16 @@ type GpuStatsUpload struct {
 
 // Contextual information about the GPU
 type GPUInfo struct {
-	Uuid          string `json:"uuid"`
-	Name          string `json:"gpu_name"`
-	Brand         string `json:"gpu_brand"`
-	DriverVersion string `json:"driver_ver"`
-	MemoryTotal   uint64 `json:"memory_total"`
+	Uuid          uuid.UUID `json:"uuid"`
+	Name          string    `json:"gpu_name"`
+	Brand         string    `json:"gpu_brand"`
+	DriverVersion string    `json:"driver_ver"`
+	MemoryTotal   uint64    `json:"memory_total"`
 }
 
 // Temporal statistics for a GPU
 type GPUStatSample struct {
-	Uuid              string    `json:"uuid"`
+	Uuid              uuid.UUID `json:"uuid"`
 	MemoryUtilisation float64   `json:"memory_util"`        // Percentage of memory used
 	GPUUtilisation    float64   `json:"gpu_util"`           // Percentage of memory used
 	MemoryUsed        float64   `json:"memory_used"`        // In megabytes
