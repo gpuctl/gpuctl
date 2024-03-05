@@ -97,7 +97,6 @@ export const GroupInfoManagement = ({
                         </Link>
                       </Td>
                       <EditableField
-                        GroupSelect={GroupSelect}
                         group={group.name}
                         workstation={workstation}
                         fieldKey="group"
@@ -105,7 +104,6 @@ export const GroupInfoManagement = ({
                         isEven={k % 2 === 0}
                       />
                       <EditableField
-                        GroupSelect={GroupSelect}
                         group={group.name}
                         workstation={workstation}
                         fieldKey="cpu"
@@ -113,7 +111,6 @@ export const GroupInfoManagement = ({
                         isEven={k % 2 === 0}
                       />
                       <EditableField
-                        GroupSelect={GroupSelect}
                         group={group.name}
                         workstation={workstation}
                         fieldKey="motherboard"
@@ -121,7 +118,6 @@ export const GroupInfoManagement = ({
                         isEven={k % 2 === 0}
                       />
                       <EditableField
-                        GroupSelect={GroupSelect}
                         group={group.name}
                         workstation={workstation}
                         fieldKey="notes"
@@ -129,7 +125,6 @@ export const GroupInfoManagement = ({
                         isEven={k % 2 === 0}
                       />
                       <EditableField
-                        GroupSelect={GroupSelect}
                         group={group.name}
                         workstation={workstation}
                         fieldKey="owner"
