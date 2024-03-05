@@ -346,7 +346,10 @@ func testLastSeen2(t *testing.T, db database.Database) {
 		{Hostname: "bar", LastSeen: t2.Round(time.Second)},
 	}
 
-	assert.ElementsMatch(t, expected, seen)
+	assert.Equal(t, expected[0].Hostname, "foo")
+	assert.Equal(t, expected[1].Hostname, "bar")
+	assert.True(t, t1.Equal(expected[0].LastSeen))
+	assert.True(t, t2.Equal(expected[1].LastSeen))
 }
 
 func testAppendDataPointMissingGPU(t *testing.T, db database.Database) {
