@@ -71,7 +71,7 @@ export const WorkstationView = ({ hostname }: { hostname: string }) => {
           .map((w) => ({ wstat: w, name: g.name })),
       );
 
-      if (stats.length !== 1)
+      if (wstats.length !== 1)
         return <Navigate to={STATS_PATH + DEFAULT_VIEW} replace />;
 
       const { wstat, name } = wstats[0];
