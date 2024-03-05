@@ -22,7 +22,7 @@ import {
   Tr,
   MenuItemOption,
 } from "@chakra-ui/react";
-import { useSearchParams } from "react-router-dom";
+import { Navigate, useSearchParams } from "react-router-dom";
 import { Graph } from "./Graph";
 import { useHistoryStats } from "../Hooks/Hooks";
 import { useState } from "react";
@@ -44,6 +44,8 @@ import { GPU_FIELDS, tablify } from "./DataTable";
 import { useForceUpdate } from "framer-motion";
 import { useAuth } from "../Providers/AuthProvider";
 import { EditableField } from "./EditableFields";
+import { STATS_PATH } from "../Config/Paths";
+import { DEFAULT_VIEW } from "../App";
 
 const USE_FAKE_STATS = false;
 
@@ -63,11 +65,16 @@ export const WorkstationView = ({ hostname }: { hostname: string }) => {
 
   return validationElim(allStats, {
     success: (stats) => {
-      const { wstat, name } = stats.flatMap((g) =>
+      const wstats = stats.flatMap((g) =>
         g.workstations
           .filter((w) => w.name === hostname)
           .map((w) => ({ wstat: w, name: g.name })),
-      )[0];
+      );
+
+      if (stats.length !== 1)
+        return <Navigate to={STATS_PATH + DEFAULT_VIEW} replace />;
+
+      const { wstat, name } = wstats[0];
 
       return (
         <Modal
