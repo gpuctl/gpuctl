@@ -6,6 +6,9 @@ COPY frontend/package.json frontend/package-lock.json ./
 RUN npm install
 
 COPY ./frontend/ ./
+
+# increase heap space to prevent oom crashes
+ENV NODE_OPTIONS="--max_old_space_size=1024"
 RUN npm run build
 
 # Build our own Caddy with a DNS provider module
