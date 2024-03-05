@@ -1,20 +1,29 @@
 package config
 
+import "time"
+
 type Server struct {
 	GSPort int `toml:"groundstation_port"`
 	WAPort int `toml:"webapi_port"`
 }
 
 type Timeouts struct {
-	DeathTimeout    int `toml:"death_timeout"`
-	MonitorInterval int `toml:"monitor_interval"`
+	DeathTimeout_    Duration `toml:"death_timeout"`
+	MonitorInterval_ Duration `toml:"monitor_interval"`
+}
+
+func (t Timeouts) DeathTimeout() time.Duration {
+	return time.Duration(t.DeathTimeout_)
+}
+func (t Timeouts) MonitorInterval() time.Duration {
+	return time.Duration(t.MonitorInterval_)
 }
 
 type Database struct {
-	InMemory           bool   `toml:"inmemory"`
-	Postgres           bool   `toml:"postgres"`
-	PostgresUrl        string `toml:"url"`
-	DownsampleInterval int    `toml:"downsample_interval"`
+	InMemory           bool     `toml:"inmemory"`
+	Postgres           bool     `toml:"postgres"`
+	PostgresUrl        string   `toml:"url"`
+	DownsampleInterval Duration `toml:"downsample_interval"`
 }
 
 type AuthConfig struct {

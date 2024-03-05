@@ -6,7 +6,6 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
-	"time"
 
 	"golang.org/x/crypto/ssh"
 
@@ -88,9 +87,7 @@ func main() {
 		errs <- fmt.Errorf("downsampler: %w", err)
 	}()
 	go func() {
-		monitorInterval := time.Duration(conf.Timeouts.MonitorInterval) * time.Second
-		deathTimeOut := time.Duration(conf.Timeouts.DeathTimeout) * time.Second
-		err := groundstation.MonitorForDeadMachines(monitorInterval, db, deathTimeOut, log, tunnelConf)
+		err := groundstation.MonitorForDeadMachines(db, conf.Timeouts, log.With(), tunnelConf)
 		errs <- fmt.Errorf("dead machine monitor: %w", err)
 	}()
 

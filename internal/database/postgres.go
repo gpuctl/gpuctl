@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+
 	//	"reflect"
 	"strings"
 	"time"
@@ -633,12 +634,8 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 
 	for rows.Next() {
 		var seen_instance broadcast.WorkstationSeen
-		var t time.Time
 
-		err = rows.Scan(&seen_instance.Hostname, &t)
-
-		seen_instance.LastSeen = t.Unix()
-
+		err := rows.Scan(&seen_instance.Hostname, &seen_instance.Hostname)
 		if err != nil {
 			return nil, err
 		}

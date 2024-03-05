@@ -7,10 +7,10 @@ type Groundstation struct {
 }
 
 type Satellite struct {
-	Cache             string `toml:"cache"`
-	DataInterval      int    `toml:"data_interval"`
-	HeartbeatInterval int    `toml:"heartbeat_interval"`
-	FakeGPU           bool   `toml:"fake_gpu"`
+	Cache             string   `toml:"cache"`
+	DataInterval      Duration `toml:"data_interval"`
+	HeartbeatInterval Duration `toml:"heartbeat_interval"`
+	FakeGPU           bool     `toml:"fake_gpu"`
 }
 
 type SatelliteConfiguration struct {
@@ -27,8 +27,8 @@ func DefaultSatelliteConfiguration() SatelliteConfiguration {
 		},
 		Satellite: Satellite{
 			Cache:             "/tmp/satellite",
-			DataInterval:      60,
-			HeartbeatInterval: 2,
+			DataInterval:      60 * Second,
+			HeartbeatInterval: 2 * Second,
 			FakeGPU:           false,
 		},
 	}

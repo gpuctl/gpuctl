@@ -305,8 +305,8 @@ func multipleHeartbeats(t *testing.T, db database.Database) {
 
 func testLastSeen1(t *testing.T, db database.Database) {
 	host := "TestHost"
-	lastSeenTime := time.Now().Unix()
-	db.UpdateLastSeen(host, lastSeenTime)
+	lastSeenTime := time.Now()
+	db.UpdateLastSeen(host, lastSeenTime.Unix())
 
 	lastSeenData, err := db.LastSeen()
 	if err != nil {
@@ -315,21 +315,26 @@ func testLastSeen1(t *testing.T, db database.Database) {
 
 	found := false
 	for _, data := range lastSeenData {
-		if data.Hostname == host && data.LastSeen == lastSeenTime {
+		if data.Hostname == host &&
+			data.LastSeen.Unix() == lastSeenTime.Unix() {
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Errorf("Last seen data for host %s was not updated correctly", host)
+		t.Errorf("For host %s wanted to find %#v, but data only had %#v", host, lastSeenTime, lastSeenData)
 	}
 }
 
 func testLastSeen2(t *testing.T, db database.Database) {
-	err := db.UpdateLastSeen("foo", 1234567890)
+
+	t1 := time.Date(1, 2, 3, 4, 5, 6, 0, time.Local)
+	t2 := time.Date(7, 8, 9, 10, 11, 12, 0, time.Local)
+
+	err := db.UpdateLastSeen("foo", t1.Unix())
 	assert.NoError(t, err)
 
-	err = db.UpdateLastSeen("bar", 9876543210)
+	err = db.UpdateLastSeen("bar", t2.Unix())
 	assert.NoError(t, err)
 
 	seen, err := db.LastSeen()
@@ -337,8 +342,8 @@ func testLastSeen2(t *testing.T, db database.Database) {
 	assert.Len(t, seen, 2)
 
 	expected := []broadcast.WorkstationSeen{
-		{Hostname: "foo", LastSeen: 1234567890},
-		{Hostname: "bar", LastSeen: 9876543210},
+		{Hostname: "foo", LastSeen: t1.Round(time.Second)},
+		{Hostname: "bar", LastSeen: t2.Round(time.Second)},
 	}
 
 	assert.ElementsMatch(t, expected, seen)

@@ -3,9 +3,11 @@ package database
 import (
 	"log/slog"
 	"time"
+
+	"github.com/gpuctl/gpuctl/internal/config"
 )
 
-func DownsampleOverTime(interval int, database Database) error {
+func DownsampleOverTime(interval config.Duration, database Database) error {
 	downsampleTicker := time.NewTicker(time.Duration(interval))
 
 	for t := range downsampleTicker.C {

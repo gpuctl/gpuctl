@@ -89,5 +89,5 @@ type RemoveMachineInfo struct {
 // data type returned by queries of when a workstation was last seen
 type WorkstationSeen struct {
 	Hostname string
-	LastSeen int64
+	LastSeen time.Time
 }

@@ -23,7 +23,7 @@ type inMemory struct {
 	machines map[string]broadcast.ModifyMachine         // maps from hostname to machine info
 	infos    map[string]gpuInfo                         // maps from uuids to context info
 	stats    map[string][]uplink.GPUStatSample          // maps from uuids to slices of stats, allowing tracking of multiple datapoints
-	lastSeen map[string]int64                           // map from hostname to last seen time
+	lastSeen map[string]time.Time                       // map from hostname to last seen time
 	files    map[string]map[string]broadcast.AttachFile // maps from hostname to attached files
 	mu       sync.Mutex                                 // mutex
 }
@@ -33,7 +33,7 @@ func InMemory() Database {
 		machines: make(map[string]broadcast.ModifyMachine),
 		infos:    make(map[string]gpuInfo),
 		stats:    make(map[string][]uplink.GPUStatSample),
-		lastSeen: make(map[string]int64),
+		lastSeen: make(map[string]time.Time),
 		files:    make(map[string]map[string]broadcast.AttachFile),
 	}
 }
@@ -46,7 +46,7 @@ func (m *inMemory) AppendDataPoint(sample uplink.GPUStatSample) error {
 		return ErrGpuNotPresent
 	} else {
 		m.stats[sample.Uuid] = append(m.stats[sample.Uuid], sample)
-		m.lastSeen[info.host] = time.Now().Unix()
+		m.lastSeen[info.host] = time.Now()
 	}
 
 	return nil
@@ -62,7 +62,7 @@ func (m *inMemory) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
 	if _, exists := m.stats[packet.Uuid]; !exists {
 		m.stats[packet.Uuid] = []uplink.GPUStatSample{}
 	}
-	m.lastSeen[host] = time.Now().Unix()
+	m.lastSeen[host] = time.Now()
 
 	return nil
 }
@@ -120,7 +120,7 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 			Motherboard: info.Motherboard,
 			Notes:       info.Notes,
 			Owner:       info.Owner,
-			LastSeen:    time.Since(time.Unix(m.lastSeen[machine], 0)),
+			LastSeen:    time.Since(m.lastSeen[machine]),
 			Gpus:        gpus[machine],
 		}
 
@@ -135,11 +135,11 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 	return result, nil
 }
 
-func (m *inMemory) UpdateLastSeen(host string, time int64) error {
+func (m *inMemory) UpdateLastSeen(host string, whenSeen int64) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.lastSeen[host] = time
+	m.lastSeen[host] = time.Unix(whenSeen, 0)
 	if _, found := m.machines[host]; !found {
 		m.machines[host] = broadcast.ModifyMachine{Hostname: host}
 	}
@@ -268,7 +268,7 @@ func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {
 		return ErrMachineFoundTwice
 	}
 
-	m.lastSeen[machine.Hostname] = time.Now().Unix()
+	m.lastSeen[machine.Hostname] = time.Now()
 
 	newMachine := broadcast.ModifyMachine{
 		Hostname: machine.Hostname,
