@@ -45,7 +45,7 @@ import { useForceUpdate } from "framer-motion";
 import { useAuth } from "../Providers/AuthProvider";
 import { EditableField } from "./EditableFields";
 
-const USE_FAKE_STATS = true;
+const USE_FAKE_STATS = false;
 
 const FAKE_STATS = [
   { x: 1, y: 90 },
