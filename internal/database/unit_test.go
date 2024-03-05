@@ -328,8 +328,8 @@ func testLastSeen1(t *testing.T, db database.Database) {
 
 func testLastSeen2(t *testing.T, db database.Database) {
 
-	t1 := time.Date(1, 2, 3, 4, 5, 6, 0, time.Local)
-	t2 := time.Date(7, 8, 9, 10, 11, 12, 0, time.Local)
+	t1 := time.Date(1, 2, 3, 4, 5, 6, 0, time.UTC)
+	t2 := time.Date(7, 8, 9, 10, 11, 12, 0, time.UTC)
 
 	err := db.UpdateLastSeen("foo", t1.Unix())
 	assert.NoError(t, err)
