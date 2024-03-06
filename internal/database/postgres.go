@@ -682,9 +682,10 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 	return data[1:], nil
 }
 func (conn PostgresConn) AggregateData(days int) (broadcast.AggregateData, error) {
+	// TODO: test this in production
 	// TODO: add functionality for this to be variable
 	var data broadcast.AggregateData
-	threshold := time.Now().AddDate(0, 0, -days).Unix()
+	threshold := time.Now().AddDate(0, 0, -days)
 
 	samples, err := conn.db.Query(`SELECT s.Received,
 		s.PowerDraw,

@@ -318,7 +318,7 @@ func testLastSeen1(t *testing.T, db database.Database) {
 	found := false
 	for _, data := range lastSeenData {
 		if data.Hostname == host &&
-			data.LastSeen.Unix() == lastSeenTime.Unix() {
+			data.LastSeen.Round(time.Second).Equal(lastSeenTime.Round(time.Second)) {
 			found = true
 			break
 		}
