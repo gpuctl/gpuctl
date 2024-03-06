@@ -137,7 +137,7 @@ var now = time.Date(2024, time.February, 1, 0, 0, 0, 0, time.Local)
 func TestDownsample(t *testing.T) {
 	db := InMemory().(*inMemory)
 
-	cutoffTime := now.AddDate(0, -6, 0).Unix()
+	cutoffTime := now.AddDate(0, -6, 0)
 
 	gpuUUID := "gpu-test-1"
 	hostName := "test-host"
