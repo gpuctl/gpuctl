@@ -1,16 +1,19 @@
 import { useState } from "react";
 import { Box, Button, Heading, Input, Text, VStack } from "@chakra-ui/react";
 import { useAuth } from "../Providers/AuthProvider";
-import { validatedElim } from "../Utils/Utils";
+import { validatedElim, isSuccess } from "../Utils/Utils";
 
-export const SignIn = () => {
+export const SignIn = ({ panelCallback }: { panelCallback: () => void }) => {
   const { login, user: authName } = useAuth();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
   const attemptLogin = async () => {
-    login(username, password);
+    const success = await login(username, password);
+    if (success) {
+      panelCallback();
+    }
   };
 
   return (

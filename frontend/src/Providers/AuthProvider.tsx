@@ -34,7 +34,7 @@ const RELOAD_ON_LOG_CHANGE = false;
 type AuthCtx = {
   user: Validated<string>;
   isSignedIn: () => boolean;
-  login: (username: string, password: string) => void;
+  login: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   useAuthFetch: (
     path: string,
@@ -47,7 +47,10 @@ type UsernameReminder = { username: string };
 const AuthContext = createContext<AuthCtx>({
   user: failure(Error("No auth context provided")),
   isSignedIn: () => false,
-  login: () => {},
+  login: () =>
+    new Promise<boolean>((resolve) => {
+      resolve(false);
+    }),
   logout: () => {},
   useAuthFetch: () => [failure(Error("No auth context provided")), () => {}],
 });
@@ -100,39 +103,33 @@ export const AuthProvider = ({
    * Feedback about if the login was successful should be retrieved by reading
    * 'user'
    */
-  const login = (username: string, password: string) => {
-    fire(async () => {
-      console.log("Tried to log in!");
+  const login = async (username: string, password: string) => {
+    console.log("Tried to log in!");
 
-      if (
-        DEBUG_AUTH &&
-        username === DEBUG_USER &&
-        password === DEBUG_PASSWORD
-      ) {
-        setUser(success(username));
-        return;
-      }
-
-      const r = await authFetch(AUTH_PATH, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!r.ok) {
-        setUser(
-          failure(
-            r.status === 401
-              ? Error("Username or password was incorrect!")
-              : Error("Auth failed for an unknown reason"),
-          ),
-        );
-        return;
-      }
-
+    if (DEBUG_AUTH && username === DEBUG_USER && password === DEBUG_PASSWORD) {
       setUser(success(username));
-      return;
+      return true;
+    }
+
+    const r = await authFetch(AUTH_PATH, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username, password }),
     });
+
+    if (!r.ok) {
+      setUser(
+        failure(
+          r.status === 401
+            ? Error("Username or password was incorrect!")
+            : Error("Auth failed for an unknown reason"),
+        ),
+      );
+      return false;
+    }
+
+    setUser(success(username));
+    return true;
   };
 
   const logout = () => {
