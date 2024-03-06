@@ -246,7 +246,7 @@ WITH OrderedStats AS (
       ELSE ROW_NUMBER() OVER (PARTITION BY Gpu ORDER BY Received ASC) - 1 
     END AS RowNum
   FROM Stats
-  WHERE Received > $1
+  WHERE Received > $1 AND IsDownsampled = FALSE
 ),
 GroupedStats AS (
   SELECT
@@ -272,15 +272,12 @@ GroupedStats AS (
   GROUP BY Gpu, GroupId
 )
 SELECT * FROM GroupedStats;`
-	delete_query := `DELETE FROM Stats
-WHERE Received > $1
-AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);
-	`
-
-	insert_query := `INSERT INTO Stats (Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed, FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw, GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock, InUse, UserName)
+	update_downsampled_query := `UPDATE Stats SET IsDownsampled = TRUE
+WHERE Received > $1 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);`
+	insert_query := `INSERT INTO Stats (Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed, FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw, GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock, InUse, UserName, IsDownsampled)
 SELECT
   Gpu,
-  SampleStartTime, 
+  SampleStartTime,
   AvgMemoryUtilisation,
   AvgGpuUtilisation,
   AvgMemoryUsed,
@@ -294,10 +291,9 @@ SELECT
   AvgMemoryClock,
   AvgMaxMemoryClock,
   OrInUse,
-  ModeUserName
-FROM TempDownsampled;
-	`
-
+  ModeUserName,
+  FALSE
+FROM TempDownsampled;`
 	cleanup_query := `DROP TABLE TempDownsampled;`
 
 	now := int_now
@@ -311,34 +307,32 @@ FROM TempDownsampled;
 
 	_, err = tx.Exec(downsample_query, sixMonthsAgoFormatted)
 	if err != nil {
-		_ = tx.Rollback()
+		tx.Rollback()
 		return err
 	}
 
-	_, err = tx.Exec(delete_query, sixMonthsAgoFormatted)
+	_, err = tx.Exec(update_downsampled_query, sixMonthsAgoFormatted)
 	if err != nil {
-		_ = tx.Rollback()
+		tx.Rollback()
 		return err
 	}
 
 	_, err = tx.Exec(insert_query)
 	if err != nil {
-		_ = tx.Rollback()
+		tx.Rollback()
 		return err
 	}
 
 	_, err = tx.Exec(cleanup_query)
 	if err != nil {
-		_ = tx.Rollback()
+		tx.Rollback()
 		return err
 	}
 
-	if err = tx.Commit(); err != nil {
-		return err
-	}
-
-	return nil
+	err = tx.Commit()
+	return err
 }
+
 func (conn PostgresConn) DownsampleOld(cut time.Time) error {
 	// TODO: decide what to do with the old downsampling code (i.e. fix bugs)
 	_, err := conn.db.Exec(`DELETE FROM Stats
