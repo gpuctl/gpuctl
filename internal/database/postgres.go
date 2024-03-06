@@ -241,7 +241,10 @@ WITH OrderedStats AS (
     MaxMemoryClock,
     InUse,
     UserName,
-    ROW_NUMBER() OVER (PARTITION BY Gpu ORDER BY Received ASC) - 1 AS RowNum
+    CASE 
+      WHEN COUNT(*) OVER (PARTITION BY Gpu) < 100 THEN 0 
+      ELSE ROW_NUMBER() OVER (PARTITION BY Gpu ORDER BY Received ASC) - 1 
+    END AS RowNum
   FROM Stats
   WHERE Received > $1
 ),
@@ -269,7 +272,6 @@ GroupedStats AS (
   GROUP BY Gpu, GroupId
 )
 SELECT * FROM GroupedStats;`
-
 	delete_query := `DELETE FROM Stats
 WHERE Received > $1
 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);
