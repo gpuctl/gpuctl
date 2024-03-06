@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/stretchr/testify/assert"
@@ -129,7 +130,7 @@ func TestToToml(t *testing.T) {
 
 	c := config.SatelliteConfiguration{
 		Groundstation: config.Groundstation{"https", "foo.bar", 80},
-		Satellite:     config.Satellite{"/tmp/sat", 15 * config.Second, 5 * config.Second, false},
+		Satellite:     config.Satellite{"/tmp/sat", 15 * time.Second, 5 * time.Second, false},
 	}
 
 	cToml, err := config.ToToml(c)
@@ -150,8 +151,8 @@ func TestToToml(t *testing.T) {
 
 	c2 := config.ControlConfiguration{
 		Timeouts: config.Timeouts{
-			DeathTimeout_:    config.Second,
-			MonitorInterval_: 2 * config.Second,
+			DeathTimeout_:    time.Second,
+			MonitorInterval_: 2 * time.Second,
 		},
 		Server: config.Server{
 			GSPort: 8080,
@@ -161,7 +162,7 @@ func TestToToml(t *testing.T) {
 			InMemory:           false,
 			Postgres:           true,
 			PostgresUrl:        "postgres://postgres@postgres/postgres",
-			DownsampleInterval: 2*config.Hour + 2*config.Minute,
+			DownsampleInterval: 2*time.Hour + 2*time.Minute,
 		},
 		Auth: config.AuthConfig{
 			Username: "joe",

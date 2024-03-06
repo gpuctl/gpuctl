@@ -4,6 +4,7 @@ import (
 	"errors"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/BurntSushi/toml"
 	"github.com/gpuctl/gpuctl/internal/config"
@@ -33,8 +34,8 @@ heartbeat_interval = "5s"`
 	assert.Equal(t, "local.groundstation", conf.Groundstation.Hostname)
 	assert.Equal(t, 8081, conf.Groundstation.Port)
 	assert.Equal(t, "/tmp/satellite", conf.Satellite.Cache)
-	assert.Equal(t, config.Minute, conf.Satellite.DataInterval)
-	assert.Equal(t, 5*config.Second, conf.Satellite.HeartbeatInterval)
+	assert.Equal(t, time.Minute, conf.Satellite.DataInterval)
+	assert.Equal(t, 5*time.Second, conf.Satellite.HeartbeatInterval)
 }
 
 func TestGetSatellite_DefaultConfig(t *testing.T) {
@@ -53,8 +54,8 @@ func TestGetSatellite_DefaultConfig(t *testing.T) {
 	assert.Equal(t, 8080, conf.Groundstation.Port)
 
 	assert.Equal(t, "/tmp/satellite", conf.Satellite.Cache)
-	assert.Equal(t, 2*config.Second, conf.Satellite.HeartbeatInterval)
-	assert.Equal(t, config.Minute, conf.Satellite.DataInterval)
+	assert.Equal(t, 2*time.Second, conf.Satellite.HeartbeatInterval)
+	assert.Equal(t, time.Minute, conf.Satellite.DataInterval)
 }
 
 func TestGetSatellite_InvalidConfig(t *testing.T) {
