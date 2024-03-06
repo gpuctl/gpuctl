@@ -17,6 +17,7 @@ import { AdminPanel } from "./AdminPanel";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useStats } from "../Providers/FetchProvider";
 import { WorkstationView } from "../Components/WorkstationView";
+import { AggregateStats } from "../Components/AggregateStats";
 
 const cardView = (stats: WorkStationGroup[]) => (
   <VStack spacing={5}>
@@ -44,6 +45,12 @@ const cardView = (stats: WorkStationGroup[]) => (
         </VStack>
       </Box>
     ))}
+    <Box key={stats.length} m={5} bg="white" paddingTop={5} paddingBottom={10}>
+      <AggregateStats
+        // TODO: replace with actual aggregate data from backend
+        data={{ average_use: 45.6, uptime: "2 days" }}
+      />
+    </Box>
   </VStack>
 );
 
