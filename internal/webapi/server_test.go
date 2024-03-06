@@ -15,6 +15,8 @@ import (
 	"github.com/gpuctl/gpuctl/internal/tunnel"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 	"github.com/gpuctl/gpuctl/internal/webapi"
+
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -86,9 +88,11 @@ func TestLogOut(t *testing.T) {
 
 func TestAllStatistics(t *testing.T) {
 	// Mock GPUInfo and GPUStatSample data
+	uuid := uuid.MustParse("99f5df6a-d3eb-4381-922b-75da3c73d054")
+
 	gpuInfos := []uplink.GPUInfo{
 		{
-			Uuid:          "uuid-123",
+			Uuid:          uuid,
 			Name:          "GeForce GTX 1080",
 			Brand:         "NVIDIA",
 			DriverVersion: "441.66",
@@ -98,7 +102,7 @@ func TestAllStatistics(t *testing.T) {
 
 	stats := []uplink.GPUStatSample{
 		{
-			Uuid:              "uuid-123",
+			Uuid:              uuid,
 			MemoryUtilisation: 64.5,
 			GPUUtilisation:    75.2,
 			MemoryUsed:        4096, // 4GB

@@ -65,7 +65,7 @@ func createTables(db *sql.DB) error {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS GPUs (
-		Uuid text NOT NULL,
+		Uuid uuid NOT NULL,
 		Machine text NOT NULL REFERENCES Machines (Hostname),
 		Name text NOT NULL,
 		Brand text NOT NULL,
@@ -91,7 +91,7 @@ func createTables(db *sql.DB) error {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Stats (
-		Gpu text REFERENCES GPUs (Uuid) NOT NULL,
+		Gpu uuid REFERENCES GPUs (Uuid) NOT NULL,
 		Received timestamp NOT NULL,
 		MemoryUtilisation real NOT NULL,
 		GpuUtilisation real NOT NULL,
