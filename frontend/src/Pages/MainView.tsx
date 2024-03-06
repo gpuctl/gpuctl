@@ -21,14 +21,7 @@ import { WorkstationView } from "../Components/WorkstationView";
 const cardView = (stats: WorkStationGroup[]) => (
   <VStack spacing={5}>
     {stats.map((l, i) => (
-      <Box
-        key={i}
-        w="97%"
-        m={5}
-        bg={"gray.100"}
-        paddingTop={5}
-        paddingBottom={10}
-      >
+      <Box key={i} w="97%" m={5} bg="white" paddingTop={5} paddingBottom={10}>
         <VStack spacing={5}>
           <Box w="100%" paddingLeft={5}>
             <Heading size="lg" textAlign="left">
