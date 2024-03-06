@@ -1,13 +1,22 @@
 import {
   Alert,
   AlertIcon,
+  AlertDescription,
   Box,
+  Button,
+  Card,
+  CardHeader,
+  CardBody,
+  CardFooter,
   Center,
   HStack,
   Heading,
   Link,
   LinkBox,
   LinkOverlay,
+  Stack,
+  StackDivider,
+  Text,
   Tooltip,
   useColorModeValue,
 } from "@chakra-ui/react";
@@ -44,73 +53,74 @@ export const WorkstationCardMin = ({
 
   return (
     <Center>
-      <Box
-        padding={0}
-        w={width}
-        rounded={"md"}
-        opacity={workstationBusy(gpus) ? 0.4 : 1.0}
-        bg={greyed(workstationBusy(gpus))}
-      >
-        {last_seen !== undefined && last_seen > LAST_SEEN_WARN_THRESH ? (
-          <Alert
-            roundedTopLeft="md"
-            roundedTopRight="md"
-            textAlign="center"
-            status="warning"
-          >
-            <AlertIcon></AlertIcon>
-            {last_seen === undefined
-              ? "Missing provenance data!"
-              : `Last seen over ${Math.floor(last_seen / 60)} minutes ago!`}
-          </Alert>
-        ) : (
-          <></>
-        )}
-        <Box padding={2}>
-          <Heading size="lg" color={textCol}>
+      <LinkBox>
+        <Card
+          size="sm"
+          w={width}
+          opacity={workstationBusy(gpus) ? 0.4 : 1.0}
+          bg={greyed(workstationBusy(gpus))}
+        >
+          {last_seen !== undefined && last_seen > LAST_SEEN_WARN_THRESH ? (
+            <Alert
+              roundedTopLeft="md"
+              roundedTopRight="md"
+              textAlign="center"
+              status="warning"
+            >
+              <AlertIcon />
+              <AlertDescription>
+                {last_seen === undefined
+                  ? "Missing provenance data!"
+                  : `Last seen over ${Math.floor(last_seen / 60)} minutes ago!`}
+              </AlertDescription>
+            </Alert>
+          ) : (
+            <></>
+          )}
+          <CardHeader>
             {last_seen !== undefined && last_seen <= LAST_SEEN_WARN_THRESH ? (
-              <HStack>
-                <Tooltip placement="right-start" label={`Seen recently!`}>
-                  <TimeIcon color={GREEN} />
-                </Tooltip>
-                <Link
+              <Tooltip placement="left-start" label={`Seen recently!`}>
+                <HStack>
+                  <TimeIcon boxSize={10} color={GREEN} />
+                  <Heading isTruncated>
+                    <LinkOverlay
+                      as={ReactRouterLink}
+                      to={{ search: newParams.toString() }}
+                    >
+                      {name}
+                    </LinkOverlay>
+                  </Heading>
+                </HStack>
+              </Tooltip>
+            ) : (
+              <Heading isTruncated>
+                <LinkOverlay
                   as={ReactRouterLink}
                   to={{ search: newParams.toString() }}
-                  isTruncated
                 >
-                  {" " + name}
-                </Link>
-              </HStack>
-            ) : (
-              <Link
-                as={ReactRouterLink}
-                to={{ search: newParams.toString() }}
-                isTruncated
-              >
-                {name}
-              </Link>
+                  {name}
+                </LinkOverlay>
+              </Heading>
             )}
-          </Heading>
-          <LinkBox>
-            <LinkOverlay
-              as={ReactRouterLink}
-              to={{ search: newParams.toString() }}
-            />
-            {gpus.map((s, i) => (
-              <Box key={i}>
-                <Heading size="md">{`${s.gpu_name} (${(
-                  s.memory_total / 1000
-                ).toFixed(0)} GB)`}</Heading>
-                <p>{`${s.in_use ? `🔴 In-use (User: ${s.user})` : "🟢 Available"}`}</p>
-                <p>{`${s.gpu_util < 10 ? "🐌" : "🏎️" + "☁️".repeat(Math.ceil(s.gpu_util / 40))} GPU Usage: ${Math.round(s.gpu_util)}%`}</p>
-                <p>{`${s.gpu_temp < 75 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${Math.round(
-                  s.gpu_temp,
-                )} °C (${Math.round(s.fan_speed)}% Fan Speed)`}</p>
-              </Box>
-            ))}
-          </LinkBox>
-        </Box>
-      </Box>
+          </CardHeader>
+          <CardBody>
+            <Stack divider={<StackDivider />} spacing="4">
+              {gpus.map((s, i) => (
+                <Box key={i}>
+                  <Heading size="md">{`${s.gpu_name} (${(
+                    s.memory_total / 1000
+                  ).toFixed(0)} GB)`}</Heading>
+                  <Text>{`${s.in_use ? `🔴 In-use (User: ${s.user})` : "🟢 Available"}`}</Text>
+                  <Text>{`${s.gpu_util < 10 ? "🐌" : "🏎️" + "☁️".repeat(Math.ceil(s.gpu_util / 40))} GPU Usage: ${Math.round(s.gpu_util)}%`}</Text>
+                  <Text>{`${s.gpu_temp < 75 ? "❄️" : s.gpu_temp < 95 ? "🌡️" : "🔥"} ${Math.round(
+                    s.gpu_temp,
+                  )} °C (${Math.round(s.fan_speed)}% Fan Speed)`}</Text>
+                </Box>
+              ))}
+            </Stack>
+          </CardBody>
+        </Card>
+      </LinkBox>
     </Center>
   );
 };
