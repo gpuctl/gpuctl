@@ -270,15 +270,15 @@ export const GroupInfoManagement = ({
                           {copied ? "Copied" : "Copy Shutdown Command"}
                         </Button>
                       </Td>
-                    <Td>
-                      <Button
-                        colorScheme="green"
-                        onClick={handleViewFiles(workstation.name)}
-                      >
-                        Files
-                      </Button>
-                    </Td>
-                  </Tr>                
+                      <Td>
+                        <Button
+                          colorScheme="green"
+                          onClick={handleViewFiles(workstation.name)}
+                        >
+                          Files
+                        </Button>
+                      </Td>
+                    </Tr>
                   );
                 }),
               ),

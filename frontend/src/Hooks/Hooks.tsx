@@ -2,7 +2,13 @@ import { useToast } from "@chakra-ui/react";
 import { STATS_PATH } from "../Config/Paths";
 import { GPUStats } from "../Data";
 import { useAuth } from "../Providers/AuthProvider";
-import { fire, success, Validated, validatedElim, Validation } from "../Utils/Utils";
+import {
+  fire,
+  success,
+  Validated,
+  validatedElim,
+  Validation,
+} from "../Utils/Utils";
 import { API_URL } from "../App";
 import { useJarJar } from "../Utils/Hooks";
 import { useInterval } from "@chakra-ui/react";
