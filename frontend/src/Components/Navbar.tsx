@@ -42,6 +42,7 @@ export const Navbar = ({
       onChange={(i) => nav(URLS[i])}
       defaultIndex={VIEW_PAGE_INDEX[initial]}
     >
+      <Heading size="xl">GPU Control Room</Heading>
       <TabList>
         <Tab>Card View</Tab>
         <Tab>Table View</Tab>
@@ -62,7 +63,6 @@ export const Navbar = ({
           </Popover>
         )}
       </TabList>
-      <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
       <TabPanels>
         {children.map((c, i) => (
           <TabPanel key={i}>{c}</TabPanel>
