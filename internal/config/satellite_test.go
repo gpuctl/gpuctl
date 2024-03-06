@@ -1,9 +1,11 @@
 package config_test
 
 import (
+	"errors"
 	"path/filepath"
 	"testing"
 
+	"github.com/BurntSushi/toml"
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/stretchr/testify/assert"
 )
@@ -18,21 +20,21 @@ port = 8081
 
 [satellite]
 cache = "/tmp/satellite"
-data_interval = 60
-heartbeat_interval = 5`
+data_interval = "1m"
+heartbeat_interval = "5s"`
 	filename, cleanup := CreateTempConfigFile(content, t)
 	defer cleanup()
 
 	filename = filepath.Base(filename)
 
-	config, err := config.GetSatellite(filename)
+	conf, err := config.GetSatellite(filename)
 	assert.NoError(t, err)
-	assert.Equal(t, "http", config.Groundstation.Protocol)
-	assert.Equal(t, "local.groundstation", config.Groundstation.Hostname)
-	assert.Equal(t, 8081, config.Groundstation.Port)
-	assert.Equal(t, "/tmp/satellite", config.Satellite.Cache)
-	assert.Equal(t, 60, config.Satellite.DataInterval)
-	assert.Equal(t, 5, config.Satellite.HeartbeatInterval)
+	assert.Equal(t, "http", conf.Groundstation.Protocol)
+	assert.Equal(t, "local.groundstation", conf.Groundstation.Hostname)
+	assert.Equal(t, 8081, conf.Groundstation.Port)
+	assert.Equal(t, "/tmp/satellite", conf.Satellite.Cache)
+	assert.Equal(t, config.Minute, conf.Satellite.DataInterval)
+	assert.Equal(t, 5*config.Second, conf.Satellite.HeartbeatInterval)
 }
 
 func TestGetSatellite_DefaultConfig(t *testing.T) {
@@ -44,15 +46,15 @@ func TestGetSatellite_DefaultConfig(t *testing.T) {
 
 	filename = filepath.Base(filename)
 
-	config, err := config.GetSatellite(filename)
+	conf, err := config.GetSatellite(filename)
 	assert.NoError(t, err)
-	assert.Equal(t, "http", config.Groundstation.Protocol)
-	assert.Equal(t, "localhost", config.Groundstation.Hostname)
-	assert.Equal(t, 8080, config.Groundstation.Port)
+	assert.Equal(t, "http", conf.Groundstation.Protocol)
+	assert.Equal(t, "localhost", conf.Groundstation.Hostname)
+	assert.Equal(t, 8080, conf.Groundstation.Port)
 
-	assert.Equal(t, "/tmp/satellite", config.Satellite.Cache)
-	assert.Equal(t, 2, config.Satellite.HeartbeatInterval)
-	assert.Equal(t, 60, config.Satellite.DataInterval)
+	assert.Equal(t, "/tmp/satellite", conf.Satellite.Cache)
+	assert.Equal(t, 2*config.Second, conf.Satellite.HeartbeatInterval)
+	assert.Equal(t, config.Minute, conf.Satellite.DataInterval)
 }
 
 func TestGetSatellite_InvalidConfig(t *testing.T) {
@@ -66,11 +68,11 @@ groundstation: "should be a table, not a string"`
 	filename = filepath.Base(filename)
 
 	config, err := config.GetSatellite(filename)
-	assert.Error(t, err)
-	assert.Equal(t, "", config.Groundstation.Hostname)
-	assert.Equal(t, 0, config.Groundstation.Port)
 
-	assert.Equal(t, "", config.Satellite.Cache)
-	assert.Equal(t, 0, config.Satellite.HeartbeatInterval)
-	assert.Equal(t, 0, config.Satellite.DataInterval)
+	var parseError toml.ParseError
+	if !errors.As(err, &parseError) {
+		t.Fatal("Expected a parse error, but got", err)
+	}
+
+	assert.Zero(t, config)
 }

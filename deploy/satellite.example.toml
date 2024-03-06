@@ -4,6 +4,6 @@ hostname = "gpuctl.perial.co.uk"
 port = 443
 
 [Satellite]
-data_interval = 15000000000
-heartbeat_interval = 5000000000
+data_interval = "15s"
+heartbeat_interval = "5s"
 fake_gpu = false

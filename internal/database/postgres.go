@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+
 	//	"reflect"
 	"strings"
 	"time"
@@ -64,7 +65,7 @@ func createTables(db *sql.DB) error {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS GPUs (
-		Uuid text NOT NULL,
+		Uuid uuid NOT NULL,
 		Machine text NOT NULL REFERENCES Machines (Hostname),
 		Name text NOT NULL,
 		Brand text NOT NULL,
@@ -90,7 +91,7 @@ func createTables(db *sql.DB) error {
 	}
 
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS Stats (
-		Gpu text REFERENCES GPUs (Uuid) NOT NULL,
+		Gpu uuid REFERENCES GPUs (Uuid) NOT NULL,
 		Received timestamp NOT NULL,
 		MemoryUtilisation real NOT NULL,
 		GpuUtilisation real NOT NULL,
@@ -220,121 +221,11 @@ func (conn PostgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) er
 	return err
 }
 
-func (conn PostgresConn) Downsample(int_now int64) error {
-	downsample_query := `CREATE TEMPORARY TABLE TempDownsampled AS
-WITH OrderedStats AS (
-  SELECT
-    Gpu,
-    Received,
-    MemoryUtilisation,
-    GpuUtilisation,
-    MemoryUsed,
-    FanSpeed,
-    Temp,
-    MemoryTemp,
-    GraphicsVoltage,
-    PowerDraw,
-    GraphicsClock,
-    MaxGraphicsClock,
-    MemoryClock,
-    MaxMemoryClock,
-    InUse,
-    UserName,
-    ROW_NUMBER() OVER (PARTITION BY Gpu ORDER BY Received ASC) - 1 AS RowNum
-  FROM Stats
-  WHERE Received > $1
-),
-GroupedStats AS (
-  SELECT
-    Gpu,
-    AVG(MemoryUtilisation) AS AvgMemoryUtilisation,
-    AVG(GpuUtilisation) AS AvgGpuUtilisation,
-    AVG(MemoryUsed) AS AvgMemoryUsed,
-    AVG(FanSpeed) AS AvgFanSpeed,
-    AVG(Temp) AS AvgTemp,
-    AVG(MemoryTemp) AS AvgMemoryTemp,
-    AVG(GraphicsVoltage) AS AvgGraphicsVoltage,
-    AVG(PowerDraw) AS AvgPowerDraw,
-    AVG(GraphicsClock) AS AvgGraphicsClock,
-    AVG(MaxGraphicsClock) AS AvgMaxGraphicsClock,
-    AVG(MemoryClock) AS AvgMemoryClock,
-    AVG(MaxMemoryClock) AS AvgMaxMemoryClock,
-    MIN(Received) AS SampleStartTime,
-    MAX(Received) AS SampleEndTime,
-    (RowNum / 100) AS GroupId,
-    bool_or(InUse) AS OrInUse,
-    mode() WITHIN GROUP (ORDER BY UserName) as ModeUserName
-  FROM OrderedStats
-  GROUP BY Gpu, GroupId
-)
-SELECT * FROM GroupedStats;`
-
-	delete_query := `DELETE FROM Stats
-WHERE Received > $1
-AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);
-	`
-
-	insert_query := `INSERT INTO Stats (Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed, FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw, GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock, InUse, UserName)
-SELECT
-  Gpu,
-  SampleStartTime, 
-  AvgMemoryUtilisation,
-  AvgGpuUtilisation,
-  AvgMemoryUsed,
-  AvgFanSpeed,
-  AvgTemp,
-  AvgMemoryTemp,
-  AvgGraphicsVoltage,
-  AvgPowerDraw,
-  AvgGraphicsClock,
-  AvgMaxGraphicsClock,
-  AvgMemoryClock,
-  AvgMaxMemoryClock,
-  OrInUse,
-  ModeUserName
-FROM TempDownsampled;
-	`
-
-	cleanup_query := `DROP TABLE TempDownsampled;`
-
-	now := time.Unix(int_now, 0)
-	sixMonthsAgo := now.AddDate(0, -6, 0)
-	sixMonthsAgoFormatted := sixMonthsAgo.Format("2006-01-02 15:04:05")
-
-	tx, err := conn.db.Begin()
-	if err != nil {
-		return err
-	}
-
-	_, err = tx.Exec(downsample_query, sixMonthsAgoFormatted)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	_, err = tx.Exec(delete_query, sixMonthsAgoFormatted)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	_, err = tx.Exec(insert_query)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	_, err = tx.Exec(cleanup_query)
-	if err != nil {
-		_ = tx.Rollback()
-		return err
-	}
-
-	if err = tx.Commit(); err != nil {
-		return err
-	}
-
-	return nil
+func (conn PostgresConn) Downsample(cut time.Time) error {
+	// TODO: decide what to do with the old downsampling code (i.e. fix bugs)
+	_, err := conn.db.Exec(`DELETE FROM Stats
+				WHERE Received < $1`, cut)
+	return err
 }
 
 // TODO: consider returning workstationGroup
@@ -633,12 +524,8 @@ func (conn PostgresConn) LastSeen() ([]broadcast.WorkstationSeen, error) {
 
 	for rows.Next() {
 		var seen_instance broadcast.WorkstationSeen
-		var t time.Time
 
-		err = rows.Scan(&seen_instance.Hostname, &t)
-
-		seen_instance.LastSeen = t.Unix()
-
+		err := rows.Scan(&seen_instance.Hostname, &seen_instance.LastSeen)
 		if err != nil {
 			return nil, err
 		}
@@ -719,4 +606,149 @@ func (conn PostgresConn) RemoveFile(remove broadcast.RemoveFile) error {
 		return ErrFileNotPresent
 	}
 	return err
+}
+
+func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
+	data := broadcast.HistoricalData{}
+	samples, err := conn.db.Query(`SELECT
+		s.Gpu,
+		s.Received,
+		s.MemoryUtilisation,
+		s.GpuUtilisation,
+		s.MemoryUsed,
+		s.FanSpeed,
+		s.Temp,
+		s.MemoryTemp,
+		s.GraphicsVoltage,
+		s.PowerDraw,
+		s.GraphicsClock,
+		s.MaxGraphicsClock,
+		s.MemoryClock,
+		s.MaxMemoryClock,
+		s.InUse,
+		s.UserName
+		FROM Stats s
+		INNER JOIN GPUs g ON g.Uuid = s.Gpu
+		WHERE g.Machine=$1
+		ORDER BY s.Received, s.Gpu`,
+		hostname,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// XXX: I hate, HATE what is below this comment, but it has to be done because we
+	//  	need to pass each gpu in its own list to the front-end
+	// NOTE: what we do here is that we accumulate over the stats and package all samples by their insert time
+
+	currtimestamp := time.Now()
+	currpoint := broadcast.HistoricalDataPoint{}
+
+	for samples.Next() {
+		var sample broadcast.GPU
+		var timestamp time.Time
+
+		err = samples.Scan(
+			&sample.Uuid,
+			&timestamp,
+			&sample.MemoryUtilisation,
+			&sample.GPUUtilisation,
+			&sample.MemoryUsed,
+			&sample.FanSpeed,
+			&sample.Temp,
+			&sample.MemoryTemp,
+			&sample.GraphicsVoltage,
+			&sample.PowerDraw,
+			&sample.GraphicsClock,
+			&sample.MaxGraphicsClock,
+			&sample.MemoryClock,
+			&sample.MaxMemoryClock,
+			&sample.InUse,
+			&sample.User,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		// Separate into different buckets based on the timestamp (error upto second)
+		if !timestamp.Round(time.Second).Equal(currtimestamp.Round(time.Second)) {
+			data = append(data, currpoint)
+			currtimestamp = timestamp
+			currpoint.Timestamp = timestamp.Unix()
+			currpoint.Samples = make([]broadcast.GPU, 0)
+		}
+		currpoint.Samples = append(currpoint.Samples, sample)
+	}
+	data = append(data, currpoint)
+
+	return data[1:], nil
+}
+func (conn PostgresConn) AggregateData(days int) (broadcast.AggregateData, error) {
+	// TODO: add functionality for this to be variable
+	var data broadcast.AggregateData
+	threshold := time.Now().AddDate(0, 0, -days).Unix()
+
+	samples, err := conn.db.Query(`SELECT s.Received,
+		s.PowerDraw,
+		s.InUse
+		FROM Stats s
+		WHERE s.Received > $1
+		ORDER BY s.Received`,
+		threshold,
+	)
+	if err != nil {
+		return data, err
+	}
+
+	// XXX: I hate EVERYTHING about the rest of this function,
+	//  	but idk how to write a better SQL query
+	lastseen := make(map[string]time.Time)
+	usage := make(map[string]int64)
+	totalTime := make(map[string]int64)
+	totalEnergy := float64(0)
+	for samples.Next() {
+		var t time.Time
+		var powerDraw float64
+		var inUse bool
+		var uuid string
+		err = samples.Scan(&t, &powerDraw, &inUse)
+		if err != nil {
+			return data, err
+		}
+		if prev, ok := lastseen[uuid]; ok {
+			delta := t.Sub(prev).Seconds()
+
+			if sum, ok := usage[uuid]; inUse && ok {
+				usage[uuid] = sum + int64(delta)
+			} else if inUse {
+				usage[uuid] = int64(delta)
+			}
+
+			if sum, ok := totalTime[uuid]; ok {
+				totalTime[uuid] = sum + int64(delta)
+			} else {
+				totalTime[uuid] = int64(delta)
+			}
+
+			totalEnergy += powerDraw * delta
+		}
+		lastseen[uuid] = t
+	}
+
+	// sum up usage
+	totalt := int64(0)
+	usedt := int64(0)
+	for uuid, totalTime := range totalTime {
+		totalt += totalTime
+		if ut, ok := usage[uuid]; ok {
+			usedt += ut
+		}
+	}
+
+	// return results
+	if totalt != 0 {
+		data.PercentUsed = int(usedt) / int(totalt)
+	}
+	data.TotalEnergy = uint64(totalEnergy)
+	return data, nil
 }

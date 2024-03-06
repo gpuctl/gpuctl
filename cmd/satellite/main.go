@@ -15,6 +15,8 @@ import (
 	"github.com/gpuctl/gpuctl/internal/passwd"
 	"github.com/gpuctl/gpuctl/internal/procinfo"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+
+	"github.com/google/uuid"
 )
 
 var (
@@ -183,7 +185,15 @@ func processStats(stats [][]uplink.GPUStatSample) []uplink.GPUStatSample {
 
 func setGPUHandler(log *slog.Logger, isFakeGPUs bool) gpustats.GPUDataSource {
 	if isFakeGPUs {
-		return gpustats.FakeGPU{}
+		// generate two random throwaway uuids for the fake gpu
+		fakeUuid1, err1 := uuid.NewRandom()
+		fakeUuid2, err2 := uuid.NewRandom()
+		err := errors.Join(err1, err2)
+		if err != nil {
+			log.Error("Could not generate random uuid, will use default constructed one", "err", err)
+			return gpustats.FakeGPU{}
+		}
+		return gpustats.FakeGPU{Uuids: [2]uuid.UUID{fakeUuid1, fakeUuid2}}
 	} else {
 		passwdfile, err := os.Open("/etc/passwd")
 		if err != nil {

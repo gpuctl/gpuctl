@@ -12,6 +12,8 @@ import (
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+
+	"github.com/google/uuid"
 )
 
 type gpuInfo struct {
@@ -21,9 +23,9 @@ type gpuInfo struct {
 
 type inMemory struct {
 	machines map[string]broadcast.ModifyMachine         // maps from hostname to machine info
-	infos    map[string]gpuInfo                         // maps from uuids to context info
-	stats    map[string][]uplink.GPUStatSample          // maps from uuids to slices of stats, allowing tracking of multiple datapoints
-	lastSeen map[string]int64                           // map from hostname to last seen time
+	infos    map[uuid.UUID]gpuInfo                      // maps from uuids to context info
+	stats    map[uuid.UUID][]uplink.GPUStatSample       // maps from uuids to slices of stats, allowing tracking of multiple datapoints
+	lastSeen map[string]time.Time                       // map from hostname to last seen time
 	files    map[string]map[string]broadcast.AttachFile // maps from hostname to attached files
 	mu       sync.Mutex                                 // mutex
 }
@@ -31,9 +33,9 @@ type inMemory struct {
 func InMemory() Database {
 	return &inMemory{
 		machines: make(map[string]broadcast.ModifyMachine),
-		infos:    make(map[string]gpuInfo),
-		stats:    make(map[string][]uplink.GPUStatSample),
-		lastSeen: make(map[string]int64),
+		infos:    make(map[uuid.UUID]gpuInfo),
+		stats:    make(map[uuid.UUID][]uplink.GPUStatSample),
+		lastSeen: make(map[string]time.Time),
 		files:    make(map[string]map[string]broadcast.AttachFile),
 	}
 }
@@ -46,7 +48,7 @@ func (m *inMemory) AppendDataPoint(sample uplink.GPUStatSample) error {
 		return ErrGpuNotPresent
 	} else {
 		m.stats[sample.Uuid] = append(m.stats[sample.Uuid], sample)
-		m.lastSeen[info.host] = time.Now().Unix()
+		m.lastSeen[info.host] = time.Now()
 	}
 
 	return nil
@@ -62,7 +64,7 @@ func (m *inMemory) UpdateGPUContext(host string, packet uplink.GPUInfo) error {
 	if _, exists := m.stats[packet.Uuid]; !exists {
 		m.stats[packet.Uuid] = []uplink.GPUStatSample{}
 	}
-	m.lastSeen[host] = time.Now().Unix()
+	m.lastSeen[host] = time.Now()
 
 	return nil
 }
@@ -120,7 +122,7 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 			Motherboard: info.Motherboard,
 			Notes:       info.Notes,
 			Owner:       info.Owner,
-			LastSeen:    time.Since(time.Unix(m.lastSeen[machine], 0)),
+			LastSeen:    time.Since(m.lastSeen[machine]),
 			Gpus:        gpus[machine],
 		}
 
@@ -135,11 +137,11 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 	return result, nil
 }
 
-func (m *inMemory) UpdateLastSeen(host string, time int64) error {
+func (m *inMemory) UpdateLastSeen(host string, whenSeen int64) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.lastSeen[host] = time
+	m.lastSeen[host] = time.Unix(whenSeen, 0)
 	if _, found := m.machines[host]; !found {
 		m.machines[host] = broadcast.ModifyMachine{Hostname: host}
 	}
@@ -159,14 +161,14 @@ func (m *inMemory) LastSeen() ([]broadcast.WorkstationSeen, error) {
 	return seen, nil
 }
 
-func (m *inMemory) Downsample(cutoffTime int64) error {
+func (m *inMemory) Downsample(cutoffTime time.Time) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	for uuid, samples := range m.stats {
 		var oldSamples, newSamples []uplink.GPUStatSample
 		for _, sample := range samples {
-			if sample.Time < cutoffTime {
+			if sample.Time < cutoffTime.Unix() {
 				oldSamples = append(oldSamples, sample)
 			} else {
 				newSamples = append(newSamples, sample)
@@ -268,7 +270,7 @@ func (m *inMemory) NewMachine(machine broadcast.NewMachine) error {
 		return ErrMachineFoundTwice
 	}
 
-	m.lastSeen[machine.Hostname] = time.Now().Unix()
+	m.lastSeen[machine.Hostname] = time.Now()
 
 	newMachine := broadcast.ModifyMachine{
 		Hostname: machine.Hostname,
@@ -287,7 +289,7 @@ func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	uuidsToRemove := make([]string, 0)
+	uuidsToRemove := make([]uuid.UUID, 0)
 	for uuid, info := range m.infos {
 		if info.host == machine.Hostname {
 			uuidsToRemove = append(uuidsToRemove, uuid)
@@ -419,4 +421,12 @@ func (m *inMemory) RemoveFile(remove broadcast.RemoveFile) error {
 	}
 	delete(m.files[remove.Hostname], remove.Filename)
 	return nil
+}
+
+// TODO: add implementations for the functions
+func (m *inMemory) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
+	return broadcast.HistoricalData{}, ErrNotImplemented
+}
+func (m *inMemory) AggregateData(days int) (broadcast.AggregateData, error) {
+	return broadcast.AggregateData{}, ErrNotImplemented
 }

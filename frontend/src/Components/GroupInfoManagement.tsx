@@ -22,6 +22,7 @@ import {
   List,
   ListItem,
   Flex,
+  Link,
 } from "@chakra-ui/react";
 import { EditableField } from "./EditableFields";
 import { WorkStationGroup } from "../Data";
@@ -34,6 +35,8 @@ import {
   useUploadFile,
 } from "../Hooks/Hooks";
 import { GS } from "../Pages/AdminPanel";
+
+import { Link as ReactRouterLink, useSearchParams } from "react-router-dom";
 
 export const GroupInfoManagement = ({
   GroupSelect,
@@ -51,6 +54,7 @@ export const GroupInfoManagement = ({
   const [copied, setCopied] = useState(false);
   const [currentMachine, setCurrentMachine] = useState("");
   const [currentFile, setCurrentFile] = useState("");
+  const [params] = useSearchParams();
 
   const [files, setFiles] = useState<any[]>([]); // TODO: Change this any
   const removeMachine = useRemoveMachine();
@@ -196,66 +200,75 @@ export const GroupInfoManagement = ({
           <Tbody>
             {instKeys(
               groups.flatMap((group) =>
-                group.workstations.map((workstation) => (k) => (
-                  <Tr key={workstation.name}>
-                    <Td>{workstation.name}</Td>
-                    <EditableField
-                      GroupSelect={GroupSelect}
-                      group={group.name}
-                      workstation={workstation}
-                      fieldKey="group"
-                      placeholder="unknown"
-                      isEven={k % 2 === 0}
-                    />
-                    <EditableField
-                      GroupSelect={GroupSelect}
-                      group={group.name}
-                      workstation={workstation}
-                      fieldKey="cpu"
-                      placeholder="unknown"
-                      isEven={k % 2 === 0}
-                    />
-                    <EditableField
-                      GroupSelect={GroupSelect}
-                      group={group.name}
-                      workstation={workstation}
-                      fieldKey="motherboard"
-                      placeholder="unknown"
-                      isEven={k % 2 === 0}
-                    />
-                    <EditableField
-                      GroupSelect={GroupSelect}
-                      group={group.name}
-                      workstation={workstation}
-                      fieldKey="notes"
-                      placeholder="none"
-                      isEven={k % 2 === 0}
-                    />
-                    <EditableField
-                      GroupSelect={GroupSelect}
-                      group={group.name}
-                      workstation={workstation}
-                      fieldKey="owner"
-                      placeholder="none"
-                      isEven={k % 2 == 0}
-                    />
-                    <Td>
-                      <Button
-                        colorScheme="red"
-                        onClick={() => removeMachine(workstation.name)}
-                      >
-                        Remove
-                      </Button>
-                    </Td>
-                    <Td>
-                      <Button
-                        colorScheme="blue"
-                        onClick={() => handleShutdownClick(workstation.name)}
-                        disabled={copied}
-                      >
-                        {copied ? "Copied" : "Copy Shutdown Command"}
-                      </Button>
-                    </Td>
+                group.workstations.map((workstation) => (k) => {
+                  const newParams = new URLSearchParams(
+                    Object.fromEntries(Array.from(params.entries())),
+                  );
+                  newParams.append("selected", workstation.name);
+
+                  return (
+                    <Tr key={workstation.name}>
+                      <Td>
+                        {" "}
+                        <Link
+                          as={ReactRouterLink}
+                          to={{ search: newParams.toString() }}
+                        >
+                          {workstation.name}{" "}
+                        </Link>
+                      </Td>
+                      <EditableField
+                        group={group.name}
+                        workstation={workstation}
+                        fieldKey="group"
+                        placeholder="unknown"
+                        isEven={k % 2 === 0}
+                      />
+                      <EditableField
+                        group={group.name}
+                        workstation={workstation}
+                        fieldKey="cpu"
+                        placeholder="unknown"
+                        isEven={k % 2 === 0}
+                      />
+                      <EditableField
+                        group={group.name}
+                        workstation={workstation}
+                        fieldKey="motherboard"
+                        placeholder="unknown"
+                        isEven={k % 2 === 0}
+                      />
+                      <EditableField
+                        group={group.name}
+                        workstation={workstation}
+                        fieldKey="notes"
+                        placeholder="none"
+                        isEven={k % 2 === 0}
+                      />
+                      <EditableField
+                        group={group.name}
+                        workstation={workstation}
+                        fieldKey="owner"
+                        placeholder="none"
+                        isEven={k % 2 === 0}
+                      />
+                      <Td>
+                        <Button
+                          colorScheme="red"
+                          onClick={() => removeMachine(workstation.name)}
+                        >
+                          Remove
+                        </Button>
+                      </Td>
+                      <Td>
+                        <Button
+                          colorScheme="blue"
+                          onClick={() => handleShutdownClick(workstation.name)}
+                          disabled={copied}
+                        >
+                          {copied ? "Copied" : "Copy Shutdown Command"}
+                        </Button>
+                      </Td>
                     <Td>
                       <Button
                         colorScheme="green"
@@ -264,8 +277,9 @@ export const GroupInfoManagement = ({
                         Files
                       </Button>
                     </Td>
-                  </Tr>
-                )),
+                  </Tr>                
+                  );
+                }),
               ),
             )}
           </Tbody>

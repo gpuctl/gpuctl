@@ -5,7 +5,6 @@ import (
 	"log"
 	"log/slog"
 	"os"
-	"time"
 
 	"golang.org/x/crypto/ssh"
 
@@ -55,8 +54,8 @@ func main() {
 		RemoteConf: config.SatelliteConfiguration{
 			Groundstation: config.Groundstation{"https://", "gpuctl.perial.co.uk", 80},
 			Satellite: config.Satellite{
-				DataInterval:      int(10 * time.Second),
-				HeartbeatInterval: int(5 * time.Second),
+				DataInterval:      10 * config.Second,
+				HeartbeatInterval: 5 * config.Second,
 				FakeGPU:           true,
 				Cache:             "/data/gpuctl/cache",
 			},

@@ -6,12 +6,16 @@ import (
 	"time"
 
 	"github.com/gpuctl/gpuctl/internal/uplink"
+
+	"github.com/google/uuid"
 )
 
 func TestCalculateAverage(t *testing.T) {
+	gpu1 := uuid.MustParse("2cd69871-b162-4b5c-963d-0ab9cac5baaf")
+
 	samples := []uplink.GPUStatSample{
 		{
-			Uuid:              "gpu-1",
+			Uuid:              gpu1,
 			MemoryUtilisation: 50,
 			GPUUtilisation:    25,
 			MemoryUsed:        4000,
@@ -30,7 +34,7 @@ func TestCalculateAverage(t *testing.T) {
 			},
 		},
 		{
-			Uuid:              "gpu-1",
+			Uuid:              gpu1,
 			MemoryUtilisation: 60,
 			GPUUtilisation:    35,
 			MemoryUsed:        5000,
@@ -51,7 +55,7 @@ func TestCalculateAverage(t *testing.T) {
 	}
 
 	expected := uplink.GPUStatSample{
-		Uuid:              "gpu-1",
+		Uuid:              gpu1,
 		MemoryUtilisation: 55,
 		GPUUtilisation:    30,
 		MemoryUsed:        4500,
@@ -137,9 +141,9 @@ var now = time.Date(2024, time.February, 1, 0, 0, 0, 0, time.Local)
 func TestDownsample(t *testing.T) {
 	db := InMemory().(*inMemory)
 
-	cutoffTime := now.AddDate(0, -6, 0).Unix()
+	cutoffTime := now.AddDate(0, -6, 0)
 
-	gpuUUID := "gpu-test-1"
+	gpuUUID := uuid.MustParse("96cd8554-161d-4865-9767-60c1779c57b9")
 	hostName := "test-host"
 
 	db.infos[gpuUUID] = gpuInfo{host: hostName, context: uplink.GPUInfo{Uuid: gpuUUID}}
@@ -187,7 +191,8 @@ func TestDownsamplePruneMethod(t *testing.T) {
 	db := InMemory().(*inMemory)
 
 	cutoffTime := now.AddDate(0, -6, 0)
-	gpuUUID := "gpu-test-1"
+	// use all 1s uuid for test
+	gpuUUID := uuid.MustParse("95a6f0b2-634c-41ab-91e2-1b9782cf8cbd")
 	hostName := "test-host"
 
 	db.infos[gpuUUID] = gpuInfo{host: hostName, context: uplink.GPUInfo{Uuid: gpuUUID}}

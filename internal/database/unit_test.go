@@ -17,6 +17,8 @@ import (
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/database"
 	"github.com/gpuctl/gpuctl/internal/uplink"
+
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -63,7 +65,7 @@ var UnitTests = [...]unitTest{
 // fake data for adding during tests
 // TODO: update with processes when they're implemented
 var fakeDataInfo = uplink.GPUInfo{
-	Uuid:          "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	Uuid:          uuid.MustParse("7d86d61f-acb4-a007-7535-203264c18e6a"),
 	Name:          "GT 1030",
 	Brand:         "NVidia",
 	DriverVersion: "v1.4.5",
@@ -72,7 +74,7 @@ var fakeDataInfo = uplink.GPUInfo{
 
 // Two fake data samples for THE SAME gpu
 var fakeDataSample = uplink.GPUStatSample{
-	Uuid:              "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	Uuid:              uuid.MustParse("7d86d61f-acb4-a007-7535-203264c18e6a"),
 	MemoryUtilisation: 25.4,
 	GPUUtilisation:    63.5,
 	MemoryUsed:        1.24,
@@ -88,7 +90,7 @@ var fakeDataSample = uplink.GPUStatSample{
 	RunningProcesses:  nil,
 }
 var fakeDataSample2 = uplink.GPUStatSample{
-	Uuid:              "GPU-7d86d61f-acb4-a007-7535-203264c18e6a",
+	Uuid:              uuid.MustParse("7d86d61f-acb4-a007-7535-203264c18e6a"),
 	MemoryUtilisation: 2,
 	GPUUtilisation:    6,
 	MemoryUsed:        1.2,
@@ -305,8 +307,8 @@ func multipleHeartbeats(t *testing.T, db database.Database) {
 
 func testLastSeen1(t *testing.T, db database.Database) {
 	host := "TestHost"
-	lastSeenTime := time.Now().Unix()
-	db.UpdateLastSeen(host, lastSeenTime)
+	lastSeenTime := time.Now()
+	db.UpdateLastSeen(host, lastSeenTime.Unix())
 
 	lastSeenData, err := db.LastSeen()
 	if err != nil {
@@ -315,21 +317,26 @@ func testLastSeen1(t *testing.T, db database.Database) {
 
 	found := false
 	for _, data := range lastSeenData {
-		if data.Hostname == host && data.LastSeen == lastSeenTime {
+		if data.Hostname == host &&
+			data.LastSeen.Unix() == lastSeenTime.Unix() {
 			found = true
 			break
 		}
 	}
 	if !found {
-		t.Errorf("Last seen data for host %s was not updated correctly", host)
+		t.Errorf("For host %s wanted to find %#v, but data only had %#v", host, lastSeenTime, lastSeenData)
 	}
 }
 
 func testLastSeen2(t *testing.T, db database.Database) {
-	err := db.UpdateLastSeen("foo", 1234567890)
+
+	t1 := time.Date(1, 2, 3, 4, 5, 6, 0, time.UTC)
+	t2 := time.Date(7, 8, 9, 10, 11, 12, 0, time.UTC)
+
+	err := db.UpdateLastSeen("foo", t1.Unix())
 	assert.NoError(t, err)
 
-	err = db.UpdateLastSeen("bar", 9876543210)
+	err = db.UpdateLastSeen("bar", t2.Unix())
 	assert.NoError(t, err)
 
 	seen, err := db.LastSeen()
@@ -337,15 +344,18 @@ func testLastSeen2(t *testing.T, db database.Database) {
 	assert.Len(t, seen, 2)
 
 	expected := []broadcast.WorkstationSeen{
-		{Hostname: "foo", LastSeen: 1234567890},
-		{Hostname: "bar", LastSeen: 9876543210},
+		{Hostname: "foo", LastSeen: t1.Round(time.Second)},
+		{Hostname: "bar", LastSeen: t2.Round(time.Second)},
 	}
 
-	assert.ElementsMatch(t, expected, seen)
+	assert.Equal(t, expected[0].Hostname, "foo")
+	assert.Equal(t, expected[1].Hostname, "bar")
+	assert.True(t, t1.Equal(expected[0].LastSeen))
+	assert.True(t, t2.Equal(expected[1].LastSeen))
 }
 
 func testAppendDataPointMissingGPU(t *testing.T, db database.Database) {
-	err := db.AppendDataPoint(uplink.GPUStatSample{Uuid: "bogus_uuid_blah"})
+	err := db.AppendDataPoint(uplink.GPUStatSample{Uuid: uuid.MustParse("00bb654e-1823-46ae-a26c-e884e2f00ff4")})
 	assert.Error(t, err)
 	assert.EqualError(t, err, database.ErrGpuNotPresent.Error())
 }
@@ -507,7 +517,7 @@ func removingMachineAndSamples(t *testing.T, db database.Database) {
 // db layer handles process information
 func inUseInformation(t *testing.T, db database.Database) {
 	fakeHost := "hamster"
-	fakeUuid := "jeff's phone no."
+	fakeUuid := uuid.MustParse("9adb69f0-1b1c-43ce-babe-99821d2cead0")
 
 	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
 	assert.NoError(t, err)
@@ -715,7 +725,6 @@ func additionRemoveOldFile(t *testing.T, db database.Database) {
 	assert.Equal(t, text, file)
 }
 
-// TODO: hook this test into the unit tests once in memory has the functionality
 func removingMachineRemoveFiles(t *testing.T, db database.Database) {
 	fakeHost := "chestnut"
 	fakeGroup := "Shared"

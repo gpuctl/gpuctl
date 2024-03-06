@@ -22,10 +22,8 @@ export const EditableField = ({
   workstation,
   fieldKey,
   placeholder,
-  GroupSelect,
   isEven,
 }: EditableFieldProps & {
-  GroupSelect: GS;
   isEven: boolean;
 }) => {
   const pickCol = (value: string) => (value ? "gray.600" : "gray.300");

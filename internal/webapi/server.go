@@ -34,6 +34,8 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 
 	femto.OnGet(mux, "/api/stats/all", api.AllStatistics)
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
+	femto.OnGet(mux, "/api/stats/historical", api.historicalData)
+	femto.OnGet(mux, "/api/stats/aggregate", api.aggregateData)
 
 	// Set up authentication and logging-out endpoint
 	femto.OnPost(mux, "/api/admin/auth", func(packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
@@ -82,6 +84,32 @@ func (a *Api) AllStatistics(r *http.Request, l *slog.Logger) (*femto.Response[br
 	return femto.Ok(data)
 }
 
+func (a *Api) historicalData(r *http.Request, l *slog.Logger) (*femto.Response[broadcast.HistoricalData], error) {
+	hostname := r.URL.Query().Get("hostname")
+	if hostname == "" {
+		return &femto.Response[broadcast.HistoricalData]{Status: http.StatusBadRequest}, nil
+	}
+
+	data, err := a.DB.HistoricalData(hostname)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return femto.Ok(data)
+}
+
+func (a *Api) aggregateData(r *http.Request, l *slog.Logger) (*femto.Response[broadcast.AggregateData], error) {
+	// TODO: add functionality for variable number of days
+	days := 7
+	data, err := a.DB.AggregateData(days)
+	if err != nil {
+		return nil, err
+	}
+
+	return femto.Ok(data)
+}
+
 func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	// Check if credientals are correct
 	token, err := auth.CreateToken(packet)
@@ -116,7 +144,6 @@ func (a *Api) LogOut(auth authentication.Authenticator[APIAuthCredientals], r *h
 	return femto.Ok(types.Unit{})
 }
 
-// TODO
 func (a *Api) addMachine(machine broadcast.NewMachine, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	l.Info("Tried to create machine", "host", machine.Hostname, "group", machine.Group)
 

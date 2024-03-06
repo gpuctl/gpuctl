@@ -6,7 +6,13 @@ import { Box } from "@chakra-ui/react";
 
 const AXIS_MARGIN = { x: 20, y: 20 };
 
-export const Graph = ({ data }: { data: { x: number; y: number }[][] }) => {
+export const Graph = ({
+  data,
+  xlabel,
+}: {
+  data: { x: number; y: number }[][];
+  xlabel: string;
+}) => {
   const minX = Math.min(...data.flatMap((d) => d.map(({ x }) => x)));
   const maxX = Math.max(...data.flatMap((d) => d.map(({ x }) => x)));
   const minY = Math.min(...data.flatMap((d) => d.map(({ y }) => y)));
@@ -42,13 +48,27 @@ export const Graph = ({ data }: { data: { x: number; y: number }[][] }) => {
         <g
           width={innerWidth}
           height={innerHeight}
-          transform={`translate(${AXIS_MARGIN.x}, ${AXIS_MARGIN.y})`}
+          transform={`translate(${AXIS_MARGIN.x}, ${0})`}
         >
           <g
             transform={`translate(0, 0)`}
             shapeRendering={"geometricPrecision"}
           >
             <Axis scale={yScale} pixelsPerTick={40} vertical={true} />
+          </g>
+
+          <g
+            transform={`translate(${innerWidth / 2}, ${height - 5})`}
+            shapeRendering={"geometricPrecision"}
+          >
+            <text
+              style={{
+                fontSize: "15px",
+                textAnchor: "middle",
+              }}
+            >
+              {xlabel}
+            </text>
           </g>
 
           <g
