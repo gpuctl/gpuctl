@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Box, Button, Heading, Input, Text, VStack } from "@chakra-ui/react";
+import {
+  Box,
+  Button,
+  Heading,
+  Input,
+  Text,
+  VStack,
+  Alert,
+  AlertIcon,
+  AlertDescription,
+} from "@chakra-ui/react";
 import { useAuth } from "../Providers/AuthProvider";
 import { validatedElim, isSuccess } from "../Utils/Utils";
 
@@ -54,7 +64,10 @@ export const SignIn = ({ panelCallback }: { panelCallback: () => void }) => {
           success: () => <></>,
           failure: (e) =>
             e.message === "Username or password was incorrect!" ? (
-              <Text color="tomato"> Username or password incorrect</Text>
+              <Alert rounded="md" status="error">
+                <AlertIcon />
+                <AlertDescription>Login incorrect</AlertDescription>
+              </Alert>
             ) : (
               <></>
             ),
