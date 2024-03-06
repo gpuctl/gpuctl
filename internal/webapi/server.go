@@ -96,12 +96,11 @@ func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals]
 
 	cookies := []http.Cookie{{
 		Name:     authentication.TokenCookieName,
-		Domain:   "localhost",
 		Value:    token,
 		Path:     "/",
 		MaxAge:   3600,
 		HttpOnly: true,
-		Secure:   false, // TODO: If I leave this in the PR, I did goofed up.
+		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 	}}
 
