@@ -118,20 +118,26 @@ func startSatellite(client *ssh.Client, conf Config) error {
 	return runCommand(client, command)
 }
 
-func Deboard(
-	hostname string,
-	conf Config,
-) error {
+func Deboard(hostname string, conf Config) error {
+	// Connect
 	client, err := sshInto(hostname, conf)
 	if err != nil {
 		return err
 	}
 	defer client.Close()
 
+	// Kill satellit
 	err = runCommand(client, "killall satellite")
 	if err != nil {
 		return fmt.Errorf("failed to kill satellite on remote: %w", err)
 	}
+
+	// Clean up data dir
+	err = runCommand(client, "rm -r "+conf.installDir())
+	if err != nil {
+		return fmt.Errorf("failed to delete install directory on remote: %w", err)
+	}
+
 	return nil
 }
 
