@@ -222,7 +222,7 @@ func appendingFailsIfMachineMissing(t *testing.T, db database.Database) {
 	}
 
 	// even if a different machine is present
-	err = db.UpdateLastSeen("badger", 0)
+	err = db.UpdateLastSeen("badger", time.Now())
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -236,7 +236,7 @@ func appendingFailsIfMachineMissing(t *testing.T, db database.Database) {
 func appendingFailsIfContextMissing(t *testing.T, db database.Database) {
 	fakeHost := "rabbit"
 
-	err := db.UpdateLastSeen(fakeHost, 0)
+	err := db.UpdateLastSeen(fakeHost, time.Now())
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -250,7 +250,7 @@ func appendingFailsIfContextMissing(t *testing.T, db database.Database) {
 func appendedDataPointsAreSaved(t *testing.T, db database.Database) {
 	fakeHost := "elk"
 
-	err := db.UpdateLastSeen(fakeHost, 0)
+	err := db.UpdateLastSeen(fakeHost, time.Now())
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -293,11 +293,11 @@ func appendedDataPointsAreSaved(t *testing.T, db database.Database) {
 
 // TODO: verify datastamp changed in the database
 func multipleHeartbeats(t *testing.T, db database.Database) {
-	err := db.UpdateLastSeen("otter", 0)
+	err := db.UpdateLastSeen("otter", time.Now())
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
-	err = db.UpdateLastSeen("otter", 0)
+	err = db.UpdateLastSeen("otter", time.Now())
 	if err != nil {
 		t.Fatalf("Unexpected error: %v", err)
 	}
@@ -308,7 +308,7 @@ func multipleHeartbeats(t *testing.T, db database.Database) {
 func testLastSeen1(t *testing.T, db database.Database) {
 	host := "TestHost"
 	lastSeenTime := time.Now()
-	db.UpdateLastSeen(host, lastSeenTime.Unix())
+	db.UpdateLastSeen(host, lastSeenTime)
 
 	lastSeenData, err := db.LastSeen()
 	if err != nil {
@@ -333,10 +333,10 @@ func testLastSeen2(t *testing.T, db database.Database) {
 	t1 := time.Date(1, 2, 3, 4, 5, 6, 0, time.UTC)
 	t2 := time.Date(7, 8, 9, 10, 11, 12, 0, time.UTC)
 
-	err := db.UpdateLastSeen("foo", t1.Unix())
+	err := db.UpdateLastSeen("foo", t1)
 	assert.NoError(t, err)
 
-	err = db.UpdateLastSeen("bar", t2.Unix())
+	err = db.UpdateLastSeen("bar", t2)
 	assert.NoError(t, err)
 
 	seen, err := db.LastSeen()
@@ -366,7 +366,7 @@ func oneGpu(t *testing.T, db database.Database) {
 	assert.NoError(t, err)
 	assert.Empty(t, data)
 
-	err = db.UpdateLastSeen("foo", 0)
+	err = db.UpdateLastSeen("foo", time.Now())
 	assert.NoError(t, err)
 
 	err = db.UpdateGPUContext("foo", uplink.GPUInfo{})
@@ -384,7 +384,7 @@ func oneGpu(t *testing.T, db database.Database) {
 func machineInfoStartsEmpty(t *testing.T, db database.Database) {
 	fakeHost := "porcupine"
 
-	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	err := db.UpdateLastSeen(fakeHost, time.Now())
 	assert.NoError(t, err)
 
 	data, err := db.LatestData()
@@ -409,7 +409,7 @@ func machineInfoStartsEmpty(t *testing.T, db database.Database) {
 func machineInfoUpdatesWork(t *testing.T, db database.Database) {
 	fakeHost := "porcupine"
 
-	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	err := db.UpdateLastSeen(fakeHost, time.Now())
 	assert.NoError(t, err)
 
 	fakeGroup := "Personal"
@@ -452,7 +452,7 @@ func machineInfoUpdatesWork(t *testing.T, db database.Database) {
 func removingMachine(t *testing.T, db database.Database) {
 	fakeHost := "chipmunk"
 
-	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	err := db.UpdateLastSeen(fakeHost, time.Now())
 	assert.NoError(t, err)
 
 	// we should find the machine now
@@ -480,7 +480,7 @@ func removingMachine(t *testing.T, db database.Database) {
 func removingMachineAndSamples(t *testing.T, db database.Database) {
 	fakeHost := "yak"
 
-	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	err := db.UpdateLastSeen(fakeHost, time.Now())
 	assert.NoError(t, err)
 
 	// add some data
@@ -519,7 +519,7 @@ func inUseInformation(t *testing.T, db database.Database) {
 	fakeHost := "hamster"
 	fakeUuid := uuid.MustParse("9adb69f0-1b1c-43ce-babe-99821d2cead0")
 
-	err := db.UpdateLastSeen(fakeHost, time.Now().Unix())
+	err := db.UpdateLastSeen(fakeHost, time.Now())
 	assert.NoError(t, err)
 
 	context := uplink.GPUInfo{

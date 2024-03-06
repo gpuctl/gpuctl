@@ -147,7 +147,7 @@ func TestDownsample(t *testing.T) {
 	hostName := "test-host"
 
 	db.infos[gpuUUID] = gpuInfo{host: hostName, context: uplink.GPUInfo{Uuid: gpuUUID}}
-	db.UpdateLastSeen(hostName, now.Unix())
+	db.UpdateLastSeen(hostName, now)
 
 	for i := 1; i <= 250; i++ {
 		sampleTime := now.AddDate(0, 0, -i*2).Unix() // Ensuring a spread over the year
@@ -196,7 +196,7 @@ func TestDownsamplePruneMethod(t *testing.T) {
 	hostName := "test-host"
 
 	db.infos[gpuUUID] = gpuInfo{host: hostName, context: uplink.GPUInfo{Uuid: gpuUUID}}
-	db.UpdateLastSeen(hostName, now.Unix())
+	db.UpdateLastSeen(hostName, now)
 
 	for i := 1; i <= 250; i++ {
 		sampleTime := now.AddDate(0, 0, -i*2).Unix() // Ensuring a spread over the year

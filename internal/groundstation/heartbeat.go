@@ -13,7 +13,7 @@ import (
 func (gs *groundstation) heartbeat(data uplink.HeartbeatReq, req *http.Request, log *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	log.Info("Received a heartbeat", "satellite", data.Hostname)
 
-	err := gs.db.UpdateLastSeen(data.Hostname, time.Now().Unix())
+	err := gs.db.UpdateLastSeen(data.Hostname, time.Now())
 
 	if err != nil {
 		return nil, err

@@ -114,7 +114,7 @@ func createTables(db *sql.DB) error {
 }
 
 // implement interface
-func (conn PostgresConn) UpdateLastSeen(host string, given_time int64) error {
+func (conn PostgresConn) UpdateLastSeen(host string, now time.Time) error {
 	var err error
 
 	tx, err := conn.db.Begin()
@@ -124,8 +124,6 @@ func (conn PostgresConn) UpdateLastSeen(host string, given_time int64) error {
 
 	// check if machine exists
 	lastSeen, err := getLastSeen(host, tx)
-
-	now := time.Unix(given_time, 0)
 
 	if err == nil {
 		// machine existed, check if time is in future

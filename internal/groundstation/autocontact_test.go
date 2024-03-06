@@ -22,7 +22,7 @@ type ErrorDB struct{}
 
 var errorDbNotImplemented = errors.New("database error: using errorDB")
 
-func (edb *ErrorDB) UpdateLastSeen(host string, time int64) error {
+func (edb *ErrorDB) UpdateLastSeen(host string, time time.Time) error {
 	return nil
 }
 
@@ -156,8 +156,8 @@ func TestMonitor(t *testing.T) {
 	sshConfig := sshConfig(t)
 
 	currentTime := time.Now()
-	db.UpdateLastSeen("machineRecent", currentTime.Unix())                 // This machine should not trigger any action
-	db.UpdateLastSeen("machineOld", currentTime.Add(-48*time.Hour).Unix()) // This machine should trigger actions
+	db.UpdateLastSeen("machineRecent", currentTime)                 // This machine should not trigger any action
+	db.UpdateLastSeen("machineOld", currentTime.Add(-48*time.Hour)) // This machine should trigger actions
 
 	cutoffTime := currentTime.Add(-24 * time.Hour)
 	err := monitor(db, cutoffTime, logger, sshConfig)
@@ -179,7 +179,7 @@ func TestMonitorCantSSH(t *testing.T) {
 	sshConfig := sshConfig(t)
 
 	currentTime := time.Now()
-	db.UpdateLastSeen("google.com", currentTime.Add(-48*time.Hour).Unix()) // This machine should trigger actions
+	db.UpdateLastSeen("google.com", currentTime.Add(-48*time.Hour)) // This machine should trigger actions
 
 	cutoffTime := currentTime.Add(-24 * time.Hour)
 	err := monitor(db, cutoffTime, logger, sshConfig)

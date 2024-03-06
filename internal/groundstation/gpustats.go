@@ -14,7 +14,7 @@ import (
 func (gs *groundstation) gpustats(data uplink.GpuStatsUpload, req *http.Request, log *slog.Logger) (*femto.EmptyBodyResponse, error) {
 	log.Info("Got GPU stats", "stats", data.Stats)
 
-	err := gs.db.UpdateLastSeen(data.Hostname, time.Now().Unix())
+	err := gs.db.UpdateLastSeen(data.Hostname, time.Now())
 	if err != nil {
 		return nil, err
 	}
