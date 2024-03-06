@@ -129,7 +129,7 @@ func TestToToml(t *testing.T) {
 
 	c := config.SatelliteConfiguration{
 		Groundstation: config.Groundstation{"https://", "foo.bar", 80},
-		Satellite:     config.Satellite{"/tmp/sat", 1, 1, false},
+		Satellite:     config.Satellite{"/tmp/sat", 15*config.Second, 5*config.Second, false},
 	}
 
 	cToml, err := config.ToToml(c)
@@ -143,8 +143,8 @@ func TestToToml(t *testing.T) {
 
 [satellite]
   cache = "/tmp/sat"
-  data_interval = 1
-  heartbeat_interval = 1
+  data_interval = "15s"
+  heartbeat_interval = "5s"
   fake_gpu = false
 `, cToml)
 }

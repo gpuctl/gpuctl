@@ -2,7 +2,7 @@ package config
 
 import "time"
 
-type Duration time.Duration
+type Duration = time.Duration
 
 const (
 	Nanosecond  Duration = Duration(time.Nanosecond)
@@ -13,7 +13,7 @@ const (
 	Hour        Duration = Duration(time.Hour)
 )
 
-func (d *Duration) UnmarshalText(text []byte) error {
+func UnmarshalText(d *Duration, text []byte) error {
 	dur, err := time.ParseDuration(string(text))
 
 	if err != nil {
@@ -30,6 +30,6 @@ func (d *Duration) UnmarshalText(text []byte) error {
 // the time interval or drop ticks to make up for slow receivers.
 // The duration d must be greater than zero; if not, NewTicker will
 // panic. Stop the ticker to release associated resources.
-func (d Duration) NewTicker() *time.Ticker {
+func NewTicker(d Duration) *time.Ticker {
 	return time.NewTicker(time.Duration(d))
 }
