@@ -161,14 +161,14 @@ func (m *inMemory) LastSeen() ([]broadcast.WorkstationSeen, error) {
 	return seen, nil
 }
 
-func (m *inMemory) Downsample(cutoffTime int64) error {
+func (m *inMemory) Downsample(cutoffTime time.Time) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	for uuid, samples := range m.stats {
 		var oldSamples, newSamples []uplink.GPUStatSample
 		for _, sample := range samples {
-			if sample.Time < cutoffTime {
+			if sample.Time < cutoffTime.Unix() {
 				oldSamples = append(oldSamples, sample)
 			} else {
 				newSamples = append(newSamples, sample)

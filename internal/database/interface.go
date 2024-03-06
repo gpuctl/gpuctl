@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"time"
 
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
@@ -43,8 +44,8 @@ type Database interface {
 	RemoveMachine(machine broadcast.RemoveMachine) error
 	UpdateMachine(changes broadcast.ModifyMachine) error
 
-	// downsample since certain unix time
-	Downsample(time int64) error
+	// downsample since certain time
+	Downsample(time.Time) error
 
 	// methods for interacting with files
 	AttachFile(broadcast.AttachFile) error

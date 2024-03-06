@@ -50,7 +50,7 @@ func (edb *ErrorDB) UpdateMachine(changes broadcast.ModifyMachine) error {
 	return nil
 }
 
-func (edb *ErrorDB) Downsample(time int64) error {
+func (edb *ErrorDB) Downsample(time time.Time) error {
 	return nil
 }
 
