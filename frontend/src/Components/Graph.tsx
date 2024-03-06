@@ -3,6 +3,7 @@ import { ScaleLinear } from "d3";
 import { useMemo, useRef } from "react";
 import { useDims } from "../Utils/Hooks";
 import { Box } from "@chakra-ui/react";
+import React from "react";
 
 const AXIS_MARGIN = { x: 20, y: 20 };
 
