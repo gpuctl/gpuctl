@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 
 	"golang.org/x/crypto/ssh"
@@ -20,7 +21,7 @@ type Config struct {
 	// The login to run the satellite on other machines as
 	User string
 	// The directory to store the satellite binary on remotes as
-	DataDir string
+	DataDirTemplate string
 	// The configuration to install on the remote.
 	RemoteConf config.SatelliteConfiguration
 
@@ -33,7 +34,8 @@ type Config struct {
 // this covers issues with subsequent deployments as different users not
 // having permissions to overwrite old data directories
 func (conf Config) installDir() string {
-	return conf.DataDir + conf.User
+	return conf.DataDirTemplate + "_" + conf.User
+
 }
 
 // Onboard will copy over and start the satellite on a remote machine, via SSH.
@@ -68,7 +70,7 @@ func Onboard(
 
 	err = scpClient.CopyToRemote(
 		bytes.NewReader(assets.SatelliteAmd64Linux),
-		conf.installDir()+"/satellite",
+		path.Join(conf.installDir(), "satellite"),
 		&scp.FileTransferOption{Perm: 0o755},
 	)
 	if err != nil {
@@ -82,7 +84,7 @@ func Onboard(
 	}
 	err = scpClient.CopyToRemote(
 		strings.NewReader(configToml),
-		conf.installDir()+"/satellite.toml",
+		path.Join(conf.installDir(), "satellite.toml"),
 		&scp.FileTransferOption{},
 	)
 	if err != nil {

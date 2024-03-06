@@ -32,8 +32,8 @@ func TestOnboardNoKey(t *testing.T) {
 	t.Parallel()
 
 	serv := webapi.NewServer(nil, alwaysAuth{}, tunnel.Config{
-		DataDir: "/foo",
-		User:    "JFK",
+		DataDirTemplate: "/foo",
+		User:            "JFK",
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader(`{"hostname": "foo.net"}`))
@@ -53,9 +53,9 @@ func TestOnboardNoHostname(t *testing.T) {
 	require.NoError(t, err)
 
 	serv := webapi.NewServer(nil, alwaysAuth{}, tunnel.Config{
-		DataDir: "/foo",
-		User:    "root",
-		Signer:  sign,
+		DataDirTemplate: "/foo",
+		User:            "root",
+		Signer:          sign,
 	})
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader("{}"))
