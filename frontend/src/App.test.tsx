@@ -7,7 +7,7 @@ test("renders welcome message", async () => {
   jest.useFakeTimers();
 
   render(<App />);
-  const welcome = await screen.findByText("Welcome to the GPU Control Room!");
+  const welcome = await screen.findByText("GPU Control Room");
   expect(welcome).toBeInTheDocument();
 
   await waitFor(() => expect(fetch).toHaveBeenCalledTimes(2));
