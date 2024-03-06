@@ -56,7 +56,13 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ groups }) => {
     <VStack padding={10} spacing={10}>
       <AddMachineForm GroupSelect={GroupSelect} groups={groups} />
       <GroupInfoManagement GroupSelect={GroupSelect} groups={groups} />
-      <Button colorScheme="red" onClick={() => {logout(); nav("/");}}>
+      <Button
+        colorScheme="red"
+        onClick={() => {
+          logout();
+          nav("/");
+        }}
+      >
         Sign Out
       </Button>
     </VStack>
