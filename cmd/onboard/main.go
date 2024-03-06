@@ -49,9 +49,9 @@ func main() {
 	}
 
 	conf := tunnel.Config{
-		User:    *user,
-		DataDir: dataDir + *user,
-		Signer:  signer,
+		User:            *user,
+		DataDirTemplate: dataDir + *user,
+		Signer:          signer,
 		RemoteConf: config.SatelliteConfiguration{
 			Groundstation: config.Groundstation{"https://", "gpuctl.perial.co.uk", 80},
 			Satellite: config.Satellite{

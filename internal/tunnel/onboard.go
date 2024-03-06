@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"path"
 	"strings"
 
 	"golang.org/x/crypto/ssh"
@@ -20,13 +21,21 @@ type Config struct {
 	// The login to run the satellite on other machines as
 	User string
 	// The directory to store the satellite binary on remotes as
-	DataDir string
+	DataDirTemplate string
 	// The configuration to install on the remote.
 	RemoteConf config.SatelliteConfiguration
 
 	// SSH Options.
 	Signer      ssh.Signer
 	KeyCallback ssh.HostKeyCallback
+}
+
+// install dir data dir appended with the username
+// this covers issues with subsequent deployments as different users not
+// having permissions to overwrite old data directories
+func (conf Config) installDir() string {
+	return conf.DataDirTemplate + "_" + conf.User
+
 }
 
 // Onboard will copy over and start the satellite on a remote machine, via SSH.
@@ -47,8 +56,8 @@ func Onboard(
 	}
 	defer client.Close()
 
-	// -- Make the data dir --
-	err = runCommand(client, "mkdir -p "+conf.DataDir)
+	// -- Make the install dir --
+	err = runCommand(client, "mkdir -p "+conf.installDir())
 	if err != nil {
 		return fmt.Errorf("failed to mkdir: %w", err)
 	}
@@ -61,7 +70,7 @@ func Onboard(
 
 	err = scpClient.CopyToRemote(
 		bytes.NewReader(assets.SatelliteAmd64Linux),
-		conf.DataDir+"/satellite",
+		path.Join(conf.installDir(), "satellite"),
 		&scp.FileTransferOption{Perm: 0o755},
 	)
 	if err != nil {
@@ -75,7 +84,7 @@ func Onboard(
 	}
 	err = scpClient.CopyToRemote(
 		strings.NewReader(configToml),
-		conf.DataDir+"/satellite.toml",
+		path.Join(conf.installDir(), "satellite.toml"),
 		&scp.FileTransferOption{},
 	)
 	if err != nil {
@@ -101,10 +110,10 @@ func RestartSatellite(hostname string, conf Config) error {
 }
 
 func startSatellite(client *ssh.Client, conf Config) error {
-	dataDir := conf.DataDir
+	installDir := conf.installDir()
 	command := fmt.Sprintf(
 		"nohup %s/satellite >> %s/satellite.log 2>> %s/satellite.err < /dev/null &",
-		dataDir, dataDir, dataDir,
+		installDir, installDir, installDir,
 	)
 	return runCommand(client, command)
 }

@@ -61,11 +61,11 @@ func main() {
 	}
 
 	tunnelConf := tunnel.Config{
-		User:        conf.SSH.Username,
-		DataDir:     conf.SSH.DataDir,
-		RemoteConf:  conf.SSH.RemoteConf,
-		Signer:      signer,
-		KeyCallback: ssh.InsecureIgnoreHostKey(), // TODO: Be secure here.
+		User:            conf.SSH.Username,
+		DataDirTemplate: conf.SSH.DataDir,
+		RemoteConf:      conf.SSH.RemoteConf,
+		Signer:          signer,
+		KeyCallback:     ssh.InsecureIgnoreHostKey(), // TODO: Be secure here.
 	}
 
 	authenticator := webapi.AuthenticatorFromConfig(conf)
