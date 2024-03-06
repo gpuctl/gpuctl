@@ -28,6 +28,7 @@ import { useRemoveMachine } from "../Hooks/Hooks";
 import { GS } from "../Pages/AdminPanel";
 
 import { Link as ReactRouterLink, useSearchParams } from "react-router-dom";
+import React from "react";
 
 export const GroupInfoManagement = ({
   GroupSelect,

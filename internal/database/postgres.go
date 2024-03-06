@@ -221,7 +221,123 @@ func (conn PostgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) er
 	return err
 }
 
-func (conn PostgresConn) Downsample(cut time.Time) error {
+func (conn PostgresConn) Downsample(int_now time.Time) error {
+	downsample_query := `CREATE TEMPORARY TABLE TempDownsampled AS
+WITH OrderedStats AS (
+  SELECT
+    Gpu,
+    Received,
+    MemoryUtilisation,
+    GpuUtilisation,
+    MemoryUsed,
+    FanSpeed,
+    Temp,
+    MemoryTemp,
+    GraphicsVoltage,
+    PowerDraw,
+    GraphicsClock,
+    MaxGraphicsClock,
+    MemoryClock,
+    MaxMemoryClock,
+    InUse,
+    UserName,
+    ROW_NUMBER() OVER (PARTITION BY Gpu ORDER BY Received ASC) - 1 AS RowNum
+  FROM Stats
+  WHERE Received > $1
+),
+GroupedStats AS (
+  SELECT
+    Gpu,
+    AVG(MemoryUtilisation) AS AvgMemoryUtilisation,
+    AVG(GpuUtilisation) AS AvgGpuUtilisation,
+    AVG(MemoryUsed) AS AvgMemoryUsed,
+    AVG(FanSpeed) AS AvgFanSpeed,
+    AVG(Temp) AS AvgTemp,
+    AVG(MemoryTemp) AS AvgMemoryTemp,
+    AVG(GraphicsVoltage) AS AvgGraphicsVoltage,
+    AVG(PowerDraw) AS AvgPowerDraw,
+    AVG(GraphicsClock) AS AvgGraphicsClock,
+    AVG(MaxGraphicsClock) AS AvgMaxGraphicsClock,
+    AVG(MemoryClock) AS AvgMemoryClock,
+    AVG(MaxMemoryClock) AS AvgMaxMemoryClock,
+    MIN(Received) AS SampleStartTime,
+    MAX(Received) AS SampleEndTime,
+    (RowNum / 100) AS GroupId,
+    bool_or(InUse) AS OrInUse,
+    mode() WITHIN GROUP (ORDER BY UserName) as ModeUserName
+  FROM OrderedStats
+  GROUP BY Gpu, GroupId
+)
+SELECT * FROM GroupedStats;`
+
+	delete_query := `DELETE FROM Stats
+WHERE Received > $1
+AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);
+	`
+
+	insert_query := `INSERT INTO Stats (Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed, FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw, GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock, InUse, UserName)
+SELECT
+  Gpu,
+  SampleStartTime, 
+  AvgMemoryUtilisation,
+  AvgGpuUtilisation,
+  AvgMemoryUsed,
+  AvgFanSpeed,
+  AvgTemp,
+  AvgMemoryTemp,
+  AvgGraphicsVoltage,
+  AvgPowerDraw,
+  AvgGraphicsClock,
+  AvgMaxGraphicsClock,
+  AvgMemoryClock,
+  AvgMaxMemoryClock,
+  OrInUse,
+  ModeUserName
+FROM TempDownsampled;
+	`
+
+	cleanup_query := `DROP TABLE TempDownsampled;`
+
+	now := int_now
+	sixMonthsAgo := now.AddDate(0, -6, 0)
+	sixMonthsAgoFormatted := sixMonthsAgo.Format("2006-01-02 15:04:05")
+
+	tx, err := conn.db.Begin()
+	if err != nil {
+		return err
+	}
+
+	_, err = tx.Exec(downsample_query, sixMonthsAgoFormatted)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec(delete_query, sixMonthsAgoFormatted)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec(insert_query)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec(cleanup_query)
+	if err != nil {
+		_ = tx.Rollback()
+		return err
+	}
+
+	if err = tx.Commit(); err != nil {
+		return err
+	}
+
+	return nil
+}
+func (conn PostgresConn) DownsampleOld(cut time.Time) error {
 	// TODO: decide what to do with the old downsampling code (i.e. fix bugs)
 	_, err := conn.db.Exec(`DELETE FROM Stats
 				WHERE Received < $1`, cut)
