@@ -137,11 +137,11 @@ func (m *inMemory) LatestData() (broadcast.Workstations, error) {
 	return result, nil
 }
 
-func (m *inMemory) UpdateLastSeen(host string, whenSeen int64) error {
+func (m *inMemory) UpdateLastSeen(host string, whenSeen time.Time) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	m.lastSeen[host] = time.Unix(whenSeen, 0)
+	m.lastSeen[host] = whenSeen
 	if _, found := m.machines[host]; !found {
 		m.machines[host] = broadcast.ModifyMachine{Hostname: host}
 	}

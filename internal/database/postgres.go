@@ -114,7 +114,7 @@ func createTables(db *sql.DB) error {
 }
 
 // implement interface
-func (conn PostgresConn) UpdateLastSeen(host string, given_time int64) error {
+func (conn PostgresConn) UpdateLastSeen(host string, now time.Time) error {
 	var err error
 
 	tx, err := conn.db.Begin()
@@ -124,8 +124,6 @@ func (conn PostgresConn) UpdateLastSeen(host string, given_time int64) error {
 
 	// check if machine exists
 	lastSeen, err := getLastSeen(host, tx)
-
-	now := time.Unix(given_time, 0)
 
 	if err == nil {
 		// machine existed, check if time is in future
@@ -802,9 +800,10 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 	return data[1:], nil
 }
 func (conn PostgresConn) AggregateData(days int) (broadcast.AggregateData, error) {
+	// TODO: test this in production
 	// TODO: add functionality for this to be variable
 	var data broadcast.AggregateData
-	threshold := time.Now().AddDate(0, 0, -days).Unix()
+	threshold := time.Now().AddDate(0, 0, -days)
 
 	samples, err := conn.db.Query(`SELECT s.Received,
 		s.PowerDraw,

@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -167,7 +168,7 @@ func TestListFiles(t *testing.T) {
 	mockLogger := slog.Default()
 	api := &webapi.Api{DB: mockDB}
 	hostname := "machine01"
-	mockDB.UpdateLastSeen(hostname, 0)
+	mockDB.UpdateLastSeen(hostname, time.Now())
 
 	token, err := joeAuth.CreateToken(joeCreds)
 	assert.NoError(t, err, "No error in creating auth token")
@@ -213,7 +214,7 @@ func TestRemovingFile(t *testing.T) {
 	assert.NoError(t, err, "No error in creating auth token")
 	cookie := http.Cookie{Name: authentication.TokenCookieName, Value: token}
 
-	mockDB.UpdateLastSeen(hostname, 0)
+	mockDB.UpdateLastSeen(hostname, time.Now())
 
 	pdf := broadcast.AttachFile{
 		Hostname:    hostname,
@@ -250,7 +251,7 @@ func TestAttachingFile(t *testing.T) {
 	mockLogger := slog.Default()
 	api := &webapi.Api{DB: mockDB}
 
-	mockDB.UpdateLastSeen("testmachine", 0)
+	mockDB.UpdateLastSeen("testmachine", time.Now())
 
 	token, err := joeAuth.CreateToken(joeCreds)
 	assert.NoError(t, err, "No error in creating auth token")
