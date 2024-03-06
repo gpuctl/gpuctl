@@ -1,5 +1,9 @@
 package config
 
+import (
+	"time"
+)
+
 type Groundstation struct {
 	Protocol string `toml:"protocol"`
 	Hostname string `toml:"hostname"`
@@ -7,10 +11,10 @@ type Groundstation struct {
 }
 
 type Satellite struct {
-	Cache             string   `toml:"cache"`
-	DataInterval      Duration `toml:"data_interval"`
-	HeartbeatInterval Duration `toml:"heartbeat_interval"`
-	FakeGPU           bool     `toml:"fake_gpu"`
+	Cache             string        `toml:"cache"`
+	DataInterval      time.Duration `toml:"data_interval"`
+	HeartbeatInterval time.Duration `toml:"heartbeat_interval"`
+	FakeGPU           bool          `toml:"fake_gpu"`
 }
 
 type SatelliteConfiguration struct {
@@ -27,8 +31,8 @@ func DefaultSatelliteConfiguration() SatelliteConfiguration {
 		},
 		Satellite: Satellite{
 			Cache:             "/tmp/satellite",
-			DataInterval:      60 * Second,
-			HeartbeatInterval: 2 * Second,
+			DataInterval:      60 * time.Second,
+			HeartbeatInterval: 2 * time.Second,
 			FakeGPU:           false,
 		},
 	}

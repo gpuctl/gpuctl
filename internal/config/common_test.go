@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/gpuctl/gpuctl/internal/config"
 	"github.com/stretchr/testify/assert"
@@ -128,8 +129,8 @@ func TestToToml(t *testing.T) {
 	t.Parallel()
 
 	c := config.SatelliteConfiguration{
-		Groundstation: config.Groundstation{"https://", "foo.bar", 80},
-		Satellite:     config.Satellite{"/tmp/sat", 1, 1, false},
+		Groundstation: config.Groundstation{"https", "foo.bar", 80},
+		Satellite:     config.Satellite{"/tmp/sat", 15 * time.Second, 5 * time.Second, false},
 	}
 
 	cToml, err := config.ToToml(c)
@@ -137,14 +138,80 @@ func TestToToml(t *testing.T) {
 
 	assert.Equal(t,
 		`[groundstation]
-  protocol = "https://"
+  protocol = "https"
   hostname = "foo.bar"
   port = 80
 
 [satellite]
   cache = "/tmp/sat"
-  data_interval = 1
-  heartbeat_interval = 1
+  data_interval = "15s"
+  heartbeat_interval = "5s"
   fake_gpu = false
 `, cToml)
+
+	c2 := config.ControlConfiguration{
+		Timeouts: config.Timeouts{
+			DeathTimeout_:    time.Second,
+			MonitorInterval_: 2 * time.Second,
+		},
+		Server: config.Server{
+			GSPort: 8080,
+			WAPort: 8000,
+		},
+		Database: config.Database{
+			InMemory:           false,
+			Postgres:           true,
+			PostgresUrl:        "postgres://postgres@postgres/postgres",
+			DownsampleInterval: 2*time.Hour + 2*time.Minute,
+		},
+		Auth: config.AuthConfig{
+			Username: "joe",
+			Password: "mama",
+		},
+		SSH: config.SSHConf{
+			DataDir:    "datadir",
+			KeyPath:    "keypath",
+			Username:   "jm",
+			RemoteConf: c,
+		},
+	}
+
+	c2Toml, err := config.ToToml(c2)
+	require.NoError(t, err)
+
+	assert.Equal(t,
+		`[timeouts]
+  death_timeout = "1s"
+  monitor_interval = "2s"
+
+[server]
+  groundstation_port = 8080
+  webapi_port = 8000
+
+[database]
+  inmemory = false
+  postgres = true
+  url = "postgres://postgres@postgres/postgres"
+  downsample_interval = "2h2m0s"
+
+[auth]
+  username = "joe"
+  password = "mama"
+
+[onboard]
+  datadir = "datadir"
+  keyfile = "keypath"
+  username = "jm"
+  [onboard.remote]
+    [onboard.remote.groundstation]
+      protocol = "https"
+      hostname = "foo.bar"
+      port = 80
+    [onboard.remote.satellite]
+      cache = "/tmp/sat"
+      data_interval = "15s"
+      heartbeat_interval = "5s"
+      fake_gpu = false
+`, c2Toml)
+
 }

@@ -8,8 +8,8 @@ type Server struct {
 }
 
 type Timeouts struct {
-	DeathTimeout_    Duration `toml:"death_timeout"`
-	MonitorInterval_ Duration `toml:"monitor_interval"`
+	DeathTimeout_    time.Duration `toml:"death_timeout"`
+	MonitorInterval_ time.Duration `toml:"monitor_interval"`
 }
 
 func (t Timeouts) DeathTimeout() time.Duration {
@@ -20,10 +20,10 @@ func (t Timeouts) MonitorInterval() time.Duration {
 }
 
 type Database struct {
-	InMemory           bool     `toml:"inmemory"`
-	Postgres           bool     `toml:"postgres"`
-	PostgresUrl        string   `toml:"url"`
-	DownsampleInterval Duration `toml:"downsample_interval"`
+	InMemory           bool          `toml:"inmemory"`
+	Postgres           bool          `toml:"postgres"`
+	PostgresUrl        string        `toml:"url"`
+	DownsampleInterval time.Duration `toml:"downsample_interval"`
 }
 
 type AuthConfig struct {
