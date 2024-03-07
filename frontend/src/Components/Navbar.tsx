@@ -6,7 +6,6 @@ import {
   PopoverCloseButton,
   PopoverContent,
   PopoverTrigger,
-  Spacer,
   Tab,
   TabList,
   TabPanel,
@@ -34,7 +33,7 @@ export const Navbar = ({
   children: ReactNode[];
   initial: ViewPage;
 }) => {
-  const { isSignedIn, logout } = useAuth();
+  const { isSignedIn } = useAuth();
   const nav = useNavigate();
   const [tabs] = useState({ index: VIEW_PAGE_INDEX[initial] });
   const admin_panel = 2;

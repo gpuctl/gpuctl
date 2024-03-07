@@ -3,22 +3,18 @@ import {
   AlertIcon,
   AlertDescription,
   Box,
-  Button,
   Card,
   CardHeader,
   CardBody,
-  CardFooter,
   Center,
   HStack,
   Heading,
-  Link,
   LinkBox,
   LinkOverlay,
   Stack,
   StackDivider,
   Text,
   Tooltip,
-  useColorModeValue,
 } from "@chakra-ui/react";
 import { GPUStats, WorkStationData } from "../Data";
 import { TimeIcon } from "@chakra-ui/icons";
@@ -42,8 +38,6 @@ export const WorkstationCardMin = ({
   width: number;
   data: WorkStationData;
 }) => {
-  const textCol = useColorModeValue("black", "white");
-
   const [params] = useSearchParams();
 
   const newParams = new URLSearchParams(

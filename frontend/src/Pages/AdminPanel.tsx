@@ -30,7 +30,7 @@ export const AdminPanel: React.FC<AdminPanelProps> = ({ groups }) => {
   // In a perfect world, we would use Choc auto-complete for group selection.
   // For now though, we just use plain text entry, because the auto-complete
   // component is being a huge pain.
-  const { isSignedIn, logout } = useAuth();
+  const { logout } = useAuth();
   const nav = useNavigate();
 
   const GroupSelect = ({

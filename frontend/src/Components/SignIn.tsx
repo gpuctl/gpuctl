@@ -4,14 +4,13 @@ import {
   Button,
   Heading,
   Input,
-  Text,
   VStack,
   Alert,
   AlertIcon,
   AlertDescription,
 } from "@chakra-ui/react";
 import { useAuth } from "../Providers/AuthProvider";
-import { validatedElim, isSuccess } from "../Utils/Utils";
+import { validatedElim } from "../Utils/Utils";
 
 export const SignIn = ({ panelCallback }: { panelCallback: () => void }) => {
   const { login, user: authName } = useAuth();
