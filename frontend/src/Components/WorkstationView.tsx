@@ -51,6 +51,7 @@ import { useAuth } from "../Providers/AuthProvider";
 import { EditableField } from "./EditableFields";
 import { STATS_PATH } from "../Config/Paths";
 import { DEFAULT_VIEW } from "../App";
+import { range } from "d3";
 
 const USE_FAKE_STATS = false;
 
@@ -160,7 +161,9 @@ const StatsTable = ({ stats }: { stats: WorkStationData }) => {
           <Thead>
             <Tr>
               <Th>Field</Th>
-              <Th>GPU 0</Th>
+              {range(0, stats.gpus.length).map((i) => (
+                <Th key={i}>GPU {i + 1}</Th>
+              ))}
             </Tr>
           </Thead>
           <Tbody>
