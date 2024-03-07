@@ -443,14 +443,16 @@ func (h NvidiaGPUHandler) GetGPUStatus() ([]uplink.GPUStatSample, error) {
 		return nil, err
 	}
 
+	// NOTE: We try and not report minor parsing errors as catastrophic ones
 	samples, err := smi.ExtractGPUStatSample()
-	if err != nil {
+
+	if samples == nil {
 		return nil, err
 	}
 
 	uplink.FilterProcesses(samples, h.ProcFilter)
 	uplink.PopulateNames(samples, h.Lookup)
-	return samples, nil
+	return samples, err
 }
 
 // Run the whole pipeline of getting GPU information
