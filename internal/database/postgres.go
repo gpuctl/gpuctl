@@ -108,6 +108,7 @@ func createTables(db *sql.DB) error {
 		MaxMemoryClock real NOT NULL,
 		InUse boolean NOT NULL,
 		UserName text NOT NULL DEFAULT '',
+		IsDownSampled boolean DEFAULT FALSE,
 		PRIMARY KEY (Gpu, Received)
 	);`)
 
