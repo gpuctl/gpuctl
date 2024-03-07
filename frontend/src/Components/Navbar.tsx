@@ -6,14 +6,14 @@ import {
   PopoverCloseButton,
   PopoverContent,
   PopoverTrigger,
-  Spacer,
   Tab,
   TabList,
   TabPanel,
   TabPanels,
   Tabs,
+  Text,
 } from "@chakra-ui/react";
-import { ReactNode } from "react";
+import { useState, ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { STATS_PATH } from "../Config/Paths";
 import { VIEW_PAGE_INDEX, ViewPage } from "../App";
@@ -33,39 +33,51 @@ export const Navbar = ({
   children: ReactNode[];
   initial: ViewPage;
 }) => {
-  const { isSignedIn, logout } = useAuth();
+  const { isSignedIn } = useAuth();
   const nav = useNavigate();
+  const [tabs] = useState({ index: VIEW_PAGE_INDEX[initial] });
+  const admin_panel = 2;
 
   return (
     <Tabs
-      variant="soft-rounded"
-      onChange={(i) => nav(URLS[i])}
+      align="center"
+      onChange={(i) => {
+        nav(URLS[i]);
+        tabs.index = i;
+      }}
       defaultIndex={VIEW_PAGE_INDEX[initial]}
+      index={tabs.index}
     >
+      <Heading size="xl">GPU Control Room</Heading>
       <TabList>
         <Tab>Card View</Tab>
         <Tab>Table View</Tab>
-        <Tab isDisabled={!isSignedIn()}>Admin Panel</Tab>
-        <Spacer />
         {isSignedIn() ? (
-          <Button onClick={logout}>Sign Out</Button>
+          <Tab>Admin Panel</Tab>
         ) : (
           <Popover>
             <PopoverTrigger>
-              <Button>Admin Sign In</Button>
+              <Button variant="ghost" _hover={{ background: "white" }}>
+                <Text fontWeight="normal">Admin Panel</Text>
+              </Button>
             </PopoverTrigger>
             <PopoverContent w="100%">
               <PopoverArrow />
               <PopoverCloseButton />
-              <SignIn />
+              <SignIn
+                panelCallback={() => {
+                  tabs.index = admin_panel;
+                }}
+              />
             </PopoverContent>
           </Popover>
         )}
       </TabList>
-      <Heading size="2xl">Welcome to the GPU Control Room!</Heading>
       <TabPanels>
         {children.map((c, i) => (
-          <TabPanel key={i}>{c}</TabPanel>
+          <Text align="left">
+            <TabPanel key={i}>{c}</TabPanel>
+          </Text>
         ))}
       </TabPanels>
     </Tabs>

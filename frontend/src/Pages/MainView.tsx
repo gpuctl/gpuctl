@@ -17,18 +17,12 @@ import { AdminPanel } from "./AdminPanel";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { useStats } from "../Providers/FetchProvider";
 import { WorkstationView } from "../Components/WorkstationView";
+import { AggregateStats } from "../Components/AggregateStats";
 
 const cardView = (stats: WorkStationGroup[]) => (
   <VStack spacing={5}>
     {stats.map((l, i) => (
-      <Box
-        key={i}
-        w="97%"
-        m={5}
-        bg={"gray.100"}
-        paddingTop={5}
-        paddingBottom={10}
-      >
+      <Box key={i} w="97%" m={5} bg="white" paddingTop={5} paddingBottom={10}>
         <VStack spacing={5}>
           <Box w="100%" paddingLeft={5}>
             <Heading size="lg" textAlign="left">
@@ -51,6 +45,12 @@ const cardView = (stats: WorkStationGroup[]) => (
         </VStack>
       </Box>
     ))}
+    <Box key={stats.length} m={5} bg="white" paddingTop={5} paddingBottom={10}>
+      <AggregateStats
+        // TODO: replace with actual aggregate data from backend
+        data={{ percent_used: 45.6, total_energy: 4563.2 }}
+      />
+    </Box>
   </VStack>
 );
 
