@@ -60,7 +60,7 @@ func ping(hostname string, l *slog.Logger) bool {
 	cmd := exec.Command("ping", "-c", "1", hostname)
 	err := cmd.Run()
 	if err != nil {
-		l.Debug("Error executing ping command", "error", err)
+		l.Error("Error executing ping command", "error", err)
 		return false
 	}
 
