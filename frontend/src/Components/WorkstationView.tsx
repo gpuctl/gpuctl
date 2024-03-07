@@ -26,6 +26,7 @@ import {
   RangeSliderTrack,
   RangeSliderFilledTrack,
   RangeSliderThumb,
+  HStack,
 } from "@chakra-ui/react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Graph } from "./Graph";
@@ -51,7 +52,11 @@ import { useAuth } from "../Providers/AuthProvider";
 import { EditableField } from "./EditableFields";
 import { STATS_PATH } from "../Config/Paths";
 import { DEFAULT_VIEW } from "../App";
+<<<<<<< Updated upstream
 import { range } from "d3";
+=======
+import { NotesPopout } from "./NotesPopout";
+>>>>>>> Stashed changes
 
 const USE_FAKE_STATS = false;
 
@@ -300,13 +305,12 @@ const AdminDetails = ({
         <Tr key={3}>
           <Td>Notes</Td>
           <Td>
-            <EditableField
-              group={group_name}
-              workstation={stats}
-              fieldKey="notes"
-              placeholder="none"
-              isEven={false}
-            />
+            <HStack>
+              <Text isTruncated maxWidth="15rem">
+                {stats.notes}
+              </Text>
+              <NotesPopout wname={stats.name} notes={stats.notes} />
+            </HStack>
           </Td>
         </Tr>
         <Tr key={4}>
