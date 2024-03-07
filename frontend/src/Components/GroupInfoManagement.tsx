@@ -267,7 +267,7 @@ export const GroupInfoManagement = ({
                           onClick={() => handleShutdownClick(workstation.name)}
                           disabled={copied}
                         >
-                          {copied ? "Copied" : "Copy Shutdown Command"}
+                          {copied && workstation.name === currentMachine ? "Copied" : "Copy Shutdown Command"}
                         </Button>
                       </Td>
                       <Td>
