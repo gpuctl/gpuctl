@@ -9,8 +9,8 @@ export const AggregateStats = ({
     <VStack paddingLeft={5} spacing={5} align="left">
       <Heading size="lg">Statistics</Heading>
       <UnorderedList spacing={3}>
-        <ListItem>Average Usage: {data.percent_used}%</ListItem>
-        <ListItem>Uptime: {data.total_energy}</ListItem>
+        <ListItem>Percent Used: {data.percent_used}%</ListItem>
+        <ListItem>Total Energy: {data.total_energy}</ListItem>
       </UnorderedList>
     </VStack>
   );
