@@ -8,7 +8,6 @@ import {
 import { EditIcon } from "@chakra-ui/icons";
 import { useModifyInfo, FieldKey } from "../Hooks/Hooks";
 import { WorkStationData } from "../Data";
-import { GS } from "../Pages/AdminPanel";
 
 type EditableFieldProps = {
   group: string;
