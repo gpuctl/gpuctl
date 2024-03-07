@@ -335,9 +335,9 @@ const StatsGraph = ({ stats }: { stats: { x: number; y: number }[][] }) => {
     setEndTS(maxTS);
   }
 
-  const filtered = stats.map((s) =>
-    s.filter(({ x }) => startTS <= x && x <= endTS),
-  );
+  const filtered = stats
+    .map((s) => s.filter(({ x }) => startTS <= x && x <= endTS))
+    .map((line, i) => ({ off: stats[i].indexOf(line[0]), line }));
 
   return (
     <>
@@ -345,7 +345,6 @@ const StatsGraph = ({ stats }: { stats: { x: number; y: number }[][] }) => {
         data={filtered}
         xlabel="Seconds Since Added"
         maxPoints={50}
-        chunkOffs={stats.map((s, i) => s.indexOf(filtered[i][0]))}
       ></Graph>
       <RangeSlider
         defaultValue={[0, maxTS]}
