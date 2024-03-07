@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from "react";
+import { FaRegCopy } from "react-icons/fa6";
 import {
   Box,
   Button,
+  ButtonGroup,
   Heading,
   Table,
   TableContainer,
@@ -192,15 +194,13 @@ export const GroupInfoManagement = ({
         <Table variant="striped">
           <Thead>
             <Tr>
-              <Th width="10rem">Hostname</Th>
-              <Th width="10rem">Group</Th>
-              <Th width="15rem">CPU</Th>
-              <Th width="15rem">Motherboard</Th>
-              <Th width="15rem">Notes</Th>
-              <Th width="10rem">Owner</Th>
-              <Th>Files</Th>
-              <Th>Shutdown </Th>
-              <Th>Remove</Th>
+              <Th>Hostname</Th>
+              <Th>Group</Th>
+              <Th>Owner</Th>
+              <Th>CPU</Th>
+              <Th>Motherboard</Th>
+              <Th>Notes</Th>
+              <Th>Actions</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -214,7 +214,7 @@ export const GroupInfoManagement = ({
 
                   return (
                     <Tr key={workstation.name}>
-                      <Td>
+                      <Td min-width="5rem">
                         {" "}
                         <Link
                           as={ReactRouterLink}
@@ -233,6 +233,13 @@ export const GroupInfoManagement = ({
                       <EditableField
                         group={group.name}
                         workstation={workstation}
+                        fieldKey="owner"
+                        placeholder="none"
+                        isEven={k % 2 === 0}
+                      />
+                      <EditableField
+                        group={group.name}
+                        workstation={workstation}
                         fieldKey="cpu"
                         placeholder="unknown"
                         isEven={k % 2 === 0}
@@ -246,7 +253,7 @@ export const GroupInfoManagement = ({
                       />
                       <Td>
                         <HStack>
-                          <Text isTruncated maxWidth="10rem">
+                          <Text isTruncated maxWidth="15rem">
                             {" "}
                             {workstation.notes}{" "}
                           </Text>
@@ -257,39 +264,37 @@ export const GroupInfoManagement = ({
                           />
                         </HStack>
                       </Td>
-                      <EditableField
-                        group={group.name}
-                        workstation={workstation}
-                        fieldKey="owner"
-                        placeholder="none"
-                        isEven={k % 2 === 0}
-                      />
                       <Td>
-                        <Button
-                          colorScheme="green"
-                          onClick={handleViewFiles(workstation.name)}
-                        >
-                          Files
-                        </Button>
-                      </Td>
-                      <Td>
-                        <Button
-                          colorScheme="blue"
-                          onClick={() => handleShutdownClick(workstation.name)}
-                          disabled={copied}
-                        >
-                          {copied && workstation.name === currentMachine
-                            ? "Copied"
-                            : "Copy"}
-                        </Button>
-                      </Td>
-                      <Td>
-                        <Button
-                          colorScheme="red"
-                          onClick={() => removeMachine(workstation.name)}
-                        >
-                          Remove
-                        </Button>
+                        <ButtonGroup>
+                          <Button
+                            colorScheme="green"
+                            onClick={handleViewFiles(workstation.name)}
+                          >
+                            Files
+                          </Button>
+                          <Button
+                            colorScheme="blue"
+                            onClick={() =>
+                              handleShutdownClick(workstation.name)
+                            }
+                            disabled={copied}
+                          >
+                            {copied && workstation.name === currentMachine ? (
+                              <HStack>
+                                {" "}
+                                <Text> Copied </Text> <FaRegCopy />{" "}
+                              </HStack>
+                            ) : (
+                              "Shutdown"
+                            )}
+                          </Button>
+                          <Button
+                            colorScheme="red"
+                            onClick={() => removeMachine(workstation.name)}
+                          >
+                            Remove
+                          </Button>
+                        </ButtonGroup>
                       </Td>
                     </Tr>
                   );
