@@ -52,11 +52,8 @@ import { useAuth } from "../Providers/AuthProvider";
 import { EditableField } from "./EditableFields";
 import { STATS_PATH } from "../Config/Paths";
 import { DEFAULT_VIEW } from "../App";
-<<<<<<< Updated upstream
 import { range } from "d3";
-=======
 import { NotesPopout } from "./NotesPopout";
->>>>>>> Stashed changes
 
 const USE_FAKE_STATS = false;
 
