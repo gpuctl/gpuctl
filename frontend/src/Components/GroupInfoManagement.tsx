@@ -26,7 +26,7 @@ import {
 } from "@chakra-ui/react";
 import { EditableField } from "./EditableFields";
 import { WorkStationGroup } from "../Data";
-import { instKeys, validateNullable, validatedElim } from "../Utils/Utils";
+import { instKeys, validatedElim } from "../Utils/Utils";
 import {
   useGetAllFiles,
   useGetSpecificFile,
@@ -86,7 +86,7 @@ export const GroupInfoManagement = ({
             // here the response should have given an attached file through the attachment header stuff
             // let's download
 
-            if (r.status == 200) {
+            if (r.status === 200) {
               const downloadLink = document.createElement("a");
               downloadLink.href = URL.createObjectURL(
                 new Blob([await r.arrayBuffer()]),
@@ -115,6 +115,7 @@ export const GroupInfoManagement = ({
 
   useEffect(() => {
     download();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentFile]);
 
   const useViewFiles = () => {
@@ -144,6 +145,7 @@ export const GroupInfoManagement = ({
     if (currentMachine) {
       view();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentMachine]);
 
   // ...
@@ -176,7 +178,7 @@ export const GroupInfoManagement = ({
   const handleFileRemoval = (name: string, filename: string) => {
     return (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
       removeFile(name, filename);
-      setFiles(files.filter((i) => i != filename));
+      setFiles(files.filter((i) => i !== filename));
     };
   };
 
