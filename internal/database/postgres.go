@@ -752,7 +752,7 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 	// NOTE: what we do here is that we accumulate over the stats and package all samples by their insert time
 
 	data := broadcast.HistoricalData{}
-	bucket := []broadcast.GPU{}
+	bucket := []broadcast.HistoricalDataPoint{}
 	curruuid, _ := uuid.NewRandom()
 
 	for samples.Next() {
@@ -783,10 +783,10 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 		if curruuid != sample.Uuid {
 			curruuid = sample.Uuid
 			data = append(data, bucket)
-			bucket = make([]broadcast.GPU, 0)
+			bucket = make([]broadcast.HistoricalDataPoint, 0)
 		}
 
-		bucket = append(bucket, sample)
+		bucket = append(bucket, broadcast.HistoricalDataPoint{Timestamp: timestamp.Unix(), Sample: sample})
 	}
 	data = append(data, bucket)
 
