@@ -324,27 +324,23 @@ SELECT * FROM GroupedStats;`
 
 	_, err = tx.Exec(downsample_query, sixMonthsAgoFormatted)
 	if err != nil {
-		tx.Rollback()
-		return err
+		return errors.Join(err, tx.Rollback())
 	}
 
 	_, err = tx.Exec(insert_query)
 	if err != nil {
-		tx.Rollback()
-		return err
+		return errors.Join(err, tx.Rollback())
 	}
 
 	_, err = tx.Exec(delete_query)
 
 	if err != nil {
-		tx.Rollback()
-		return err
+		return errors.Join(err, tx.Rollback())
 	}
 
 	_, err = tx.Exec(cleanup_query)
 	if err != nil {
-		tx.Rollback()
-		return err
+		return errors.Join(err, tx.Rollback())
 	}
 
 	err = tx.Commit()
