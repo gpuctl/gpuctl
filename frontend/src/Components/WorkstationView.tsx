@@ -40,7 +40,6 @@ import { GraphField, WorkStationData } from "../Data";
 import {
   Validation,
   all,
-  cropString,
   enumVals,
   mapSuccess,
   success,
@@ -176,8 +175,8 @@ const StatsTable = ({ stats }: { stats: WorkStationData }) => {
           </MenuOptionGroup>
         </MenuList>
       </Menu>
-      <TableContainer>
-        <Table variant="striped">
+      <TableContainer overflowX="scroll" css="transform: scaleY(-1)">
+        <Table variant="striped" css="transform: scaleY(-1)">
           <Thead>
             <Tr>
               <Th>Field</Th>
@@ -194,7 +193,7 @@ const StatsTable = ({ stats }: { stats: WorkStationData }) => {
                 <Tr key={i}>
                   <Td>{Object.keys(GPU_FIELDS)[i]}</Td>
                   {fs.map((f, j) => (
-                    <Td key={j}>{cropString(f, Math.round(35 / fs.length))}</Td>
+                    <Td key={j}>{f}</Td>
                   ))}
                 </Tr>
               ),
