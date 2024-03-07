@@ -41,4 +41,4 @@ fe_pid=$!
 # Clean up
 echo "Shutting down..."
 echo "Killing processes ($fe_pid, $satellite_pid, $control_pid)"
-kill $fe_pid | kill $satellite_pid | kill $control_pid
+kill $satellite_pid | kill $control_pid
