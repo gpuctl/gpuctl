@@ -253,6 +253,7 @@ export const GroupInfoManagement = ({
                           <NotesPopout
                             wname={workstation.name}
                             notes={workstation.notes}
+                            isEven={k % 2 === 0}
                           />
                         </HStack>
                       </Td>

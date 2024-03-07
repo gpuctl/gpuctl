@@ -18,7 +18,6 @@ import {
   Tbody,
   Td,
   Th,
-  Thead,
   Tr,
   MenuItemOption,
   Spacer,
@@ -27,6 +26,8 @@ import {
   RangeSliderFilledTrack,
   RangeSliderThumb,
   HStack,
+  VStack,
+  Thead,
 } from "@chakra-ui/react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Graph } from "./Graph";
@@ -103,10 +104,10 @@ export const WorkstationView = ({ hostname }: { hostname: string }) => {
             <ModalBody>
               <SimpleGrid columns={2} spacing={5}>
                 <StatsTable stats={wstat}></StatsTable>
-                <Box>
+                <VStack spacing={10}>
                   <StatsGraphPanel hostname={hostname} />
                   <AdminDetails stats={wstat} group_name={name}></AdminDetails>
-                </Box>
+                </VStack>
               </SimpleGrid>
             </ModalBody>
           </ModalContent>
@@ -261,66 +262,62 @@ const AdminDetails = ({
   if (!isSignedIn()) return <></>;
 
   return (
-    <Table variant="striped">
+    <Table variant="simple">
       <Tbody>
-        <Tr key={0}>
+        <Tr>
           <Td> Group </Td>
-          <Td>
-            <EditableField
-              group={group_name}
-              workstation={stats}
-              fieldKey="group"
-              placeholder="unknown"
-              isEven={true}
-            />
-          </Td>
+          <EditableField
+            group={group_name}
+            workstation={stats}
+            fieldKey="group"
+            placeholder="unknown"
+            isEven={true}
+          />
         </Tr>
-        <Tr key={1}>
+        <Tr>
           <Td>CPU </Td>
-          <Td>
-            <EditableField
-              group={group_name}
-              workstation={stats}
-              fieldKey="cpu"
-              placeholder="unknown"
-              isEven={false}
-            />
-          </Td>
+          <EditableField
+            group={group_name}
+            workstation={stats}
+            fieldKey="cpu"
+            placeholder="unknown"
+            isEven={true}
+          />
         </Tr>
-        <Tr key={2}>
+        <Tr>
           <Td>Motherboard</Td>
-          <Td>
-            <EditableField
-              group={group_name}
-              workstation={stats}
-              fieldKey="motherboard"
-              placeholder="unknown"
-              isEven={true}
-            />
-          </Td>
+          <EditableField
+            group={group_name}
+            workstation={stats}
+            fieldKey="motherboard"
+            placeholder="unknown"
+            isEven={true}
+          />
         </Tr>
-        <Tr key={3}>
+        <Tr>
           <Td>Notes</Td>
           <Td>
             <HStack>
               <Text isTruncated maxWidth="15rem">
                 {stats.notes}
               </Text>
-              <NotesPopout wname={stats.name} notes={stats.notes} />
+              <NotesPopout
+                wname={stats.name}
+                notes={stats.notes}
+                isEven={true}
+              />
             </HStack>
           </Td>
         </Tr>
-        <Tr key={4}>
+        <Tr>
           <Td>Owner</Td>
-          <Td>
-            <EditableField
-              group={group_name}
-              workstation={stats}
-              fieldKey="owner"
-              placeholder="none"
-              isEven={true}
-            />
-          </Td>
+          <EditableField
+            group={group_name}
+            workstation={stats}
+            fieldKey="owner"
+            placeholder="none"
+            isEven={true}
+          />
         </Tr>
       </Tbody>
     </Table>

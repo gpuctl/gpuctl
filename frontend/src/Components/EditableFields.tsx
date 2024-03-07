@@ -2,6 +2,7 @@ import {
   Editable,
   EditableInput,
   EditablePreview,
+  HStack,
   IconButton,
   Td,
 } from "@chakra-ui/react";
@@ -77,11 +78,11 @@ export const EditableField = ({
           }}
         >
           {(props) => (
-            <>
+            <HStack>
               <EditablePreview isTruncated />
               <EditableInput width="10rem" />
               <EditableButton {...props} />
-            </>
+            </HStack>
           )}
         </Editable>
       ) : (
@@ -98,11 +99,11 @@ export const EditableField = ({
           }}
         >
           {(props) => (
-            <>
+            <HStack>
               <EditablePreview isTruncated />
               <EditableInput />
               <EditableButton {...props} />
-            </>
+            </HStack>
           )}
         </Editable>
       )}
