@@ -3,6 +3,7 @@ import {
   EditableInput,
   EditablePreview,
   HStack,
+  Flex,
   IconButton,
   Td,
 } from "@chakra-ui/react";
@@ -67,46 +68,48 @@ export const EditableField = ({
   // https://github.com/gpuctl/gpuctl/pull/220
   // Go back there if you want to re-implement it
   return (
-    <Td>
-      {fieldKey === "group" ? (
-        <Editable
-          defaultValue={group}
-          placeholder={placeholder}
-          textColor={pickCol(group)}
-          onSubmit={(a) => {
-            handleSubmit(a);
-          }}
-        >
-          {(props) => (
-            <HStack>
-              <EditablePreview isTruncated />
-              <EditableInput width="10rem" />
-              <EditableButton {...props} />
-            </HStack>
-          )}
-        </Editable>
-      ) : (
-        <Editable
-          defaultValue={
-            workstation[fieldKey as keyof WorkStationData] as string
-          }
-          placeholder={placeholder}
-          textColor={pickCol(
-            workstation[fieldKey as keyof WorkStationData] as string,
-          )}
-          onSubmit={(a) => {
-            handleSubmit(a);
-          }}
-        >
-          {(props) => (
-            <HStack>
-              <EditablePreview isTruncated />
-              <EditableInput />
-              <EditableButton {...props} />
-            </HStack>
-          )}
-        </Editable>
-      )}
+    <Td pr="0">
+      <Flex min-width="5rem">
+        {fieldKey === "group" ? (
+          <Editable
+            defaultValue={group}
+            placeholder={placeholder}
+            textColor={pickCol(group)}
+            onSubmit={(a) => {
+              handleSubmit(a);
+            }}
+          >
+            {(props) => (
+              <HStack>
+                <EditablePreview isTruncated />
+                <EditableInput />
+                <EditableButton {...props} />
+              </HStack>
+            )}
+          </Editable>
+        ) : (
+          <Editable
+            defaultValue={
+              workstation[fieldKey as keyof WorkStationData] as string
+            }
+            placeholder={placeholder}
+            textColor={pickCol(
+              workstation[fieldKey as keyof WorkStationData] as string,
+            )}
+            onSubmit={(a) => {
+              handleSubmit(a);
+            }}
+          >
+            {(props) => (
+              <HStack>
+                <EditablePreview isTruncated />
+                <EditableInput />
+                <EditableButton {...props} />
+              </HStack>
+            )}
+          </Editable>
+        )}
+      </Flex>
     </Td>
   );
 };

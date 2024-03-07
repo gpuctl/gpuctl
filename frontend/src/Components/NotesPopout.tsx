@@ -50,8 +50,9 @@ export const NotesPopout = ({
         <PopoverArrow />
         <PopoverCloseButton />
         <PopoverHeader>Notes: {wname}</PopoverHeader>
-        <PopoverBody>
+        <PopoverBody height="15rem">
           <Textarea
+            height="100%"
             value={newNotes}
             onChange={(s) => {
               setNewNotes(s.target.value);
