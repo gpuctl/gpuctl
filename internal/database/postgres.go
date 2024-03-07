@@ -310,6 +310,8 @@ WHERE Received > $1 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsamp
 			InUse = EXCLUDED.InUse,
 			UserName = EXCLUDED.UserName,
 			IsDownsampled = EXCLUDED.IsDownsampled;`
+
+	delete_query := `DELETE FROM Stats WHERE Received <= $1 AND IsDownsampled = FALSE;`
 	cleanup_query := `DROP TABLE TempDownsampled;`
 
 	now := int_now
@@ -334,6 +336,13 @@ WHERE Received > $1 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsamp
 	}
 
 	_, err = tx.Exec(insert_query)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	_, err = tx.Exec(delete_query)
+
 	if err != nil {
 		tx.Rollback()
 		return err
