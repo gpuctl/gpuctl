@@ -7,8 +7,7 @@ RUN npm install
 
 COPY ./frontend/ ./
 
-# increase heap space to prevent oom crashes
-#ENV NODE_OPTIONS="--max_old_space_size=1024"
+# This doens't run tsc, but that's run elsewhere in CI
 RUN npm run build-nocheck
 
 # Build our own Caddy with a DNS provider module
