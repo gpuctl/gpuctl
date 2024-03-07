@@ -23,6 +23,8 @@ import {
   ListItem,
   Flex,
   Link,
+  Text,
+  HStack,
 } from "@chakra-ui/react";
 import { EditableField } from "./EditableFields";
 import { WorkStationGroup } from "../Data";
@@ -38,6 +40,7 @@ import { GS } from "../Pages/AdminPanel";
 
 import { Link as ReactRouterLink, useSearchParams } from "react-router-dom";
 import React from "react";
+import { NotesPopout } from "./NotesPopout";
 
 export const GroupInfoManagement = ({
   GroupSelect,
@@ -189,15 +192,15 @@ export const GroupInfoManagement = ({
         <Table variant="striped">
           <Thead>
             <Tr>
-              <Th>Hostname</Th>
-              <Th>Group</Th>
-              <Th>CPU</Th>
-              <Th>Motherboard</Th>
-              <Th>Notes</Th>
-              <Th>Owner</Th>
-              <Th>Action</Th>
-              <Th>Shutdown</Th>
+              <Th width="10rem">Hostname</Th>
+              <Th width="10rem">Group</Th>
+              <Th width="15rem">CPU</Th>
+              <Th width="15rem">Motherboard</Th>
+              <Th width="15rem">Notes</Th>
+              <Th width="10rem">Owner</Th>
               <Th>Files</Th>
+              <Th>Shutdown </Th>
+              <Th>Remove</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -241,13 +244,18 @@ export const GroupInfoManagement = ({
                         placeholder="unknown"
                         isEven={k % 2 === 0}
                       />
-                      <EditableField
-                        group={group.name}
-                        workstation={workstation}
-                        fieldKey="notes"
-                        placeholder="none"
-                        isEven={k % 2 === 0}
-                      />
+                      <Td>
+                        <HStack>
+                          <Text isTruncated maxWidth="10rem">
+                            {" "}
+                            {workstation.notes}{" "}
+                          </Text>
+                          <NotesPopout
+                            wname={workstation.name}
+                            notes={workstation.notes}
+                          />
+                        </HStack>
+                      </Td>
                       <EditableField
                         group={group.name}
                         workstation={workstation}
@@ -257,10 +265,10 @@ export const GroupInfoManagement = ({
                       />
                       <Td>
                         <Button
-                          colorScheme="red"
-                          onClick={() => removeMachine(workstation.name)}
+                          colorScheme="green"
+                          onClick={handleViewFiles(workstation.name)}
                         >
-                          Remove
+                          Files
                         </Button>
                       </Td>
                       <Td>
@@ -271,15 +279,15 @@ export const GroupInfoManagement = ({
                         >
                           {copied && workstation.name === currentMachine
                             ? "Copied"
-                            : "Copy Shutdown Command"}
+                            : "Copy"}
                         </Button>
                       </Td>
                       <Td>
                         <Button
-                          colorScheme="green"
-                          onClick={handleViewFiles(workstation.name)}
+                          colorScheme="red"
+                          onClick={() => removeMachine(workstation.name)}
                         >
-                          Files
+                          Remove
                         </Button>
                       </Td>
                     </Tr>

@@ -78,8 +78,8 @@ export const EditableField = ({
         >
           {(props) => (
             <>
-              <EditablePreview />
-              <EditableInput />
+              <EditablePreview isTruncated />
+              <EditableInput width="10rem" />
               <EditableButton {...props} />
             </>
           )}
@@ -99,7 +99,7 @@ export const EditableField = ({
         >
           {(props) => (
             <>
-              <EditablePreview />
+              <EditablePreview isTruncated />
               <EditableInput />
               <EditableButton {...props} />
             </>
