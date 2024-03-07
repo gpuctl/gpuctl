@@ -48,14 +48,13 @@ export const useDims = (myRef: RefObject<HTMLHeadingElement>) => {
       w: cur.offsetWidth,
       h: cur.offsetHeight,
     });
+  const updateDims = () => {
+    const cur = myRef?.current;
+    if (cur == null) return;
+    setDimsFromParent(cur);
+  };
 
   useEffect(() => {
-    const updateDims = () => {
-      const cur = myRef?.current;
-      if (cur == null) return;
-      setDimsFromParent(cur);
-    };
-
     updateDims();
     window.addEventListener("resize", updateDims);
 
@@ -64,5 +63,5 @@ export const useDims = (myRef: RefObject<HTMLHeadingElement>) => {
     };
   }, [myRef]);
 
-  return dims;
+  return { dims: dims, updateDims: updateDims };
 };

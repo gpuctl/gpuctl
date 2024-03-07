@@ -21,10 +21,10 @@ export const Graph = ({
 
   const ref = useRef<HTMLHeadingElement>(null);
 
-  const { w: width, h: height } = useDims(ref);
+  const { dims, updateDims } = useDims(ref);
 
-  const innerWidth = width - AXIS_MARGIN.x * 2;
-  const innerHeight = height - AXIS_MARGIN.y * 2;
+  const innerWidth = dims.w - AXIS_MARGIN.x * 2;
+  const innerHeight = dims.h - AXIS_MARGIN.y * 2;
 
   const xScale: ScaleLinear<number, number> = d3
     .scaleLinear()
@@ -45,7 +45,7 @@ export const Graph = ({
 
   return (
     <Box minWidth={200} minHeight={400} ref={ref}>
-      <svg width={width} height={height}>
+      <svg width={dims.w} height={dims.h}>
         <g
           width={innerWidth}
           height={innerHeight}
@@ -59,7 +59,7 @@ export const Graph = ({
           </g>
 
           <g
-            transform={`translate(${innerWidth / 2}, ${height - 5})`}
+            transform={`translate(${innerWidth / 2}, ${dims.h - 5})`}
             shapeRendering={"geometricPrecision"}
           >
             <text
