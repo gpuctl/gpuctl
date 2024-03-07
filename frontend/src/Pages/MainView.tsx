@@ -48,7 +48,7 @@ const cardView = (stats: WorkStationGroup[]) => (
     <Box key={stats.length} m={5} bg="white" paddingTop={5} paddingBottom={10}>
       <AggregateStats
         // TODO: replace with actual aggregate data from backend
-        data={{ average_use: 45.6, uptime: "2 days" }}
+        data={{ percent_used: 45.6, total_energy: 4563.2 }}
       />
     </Box>
   </VStack>
