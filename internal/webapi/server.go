@@ -61,8 +61,8 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 }
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
-	// TODO: Maybe unset in Caddyfile???
+	// These get removed by the Caddyfile in prod, but are needed for dev.
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	s.mux.ServeHTTP(w, r)
 }

@@ -8,8 +8,9 @@ import { STATS_PATH } from "./Config/Paths";
 import { AuthProvider } from "./Providers/AuthProvider";
 import { FetchStatsProvider } from "./Providers/FetchProvider";
 
-export const API_URL =
-  process.env.NODE_ENV === "production" ? "/api" : "http://localhost:8000/api";
+export const API_URL = import.meta.env.PROD
+  ? "/api"
+  : "http://localhost:8000/api";
 export const REFRESH_INTERVAL = 5000;
 
 export enum ViewPage {

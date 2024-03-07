@@ -1,66 +1,40 @@
 {
-  "name": "frontend",
-  "version": "0.1.0",
+  "name": "frontend-2",
   "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "build-nocheck": "vite build",
+    "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
+    "preview": "vite preview",
+    "fmt": "prettier --write .",
+    "fmt-check": "prettier --check ."
+  },
   "dependencies": {
     "@chakra-ui/icons": "^2.1.1",
     "@chakra-ui/react": "^2.8.2",
-    "@choc-ui/chakra-autocomplete": "^5.2.10",
-    "@emotion/react": "^11.11.3",
-    "@emotion/styled": "^11.11.0",
-    "@testing-library/jest-dom": "^5.17.0",
-    "@testing-library/react": "^13.4.0",
-    "@testing-library/user-event": "^13.5.0",
-    "@types/d3": "^7.4.3",
-    "@types/jest": "^27.5.2",
-    "@types/node": "^16.18.71",
-    "@types/react": "^18.2.48",
-    "@types/react-dom": "^18.2.18",
+    "@choc-ui/chakra-autocomplete": "^5.3.0",
     "d3": "^7.8.5",
-    "framer-motion": "^10.18.0",
-    "localforage": "^1.10.0",
-    "match-sorter": "^6.3.3",
+    "lodash": "^4.17.21",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^5.0.1",
-    "react-router-dom": "^6.22.0",
-    "react-scripts": "^5.0.1",
-    "sort-by": "^1.2.0",
-    "typescript": "^4.9.5",
-    "web-vitals": "^2.1.4"
+    "react-router-dom": "^6.22.3"
   },
   "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
-    "prettier": "^3.2.4"
-  },
-  "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test",
-    "eject": "react-scripts eject",
-    "fmt-check": "prettier --check ."
-  },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
-  "jest": {
-    "transformIgnorePatterns": [
-      "/node_modules/(?!(d3|d3-array|d3-axis|d3-brush|d3-dispatch|d3-drag|d3-selection|d3-interpolate|d3-color|d3-transition|d3-timer|d3-ease|d3-chord|d3-path|d3-contour|d3-delaunay|d3-dsv|d3-fetch|d3-force|d3-quadtree|d3-format|d3-geo|d3-hierarchy|d3-polygon|d3-random|d3-scale|d3-time|d3-time-format|d3-scale-chromatic|d3-shape|d3-zoom|delaunator|robust-predicates|internmap)/)"
-    ]
-  },
-  "browserslist": {
-    "production": [
-      ">0.2%",
-      "not dead",
-      "not op_mini all"
-    ],
-    "development": [
-      "last 1 chrome version",
-      "last 1 firefox version",
-      "last 1 safari version"
-    ]
+    "@types/d3": "^7.4.3",
+    "@types/react": "^18.2.56",
+    "@types/react-dom": "^18.2.19",
+    "@typescript-eslint/eslint-plugin": "^7.0.2",
+    "@typescript-eslint/parser": "^7.0.2",
+    "@vitejs/plugin-react": "^4.2.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "eslint-plugin-react-refresh": "^0.4.5",
+    "prettier": "^3.2.5",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.4"
   }
 }
