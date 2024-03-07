@@ -178,3 +178,17 @@ export const all = <T,>(x: (T | null)[]): T[] | null =>
     (p, c) => (c === null ? null : p?.concat([c]) ?? null),
     [],
   );
+
+export const chunks = <T,>(
+  arr: T[],
+  chunkSize: number,
+  chunkOff: number = 0,
+) => {
+  const modded = chunkOff % chunkSize;
+  return makeArr(Math.ceil(arr.length / chunkSize), (i) =>
+    arr.slice(
+      Math.max(0, i * chunkSize - modded),
+      (i + 1) * chunkSize - modded,
+    ),
+  );
+};
