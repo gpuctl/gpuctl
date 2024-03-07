@@ -9,8 +9,7 @@ func DownsampleOverTime(interval time.Duration, database Database) error {
 	downsampleTicker := time.NewTicker(time.Duration(interval))
 
 	for range downsampleTicker.C {
-		weekago := time.Now().AddDate(0, 0, -7)
-		err := database.Downsample(weekago)
+		err := database.Downsample(time.Now())
 
 		if err != nil {
 			slog.Error("Got error whilst downsampling", "err", err)
