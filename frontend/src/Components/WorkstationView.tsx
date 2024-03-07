@@ -28,6 +28,9 @@ import {
   HStack,
   VStack,
   Thead,
+  Icon,
+  IconProps,
+  Stack,
 } from "@chakra-ui/react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Graph } from "./Graph";
@@ -68,6 +71,17 @@ const FAKE_STATS = [
 
 const GRAPH_FIELDS = enumVals(GraphField);
 
+export const GRAPH_COLS = [
+  "#5DA5DA",
+  "#FAA43A",
+  "#60BD68",
+  "#F17CB0",
+  "#B2912F",
+  "#B276B2",
+  "#DECF3F",
+  "#F15854",
+];
+
 export const WorkstationView = ({ hostname }: { hostname: string }) => {
   const [, setPs] = useSearchParams();
   const { allStats } = useStats();
@@ -105,7 +119,10 @@ export const WorkstationView = ({ hostname }: { hostname: string }) => {
               <SimpleGrid columns={2} spacing={5}>
                 <StatsTable stats={wstat}></StatsTable>
                 <VStack spacing={10}>
-                  <StatsGraphPanel hostname={hostname} />
+                  <StatsGraphPanel
+                    hostname={hostname}
+                    numGPUs={wstat.gpus.length}
+                  />
                   <AdminDetails stats={wstat} group_name={name}></AdminDetails>
                 </VStack>
               </SimpleGrid>
@@ -189,8 +206,14 @@ const StatsTable = ({ stats }: { stats: WorkStationData }) => {
   );
 };
 
-const StatsGraphPanel = ({ hostname }: { hostname: string }) => {
-  const [field, setField] = useState<GraphField>(GraphField.POWER_DRAW);
+const StatsGraphPanel = ({
+  hostname,
+  numGPUs,
+}: {
+  hostname: string;
+  numGPUs: number;
+}) => {
+  const [field, setField] = useState<GraphField>(GraphField.GPU_TEMP);
 
   const historyStats = useHistoryStats(hostname);
 
@@ -237,7 +260,7 @@ const StatsGraphPanel = ({ hostname }: { hostname: string }) => {
       {validationElim(statsToDisplay, {
         success: (s) =>
           s.length > 0 || s[0].length > 0 ? (
-            <StatsGraph stats={s}></StatsGraph>
+            <StatsGraph stats={s} numGPUs={numGPUs}></StatsGraph>
           ) : (
             <Text>No historical data found!</Text>
           ),
@@ -324,7 +347,13 @@ const AdminDetails = ({
   );
 };
 
-const StatsGraph = ({ stats }: { stats: { x: number; y: number }[][] }) => {
+const StatsGraph = ({
+  stats,
+  numGPUs,
+}: {
+  stats: { x: number; y: number }[][];
+  numGPUs: number;
+}) => {
   const maxTS =
     stats.length === 0 ? 0 : Math.max(...stats[0].map(({ x }) => x));
 
@@ -338,7 +367,9 @@ const StatsGraph = ({ stats }: { stats: { x: number; y: number }[][] }) => {
 
   const filtered = stats
     .map((s) => s.filter(({ x }) => startTS <= x && x <= endTS))
-    .map((line, i) => ({ off: stats[i].indexOf(line[0]), line }));
+    .map((line, i) =>
+      line.length > 0 ? { off: stats[i].indexOf(line[0]), line } : null,
+    );
 
   return (
     <>
@@ -364,6 +395,29 @@ const StatsGraph = ({ stats }: { stats: { x: number; y: number }[][] }) => {
         <RangeSliderThumb index={0} />
         <RangeSliderThumb index={1} />
       </RangeSlider>
+      {numGPUs > 1 ? (
+        <>
+          <Stack direction={["column", "row"]} spacing={5}>
+            {range(0, numGPUs).map((i) => (
+              <HStack key={i}>
+                <CircleIcon color={GRAPH_COLS[i]}></CircleIcon>
+                <Text fontSize="xl">{`GPU ${i + 1}`}</Text>
+              </HStack>
+            ))}
+          </Stack>
+        </>
+      ) : (
+        <></>
+      )}
     </>
   );
 };
+
+const CircleIcon = (props: IconProps) => (
+  <Icon viewBox="0 0 200 200" {...props}>
+    <path
+      fill="currentColor"
+      d="M 100, 100 m -75, 0 a 75,75 0 1,0 150,0 a 75,75 0 1,0 -150,0"
+    />
+  </Icon>
+);
