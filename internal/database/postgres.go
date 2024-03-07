@@ -314,15 +314,15 @@ SELECT * FROM GroupedStats;`
 	cleanup_query := `DROP TABLE TempDownsampled;`
 
 	now := int_now
-	sixMonthsAgo := now.AddDate(0, -6, 0)
-	sixMonthsAgoFormatted := sixMonthsAgo.Format("2006-01-02 15:04:05")
+	downsampleThresh := now.Add(-time.Hour)
+	downsampleThreshFormatted := downsampleThresh.Format("2006-01-02 15:04:05")
 
 	tx, err := conn.db.Begin()
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(downsample_query, sixMonthsAgoFormatted)
+	_, err = tx.Exec(downsample_query, downsampleThreshFormatted)
 	if err != nil {
 		return errors.Join(err, tx.Rollback())
 	}
@@ -332,7 +332,7 @@ SELECT * FROM GroupedStats;`
 		return errors.Join(err, tx.Rollback())
 	}
 
-	_, err = tx.Exec(delete_query)
+	_, err = tx.Exec(delete_query, downsampleThreshFormatted)
 
 	if err != nil {
 		return errors.Join(err, tx.Rollback())

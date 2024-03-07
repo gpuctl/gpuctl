@@ -299,7 +299,7 @@ func (m *inMemory) RemoveMachine(machine broadcast.RemoveMachine) error {
 
 	found := false
 
-	for hostname, _ := range m.lastSeen {
+	for hostname := range m.lastSeen {
 		if hostname == machine.Hostname {
 			found = true
 			break
@@ -405,7 +405,7 @@ func (m *inMemory) ListFiles(hostname string) ([]string, error) {
 		return []string{}, nil
 	}
 	res := []string{}
-	for k, _ := range m.files[hostname] {
+	for k := range m.files[hostname] {
 		res = append(res, k)
 	}
 	return res, nil
