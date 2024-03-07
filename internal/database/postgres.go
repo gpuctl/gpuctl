@@ -221,7 +221,7 @@ func (conn PostgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) er
 	return err
 }
 
-func (conn PostgresConn) Downsample(int_now time.Time) error {
+func (conn PostgresConn) DownsampleOld(int_now time.Time) error {
 	downsample_query := `CREATE TEMPORARY TABLE TempDownsampled AS
 WITH OrderedStats AS (
   SELECT
@@ -333,7 +333,7 @@ FROM TempDownsampled;`
 	return err
 }
 
-func (conn PostgresConn) DownsampleOld(cut time.Time) error {
+func (conn PostgresConn) Downsample(cut time.Time) error {
 	// TODO: decide what to do with the old downsampling code (i.e. fix bugs)
 	_, err := conn.db.Exec(`DELETE FROM Stats
 				WHERE Received < $1`, cut)
