@@ -36,7 +36,11 @@ export const WorkstationCardMin = ({
   const textCol = useColorModeValue("black", "white");
 
   const [params] = useSearchParams();
-  params.append("selected", name);
+
+  const newParams = new URLSearchParams(
+    Object.fromEntries(Array.from(params.entries())),
+  );
+  newParams.append("selected", name);
 
   return (
     <Center>
@@ -71,7 +75,7 @@ export const WorkstationCardMin = ({
                 </Tooltip>
                 <Link
                   as={ReactRouterLink}
-                  to={{ search: params.toString() }}
+                  to={{ search: newParams.toString() }}
                   isTruncated
                 >
                   {" " + name}
@@ -80,7 +84,7 @@ export const WorkstationCardMin = ({
             ) : (
               <Link
                 as={ReactRouterLink}
-                to={{ search: params.toString() }}
+                to={{ search: newParams.toString() }}
                 isTruncated
               >
                 {name}
@@ -90,7 +94,7 @@ export const WorkstationCardMin = ({
           <LinkBox>
             <LinkOverlay
               as={ReactRouterLink}
-              to={{ search: params.toString() }}
+              to={{ search: newParams.toString() }}
             />
             {gpus.map((s, i) => (
               <Box key={i}>
