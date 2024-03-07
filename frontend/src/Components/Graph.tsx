@@ -3,7 +3,8 @@ import { ScaleLinear } from "d3";
 import { useMemo, useRef } from "react";
 import { useDims } from "../Utils/Hooks";
 import { Box } from "@chakra-ui/react";
-import { chunks } from "../Utils/Utils";
+import { catNulls, chunks, mapNotNulls } from "../Utils/Utils";
+import { GRAPH_COLS } from "./WorkstationView";
 
 const AXIS_MARGIN = { x: 20, y: 20 };
 
@@ -12,14 +13,22 @@ export const Graph = ({
   xlabel,
   maxPoints,
 }: {
-  data: { off: number; line: { x: number; y: number }[] }[];
+  data: ({ off: number; line: { x: number; y: number }[] } | null)[];
   xlabel: string;
   maxPoints: number;
 }) => {
-  const minX = Math.min(...data.flatMap((d) => d.line.map(({ x }) => x)));
-  const maxX = Math.max(...data.flatMap((d) => d.line.map(({ x }) => x)));
-  const minY = Math.min(...data.flatMap((d) => d.line.map(({ y }) => y)));
-  const maxY = Math.max(...data.flatMap((d) => d.line.map(({ y }) => y)));
+  const minX = Math.min(
+    ...catNulls(data.flatMap((d) => d?.line?.map(({ x }) => x))),
+  );
+  const maxX = Math.max(
+    ...catNulls(data.flatMap((d) => d?.line?.map(({ x }) => x))),
+  );
+  const minY = Math.min(
+    ...catNulls(data.flatMap((d) => d?.line?.map(({ y }) => y))),
+  );
+  const maxY = Math.max(
+    ...catNulls(data.flatMap((d) => d?.line?.map(({ y }) => y))),
+  );
 
   const ref = useRef<HTMLHeadingElement>(null);
 
@@ -43,8 +52,12 @@ export const Graph = ({
     .x(([x]) => xScale(x))
     .y(([, y]) => yScale(y));
 
-  const downsampled = data.map(({ off, line }, i) => {
-    const chunkSize = Math.ceil(line.length / maxPoints);
+  const downsampled = mapNotNulls(data, ({ off, line }, i) => {
+    const lineMinX = Math.min(...line.map(({ x }) => x));
+    const lineMaxX = Math.max(...line.map(({ x }) => x));
+    const lineFrac = (lineMaxX - lineMinX) / (maxX - minX);
+
+    const chunkSize = Math.ceil(line.length / (maxPoints * lineFrac));
     return chunks(line, chunkSize, off).map((c) => {
       const { x, y } = c.reduce(({ x: x1, y: y1 }, { x: x2, y: y2 }) => ({
         x: x1,
@@ -54,7 +67,7 @@ export const Graph = ({
     });
   });
 
-  const linePaths = downsampled.map((d) =>
+  const linePaths = mapNotNulls(downsampled, (d) =>
     lineBuilder(d.map(({ x, y }) => [x, y])),
   );
 
@@ -64,7 +77,7 @@ export const Graph = ({
         <g
           width={innerWidth}
           height={innerHeight}
-          transform={`translate(${AXIS_MARGIN.x * 2}, ${0})`}
+          transform={`translate(${AXIS_MARGIN.x * 2 - AXIS_MARGIN.x / 4}, ${AXIS_MARGIN.y / 4})`}
         >
           <g
             transform={`translate(0, 0)`}
@@ -97,7 +110,7 @@ export const Graph = ({
           {linePaths.map((p, i) => (
             <path
               d={p ?? undefined}
-              stroke={["blue", "red", "green", "orange", "purple"][i % 5]}
+              stroke={GRAPH_COLS[i % GRAPH_COLS.length]}
               fill="none"
               strokeWidth={3}
             />

@@ -30,8 +30,11 @@ export const inlineLog = <T,>(x: T): T => {
   return x;
 };
 
-export const mapNullable = <T, U>(x: T | null, f: (x: T) => U): U | null =>
-  x == null ? null : f(x);
+export const mapNullable = <T, U>(
+  x: T | undefined | null,
+  f: (x: T) => U,
+): U | undefined | null =>
+  x == null ? null : x === undefined ? undefined : f(x);
 
 export type EnumDict = { [key: string]: string | number };
 export type EnumType<E extends EnumDict> = E[Exclude<keyof E, number>];
@@ -192,3 +195,12 @@ export const chunks = <T,>(
     ),
   );
 };
+
+export const catNulls = <T,>(arr: (T | null | undefined)[]): T[] =>
+  arr.flatMap((x) => (x === null || x === undefined ? [] : [x]));
+
+export const mapNotNulls = <T, U>(
+  arr: (T | null | undefined)[],
+  f: (x: T, y: number) => U,
+): (U | null | undefined)[] =>
+  arr.map((x, i) => mapNullable(x, (y) => f(y, i)));
