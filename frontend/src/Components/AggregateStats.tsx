@@ -10,7 +10,7 @@ export const AggregateStats = ({
       <Heading size="lg">Statistics</Heading>
       <UnorderedList spacing={3}>
         <ListItem>Percent Used: {data.percent_used}%</ListItem>
-        <ListItem>Total Energy: {data.total_energy}</ListItem>
+        <ListItem>Total Energy: {data.total_energy} Joules</ListItem>
       </UnorderedList>
     </VStack>
   );
