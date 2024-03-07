@@ -379,6 +379,7 @@ const StatsGraph = ({
       ></Graph>
       <RangeSlider
         defaultValue={[0, maxTS]}
+        value={[startTS, endTS]}
         min={0}
         max={maxTS}
         onChange={([min, max]) => {
