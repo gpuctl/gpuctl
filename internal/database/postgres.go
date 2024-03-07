@@ -311,7 +311,7 @@ WHERE Received > $1 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsamp
 			UserName = EXCLUDED.UserName,
 			IsDownsampled = EXCLUDED.IsDownsampled;`
 
-	delete_query := `DELETE FROM Stats WHERE Received <= $1 AND IsDownsampled = FALSE;`
+	delete_query := `DELETE FROM Stats WHERE Received <= $1 AND IsDownsampled = TRUE;`
 	cleanup_query := `DROP TABLE TempDownsampled;`
 
 	now := int_now
