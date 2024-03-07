@@ -48,7 +48,7 @@ export const Navbar = ({
       defaultIndex={VIEW_PAGE_INDEX[initial]}
       index={tabs.index}
     >
-      <Heading size="xl">GPU Control Room</Heading>
+      <Heading mt="2rem" mb="0.5rem" size="xl">GPU Control Room</Heading>
       <TabList>
         <Tab>Card View</Tab>
         <Tab>Table View</Tab>
