@@ -36,9 +36,13 @@ func monitor(database database.Database, cutoffTime time.Time, l *slog.Logger, s
 
 	for _, seen := range lastSeens {
 		// FIXME: If the first machine always fails to restart
-		if seen.LastSeen.Before(cutoffTime) && ping(seen.Hostname, l) {
+		seenIsOld := seen.LastSeen.Before(cutoffTime)
+		canPing := ping(seen.Hostname, l)
 
-			l.Info("Attempting to restart a machine", "hostname", seen.Hostname, "last-seen", seen.LastSeen)
+		l.Info("Deciding if I should restart satellite", "hostname", seen.Hostname, "seen-is-old", seenIsOld, "can-ping", canPing)
+
+		if seenIsOld && canPing {
+			l.Info("Attempting to restart a satellite", "hostname", seen.Hostname, "last-seen", seen.LastSeen)
 
 			err := tunnel.RestartSatellite(seen.Hostname, s)
 
