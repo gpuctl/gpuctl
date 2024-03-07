@@ -256,8 +256,12 @@ func (s *satellite) sendGPUStatusWithSource(gpuhandler gpustats.GPUDataSource) e
 	stats, err := gpuhandler.GetGPUStatus()
 
 	if err != nil {
-		return err
+		slog.Warn("Got error parsing data:", "err", err)
+		if stats == nil {
+			return err
+		}
 	}
+
 	return s.sendGPUStatus(stats)
 
 }
