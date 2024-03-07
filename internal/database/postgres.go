@@ -272,8 +272,7 @@ GroupedStats AS (
   GROUP BY Gpu, GroupId
 )
 SELECT * FROM GroupedStats;`
-	update_downsampled_query := `UPDATE Stats SET IsDownsampled = TRUE
-WHERE Received > $1 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);`
+
 	insert_query := `INSERT INTO Stats (Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed, FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw, GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock, InUse, UserName, IsDownsampled)
 	SELECT
 		Gpu,
@@ -292,7 +291,7 @@ WHERE Received > $1 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsamp
 		AvgMaxMemoryClock,
 		OrInUse,
 		ModeUserName,
-		FALSE
+		TRUE
 	FROM TempDownsampled
 	ON CONFLICT (Gpu, Received) DO UPDATE
 	SET MemoryUtilisation = EXCLUDED.MemoryUtilisation,
@@ -311,7 +310,7 @@ WHERE Received > $1 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsamp
 			UserName = EXCLUDED.UserName,
 			IsDownsampled = EXCLUDED.IsDownsampled;`
 
-	delete_query := `DELETE FROM Stats WHERE Received <= $1 AND IsDownsampled = TRUE;`
+	delete_query := `DELETE FROM Stats WHERE Received <= $1 AND IsDownsampled = FALSE;`
 	cleanup_query := `DROP TABLE TempDownsampled;`
 
 	now := int_now
@@ -324,12 +323,6 @@ WHERE Received > $1 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsamp
 	}
 
 	_, err = tx.Exec(downsample_query, sixMonthsAgoFormatted)
-	if err != nil {
-		tx.Rollback()
-		return err
-	}
-
-	_, err = tx.Exec(update_downsampled_query, sixMonthsAgoFormatted)
 	if err != nil {
 		tx.Rollback()
 		return err
