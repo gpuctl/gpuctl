@@ -339,7 +339,9 @@ export const GroupInfoManagement = ({
                   justifyContent="space-between"
                   alignItems="center"
                 >
-                  <Box flex="1">{file}</Box>
+                  <Box flex="1" isTruncated maxWidth="25rem">
+                    {file}
+                  </Box>
                   <Flex alignItems="center" gap="2">
                     <Button
                       colorScheme="blue"
