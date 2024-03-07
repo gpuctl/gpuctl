@@ -5,6 +5,7 @@ import { Validated, Validation, failure, success } from "../Utils/Utils";
 import { ReactNode, createContext, useContext, useState } from "react";
 import { useJarJar } from "../Utils/Hooks";
 import { useInterval } from "@chakra-ui/react";
+import { workstationBusy } from "../Components/WorkstationCardMinimal";
 
 const API_ALL_STATS_PATH = "/stats/all";
 
@@ -80,9 +81,7 @@ const retrieveAllStats: (
 // USEFUL FOR TESTING, DON'T DELETE PLS
 // success(preProcess(EXAMPLE_DATA_1));
 
-// We will consider a machine to be in use if any of it's GPUs are
-const inUse = (machine: WorkStationData) =>
-  machine.gpus.some(({ in_use }) => in_use);
+const inUse = (machine: WorkStationData) => workstationBusy(machine.gpus);
 
 const sortData = <T,>(ws: (WorkStationData & T)[]) =>
   ws
