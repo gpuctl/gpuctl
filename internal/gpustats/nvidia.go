@@ -330,7 +330,6 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 		uuid, err_ := parseUuid(gpu.Uuid)
 		err = errors.Join(err, err_)
 
-
 		// Filter processes
 		procs := []uplink.GPUProcInfo{}
 
