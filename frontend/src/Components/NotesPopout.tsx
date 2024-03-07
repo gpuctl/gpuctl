@@ -16,9 +16,11 @@ import { useState } from "react";
 export const NotesPopout = ({
   wname,
   notes,
+  isEven,
 }: {
   wname: string;
   notes: string;
+  isEven: boolean;
 }) => {
   const modifyInfo = useModifyInfo();
   const [newNotes, setNewNotes] = useState(notes);
@@ -37,7 +39,12 @@ export const NotesPopout = ({
   return (
     <Popover>
       <PopoverTrigger>
-        <IconButton size="sm" icon={<EditIcon />} aria-label="edit" />
+        <IconButton
+          bgColor={isEven ? "gray.100" : "white"}
+          size="sm"
+          icon={<EditIcon />}
+          aria-label="edit"
+        />
       </PopoverTrigger>
       <PopoverContent>
         <PopoverArrow />
