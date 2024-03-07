@@ -11,8 +11,7 @@ import {
 } from "@chakra-ui/react";
 import { useModifyInfo } from "../Hooks/Hooks";
 import { EditIcon } from "@chakra-ui/icons";
-import { useRef, useState } from "react";
-import { isVisible } from "@testing-library/user-event/dist/utils";
+import { useState } from "react";
 
 export const NotesPopout = ({
   wname,
