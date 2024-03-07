@@ -25,7 +25,7 @@ const LAST_SEEN_WARN_THRESH = 60 * 5;
 const GREEN = "#25D36B";
 
 // A mechine is busy if all gpus are in use
-const workstationBusy = (gs: GPUStats[]) => {
+export const workstationBusy = (gs: GPUStats[]) => {
   return gs.every((g) => {
     return g.in_use;
   });
