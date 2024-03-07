@@ -184,7 +184,7 @@ const StatsTable = ({ stats }: { stats: WorkStationData }) => {
 };
 
 const StatsGraphPanel = ({ hostname }: { hostname: string }) => {
-  const [field, setField] = useState<GraphField>(GraphField.GPU_UTIL);
+  const [field, setField] = useState<GraphField>(GraphField.POWER_DRAW);
 
   const historyStats = useHistoryStats(hostname);
 
