@@ -94,12 +94,7 @@ type WorkstationSeen struct {
 	LastSeen time.Time
 }
 
-type HistoricalData []HistoricalDataPoint
-
-type HistoricalDataPoint struct {
-	Timestamp int64 `json:"timestamp"`
-	Samples   []GPU `json:"sample"`
-}
+type HistoricalData [][]GPU
 
 type AggregateData struct {
 	PercentUsed int    `json:"percent_used"`

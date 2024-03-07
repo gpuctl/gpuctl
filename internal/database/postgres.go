@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/gpuctl/gpuctl/internal/broadcast"
 	"github.com/gpuctl/gpuctl/internal/uplink"
 
@@ -719,7 +720,6 @@ func (conn PostgresConn) RemoveFile(remove broadcast.RemoveFile) error {
 }
 
 func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
-	data := broadcast.HistoricalData{}
 	samples, err := conn.db.Query(`SELECT
 		s.Gpu,
 		s.Received,
@@ -740,7 +740,7 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 		FROM Stats s
 		INNER JOIN GPUs g ON g.Uuid = s.Gpu
 		WHERE g.Machine=$1
-		ORDER BY s.Received, s.Gpu`,
+		ORDER BY s.Gpu, s.Received`,
 		hostname,
 	)
 	if err != nil {
@@ -751,8 +751,9 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 	//  	need to pass each gpu in its own list to the front-end
 	// NOTE: what we do here is that we accumulate over the stats and package all samples by their insert time
 
-	currtimestamp := time.Now()
-	currpoint := broadcast.HistoricalDataPoint{}
+	data := broadcast.HistoricalData{}
+	bucket := []broadcast.GPU{}
+	curruuid, _ := uuid.NewRandom()
 
 	for samples.Next() {
 		var sample broadcast.GPU
@@ -779,17 +780,15 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 		if err != nil {
 			return nil, err
 		}
-
-		// Separate into different buckets based on the timestamp (error upto second)
-		if !timestamp.Round(time.Second).Equal(currtimestamp.Round(time.Second)) {
-			data = append(data, currpoint)
-			currtimestamp = timestamp
-			currpoint.Timestamp = timestamp.Unix()
-			currpoint.Samples = make([]broadcast.GPU, 0)
+		if curruuid != sample.Uuid {
+			curruuid = sample.Uuid
+			data = append(data, bucket)
+			bucket = make([]broadcast.GPU, 0)
 		}
-		currpoint.Samples = append(currpoint.Samples, sample)
+
+		bucket = append(bucket, sample)
 	}
-	data = append(data, currpoint)
+	data = append(data, bucket)
 
 	return data[1:], nil
 }
