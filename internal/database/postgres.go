@@ -275,25 +275,41 @@ SELECT * FROM GroupedStats;`
 	update_downsampled_query := `UPDATE Stats SET IsDownsampled = TRUE
 WHERE Received > $1 AND Received <= (SELECT MAX(SampleEndTime) FROM TempDownsampled);`
 	insert_query := `INSERT INTO Stats (Gpu, Received, MemoryUtilisation, GpuUtilisation, MemoryUsed, FanSpeed, Temp, MemoryTemp, GraphicsVoltage, PowerDraw, GraphicsClock, MaxGraphicsClock, MemoryClock, MaxMemoryClock, InUse, UserName, IsDownsampled)
-SELECT
-  Gpu,
-  SampleStartTime,
-  AvgMemoryUtilisation,
-  AvgGpuUtilisation,
-  AvgMemoryUsed,
-  AvgFanSpeed,
-  AvgTemp,
-  AvgMemoryTemp,
-  AvgGraphicsVoltage,
-  AvgPowerDraw,
-  AvgGraphicsClock,
-  AvgMaxGraphicsClock,
-  AvgMemoryClock,
-  AvgMaxMemoryClock,
-  OrInUse,
-  ModeUserName,
-  FALSE
-FROM TempDownsampled;`
+	SELECT
+		Gpu,
+		SampleStartTime,
+		AvgMemoryUtilisation,
+		AvgGpuUtilisation,
+		AvgMemoryUsed,
+		AvgFanSpeed,
+		AvgTemp,
+		AvgMemoryTemp,
+		AvgGraphicsVoltage,
+		AvgPowerDraw,
+		AvgGraphicsClock,
+		AvgMaxGraphicsClock,
+		AvgMemoryClock,
+		AvgMaxMemoryClock,
+		OrInUse,
+		ModeUserName,
+		FALSE
+	FROM TempDownsampled
+	ON CONFLICT (Gpu, Received) DO UPDATE
+	SET MemoryUtilisation = EXCLUDED.MemoryUtilisation,
+			GpuUtilisation = EXCLUDED.GpuUtilisation,
+			MemoryUsed = EXCLUDED.MemoryUsed,
+			FanSpeed = EXCLUDED.FanSpeed,
+			Temp = EXCLUDED.Temp,
+			MemoryTemp = EXCLUDED.MemoryTemp,
+			GraphicsVoltage = EXCLUDED.GraphicsVoltage,
+			PowerDraw = EXCLUDED.PowerDraw,
+			GraphicsClock = EXCLUDED.GraphicsClock,
+			MaxGraphicsClock = EXCLUDED.MaxGraphicsClock,
+			MemoryClock = EXCLUDED.MemoryClock,
+			MaxMemoryClock = EXCLUDED.MaxMemoryClock,
+			InUse = EXCLUDED.InUse,
+			UserName = EXCLUDED.UserName,
+			IsDownsampled = EXCLUDED.IsDownsampled;`
 	cleanup_query := `DROP TABLE TempDownsampled;`
 
 	now := int_now
