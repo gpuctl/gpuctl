@@ -238,17 +238,17 @@ export const useHandleSubmit = (
   });
 };
 
-export type HistoryStats = {
+export type HistorySample = {
   timestamp: number;
-  sample: GPUStats[];
+  sample: GPUStats;
 };
 
 const GRAPH_REFRESH_INTERVAL = 5000;
 
 export const useHistoryStats = (
   hostname: string,
-): Validation<HistoryStats[]> => {
-  const [stats, updateStats] = useJarJar<HistoryStats[]>(async () =>
+): Validation<HistorySample[][]> => {
+  const [stats, updateStats] = useJarJar<HistorySample[][]>(async () =>
     success(
       await (
         await fetch(API_URL + `/stats/historical?hostname=${hostname}`)
