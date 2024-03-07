@@ -10,6 +10,7 @@ import {
   TableContainer,
   Tbody,
   Td,
+  Text,
   Th,
   Thead,
   Tr,
@@ -40,6 +41,51 @@ export const GPU_FIELDS = {
   "Memory Clock": "memory_clock",
   "Max Memory Clock": "max_memory_clock",
 } as const;
+
+const Row = ({
+  params,
+  workstation_name,
+  shownColumns,
+  gpu,
+  group_name,
+}: {
+  params: URLSearchParams;
+  workstation_name: string;
+  shownColumns: Record<string, boolean>;
+  gpu: GPUStats;
+  group_name: string;
+}) => {
+  const [hover, setHover] = useState(false);
+  const newParams = new URLSearchParams(
+    Object.fromEntries(Array.from(params.entries())),
+  );
+  newParams.append("selected", workstation_name);
+
+  return (
+    <Tr>
+      <Link
+        as={ReactRouterLink}
+        to={{ search: newParams.toString() }}
+        display="contents"
+        onMouseEnter={() => {
+          setHover(true);
+        }}
+        onMouseLeave={() => {
+          setHover(false);
+        }}
+      >
+        {" "}
+        {tablify(shownColumns, gpu, group_name, workstation_name).map((s, i) =>
+          s === null ? null : (
+            <Td>
+              <Text textDecoration={hover ? "underline" : ""}>{s}</Text>
+            </Td>
+          ),
+        )}
+      </Link>
+    </Tr>
+  );
+};
 
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   // default to show group, machine_name, gpu_name, isFree, brand, and memory_total
@@ -122,28 +168,15 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                       j * gpus.length +
                       k) *
                     19; //size of gpu
-                  const newParams = new URLSearchParams(
-                    Object.fromEntries(Array.from(params.entries())),
-                  );
-                  newParams.append("selected", workstation_name);
-
                   return (
-                    <Link
-                      as={ReactRouterLink}
-                      to={{ search: newParams.toString() }}
-                      display="contents"
-                    >
-                      <Tr key={id}>
-                        {tablify(
-                          shownColumns,
-                          gpu,
-                          group_name,
-                          workstation_name,
-                        ).map((s, i) =>
-                          s === null ? null : <Td key={i}>{s}</Td>,
-                        )}
-                      </Tr>
-                    </Link>
+                    <Row
+                      key={id}
+                      params={params}
+                      workstation_name={workstation_name}
+                      shownColumns={shownColumns}
+                      gpu={gpu}
+                      group_name={group_name}
+                    />
                   );
                 }),
               ),
