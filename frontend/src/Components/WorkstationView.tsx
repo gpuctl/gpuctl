@@ -229,7 +229,12 @@ const StatsGraphPanel = ({ hostname }: { hostname: string }) => {
       </Menu>
       <Spacer height={5} />
       {validationElim(statsToDisplay, {
-        success: (s) => <StatsGraph stats={s}></StatsGraph>,
+        success: (s) =>
+          s.length > 0 || s[0].length > 0 ? (
+            <StatsGraph stats={s}></StatsGraph>
+          ) : (
+            <Text>No historical data found!</Text>
+          ),
         failure: () => (
           <Text>Failed to fetch historical data for graph! Retrying...</Text>
         ),
@@ -324,6 +329,11 @@ const StatsGraph = ({ stats }: { stats: { x: number; y: number }[][] }) => {
 
   const [startTS, setStartTS] = useState(0);
   const [endTS, setEndTS] = useState(maxTS);
+  const [atEnd, setAtEnd] = useState(true);
+
+  if (atEnd && endTS !== maxTS) {
+    setEndTS(maxTS);
+  }
 
   const filtered = stats.map((s) =>
     s.filter(({ x }) => startTS <= x && x <= endTS),
@@ -331,14 +341,21 @@ const StatsGraph = ({ stats }: { stats: { x: number; y: number }[][] }) => {
 
   return (
     <>
-      <Graph data={filtered} xlabel="Seconds Since Added"></Graph>
+      <Graph
+        data={filtered}
+        xlabel="Seconds Since Added"
+        maxPoints={50}
+        chunkOffs={stats.map((s, i) => s.indexOf(filtered[i][0]))}
+      ></Graph>
       <RangeSlider
         defaultValue={[0, maxTS]}
         min={0}
         max={maxTS}
         onChange={([min, max]) => {
+          if (min === max) return;
           setStartTS(min);
           setEndTS(max);
+          setAtEnd(max === maxTS);
         }}
       >
         <RangeSliderTrack>

@@ -178,3 +178,24 @@ export const all = <T,>(x: (T | null)[]): T[] | null =>
     (p, c) => (c === null ? null : p?.concat([c]) ?? null),
     [],
   );
+
+export const chunks = <T,>(
+  arr: T[],
+  chunkSize: number,
+  chunkOff: number = 0,
+) => {
+  const hmm = chunkOff % chunkSize;
+  return makeArr(Math.ceil(arr.length / chunkSize), (i) => {
+    const s = arr.slice(
+      Math.max(0, i * chunkSize - hmm),
+      (i + 1) * chunkSize - hmm,
+    );
+    if (s.length === 0)
+      // 49, 26, -1, 1275
+      // 49 * 26 - 1 = 1273
+      throw Error(
+        `WHAT ${chunkOff} ${i}, ${chunkSize}, ${hmm}, ${arr.length}, ${i * chunkSize - hmm}, ${(i + 1) * chunkSize - hmm}`,
+      );
+    return s;
+  });
+};

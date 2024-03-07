@@ -3,16 +3,20 @@ import { ScaleLinear } from "d3";
 import { useMemo, useRef } from "react";
 import { useDims } from "../Utils/Hooks";
 import { Box } from "@chakra-ui/react";
-import React from "react";
+import { chunks } from "../Utils/Utils";
 
 const AXIS_MARGIN = { x: 20, y: 20 };
 
 export const Graph = ({
   data,
   xlabel,
+  maxPoints,
+  chunkOffs,
 }: {
   data: { x: number; y: number }[][];
   xlabel: string;
+  maxPoints: number;
+  chunkOffs: number[];
 }) => {
   const minX = Math.min(...data.flatMap((d) => d.map(({ x }) => x)));
   const maxX = Math.max(...data.flatMap((d) => d.map(({ x }) => x)));
@@ -41,7 +45,20 @@ export const Graph = ({
     .x(([x]) => xScale(x))
     .y(([, y]) => yScale(y));
 
-  const linePaths = data.map((d) => lineBuilder(d.map(({ x, y }) => [x, y])));
+  const downsampled = data.map((d, i) => {
+    const chunkSize = Math.ceil(d.length / maxPoints);
+    return chunks(d, chunkSize, chunkOffs[i]).map((c) => {
+      const { x, y } = c.reduce(({ x: x1, y: y1 }, { x: x2, y: y2 }) => ({
+        x: x1 + x2,
+        y: y1 + y2,
+      }));
+      return { x: x / c.length, y: y / c.length };
+    });
+  });
+
+  const linePaths = downsampled.map((d) =>
+    lineBuilder(d.map(({ x, y }) => [x, y])),
+  );
 
   return (
     <Box minWidth={200} minHeight={400} ref={ref}>
@@ -49,7 +66,7 @@ export const Graph = ({
         <g
           width={innerWidth}
           height={innerHeight}
-          transform={`translate(${AXIS_MARGIN.x}, ${0})`}
+          transform={`translate(${AXIS_MARGIN.x * 2}, ${0})`}
         >
           <g
             transform={`translate(0, 0)`}
