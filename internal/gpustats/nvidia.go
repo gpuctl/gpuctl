@@ -301,6 +301,7 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 	var res []uplink.GPUStatSample
 
 	// Go over gpus in xml
+	var errs error
 	for _, gpu := range xml.Gpu {
 		// TODO: add the new information as well
 		fanSpeed, err := parseFloatWithUnit(gpu.FanSpeed, "fan speed")
@@ -328,11 +329,6 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 		err = errors.Join(err, err_)
 		uuid, err_ := parseUuid(gpu.Uuid)
 		err = errors.Join(err, err_)
-
-		// report back catastrophic failures
-		if err != nil {
-			return nil, err
-		}
 
 		// Filter processes
 		procs := []uplink.GPUProcInfo{}
@@ -370,10 +366,10 @@ func (xml NvidiaSmiLog) ExtractGPUStatSample() ([]uplink.GPUStatSample, error) {
 			MaxMemoryClock:    maxMFreq,
 			RunningProcesses:  procs,
 		}
-
+		errs = errors.Join(errs, err)
 		res = append(res, curr)
 	}
-	return res, nil
+	return res, errs
 }
 
 // convert nvidia uuid to standard uuid
