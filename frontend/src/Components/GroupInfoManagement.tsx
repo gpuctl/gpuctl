@@ -65,8 +65,6 @@ export const GroupInfoManagement = ({
     direction: "ascending",
   });
 
-
-
   const [params] = useSearchParams();
 
   const [files, setFiles] = useState<any[]>([]); // TODO: Change this any
@@ -201,21 +199,11 @@ export const GroupInfoManagement = ({
         <Table variant="striped">
           <Thead>
             <Tr>
-              <Th>
-                Hostname
-              </Th>
-              <Th>
-                Group
-              </Th>
-              <Th>
-                Owner
-              </Th>
-              <Th>
-                CPU
-              </Th>
-              <Th>
-                Motherboard
-              </Th>
+              <Th>Hostname</Th>
+              <Th>Group</Th>
+              <Th>Owner</Th>
+              <Th>CPU</Th>
+              <Th>Motherboard</Th>
               <Th>Notes</Th>
               <Th>Actions</Th>{" "}
             </Tr>
