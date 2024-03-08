@@ -158,9 +158,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
       groups.flatMap(({ name: group_name, workstations }, i) =>
         workstations.flatMap(({ name: workstation_name, gpus }, j) =>
           gpus.map((gpu, k) => {
-            const id =
-              (i * gpus.length * workstations.length + j * gpus.length + k) *
-              19; //size of gpu
+
 
             const rows: (string | number | null)[] = tablify(
               shownColumns,
