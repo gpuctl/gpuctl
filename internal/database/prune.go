@@ -8,13 +8,13 @@ func DownsampleOverTime(interval time.Duration, downsample_thresh time.Duration,
 	downsampleTicker := time.NewTicker(time.Duration(interval))
 
 	for range downsampleTicker.C {
-		database.Downsample(downsample_thresh)
-		database.Delete(delete_thresh)
+		database.Downsample(-1 * downsample_thresh)
+		database.Delete(-1 * delete_thresh)
 	}
 
 	return nil
 }
 
 func downsampleDatabase(database Database, t time.Duration) error {
-	return database.Downsample(t)
+	return database.Downsample(-1 * t)
 }
