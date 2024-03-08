@@ -62,7 +62,7 @@ func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCr
 
 func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// These get removed by the Caddyfile in prod, but are needed for dev.
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", "localhost:5173") // Vite dev-server
 	w.Header().Set("Access-Control-Allow-Credentials", "true")
 	s.mux.ServeHTTP(w, r)
 }

@@ -17,7 +17,7 @@ CONTROL_BIN="./control"
 CONTROL_LOGS=$CONTROL_BIN.log
 CONTROL_CONF=$CONTROL_BIN.toml
 FE_DIR="./frontend/"
-FE_LOGS="frontend.log"
+FE_LOGS="./frontend.log"
 WAIT_GAP=1
 
 # Launch everything
@@ -31,8 +31,8 @@ echo "Starting satellite (log: $SATELLITE_LOGS)"
 $SATELLITE_BIN &> $SATELLITE_LOGS &
 satellite_pid=$!
 
-echo "Launching front-end"
-(cd $FE_DIR && npm start &> $FE_LOGS) &
+echo "Launching front-end (log: $FE_LOGS)"
+(cd $FE_DIR && npm run dev &> $FE_LOGS) &
 fe_pid=$!
 
 # Wait for SIGINT
@@ -41,4 +41,4 @@ fe_pid=$!
 # Clean up
 echo "Shutting down..."
 echo "Killing processes ($fe_pid, $satellite_pid, $control_pid)"
-kill $satellite_pid | kill $control_pid
+kill $fe_pid | kill $satellite_pid | kill $control_pid
