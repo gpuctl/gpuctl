@@ -1,5 +1,5 @@
 import { API_URL, REFRESH_INTERVAL } from "../App";
-import { WorkStationData, WorkStationGroup } from "../Data";
+import { EXAMPLE_DATA_1, WorkStationData, WorkStationGroup } from "../Data";
 import { partition } from "lodash";
 import { Validated, Validation, failure, success } from "../Utils/Utils";
 import { ReactNode, createContext, useContext, useState } from "react";
@@ -72,9 +72,10 @@ export const FetchStatsProvider = ({
 const retrieveAllStats: (
   cb: StatsCB,
 ) => Promise<Validated<WorkStationGroup[]>> = async (cb) => {
-  const stats = success(
-    preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()),
-  );
+  const stats = success(preProcess(EXAMPLE_DATA_1));
+  // const stats = success(
+  //   preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()),
+  // );
   cb(stats);
   return stats;
 };
