@@ -47,6 +47,8 @@ type Database interface {
 	// downsample since certain time
 	Downsample(time.Time) error
 
+	Delete(time.Time) error
+
 	// methods for interacting with files
 	AttachFile(broadcast.AttachFile) error
 	GetFile(hostname string, filename string) (broadcast.AttachFile, error)

@@ -347,7 +347,7 @@ SELECT * FROM GroupedStats;`
 	return err
 }
 
-func (conn PostgresConn) DownsampleOld(cut time.Time) error {
+func (conn PostgresConn) Delete(cut time.Time) error {
 	// TODO: decide what to do with the old downsampling code (i.e. fix bugs)
 	_, err := conn.db.Exec(`DELETE FROM Stats
 				WHERE Received < $1`, cut)

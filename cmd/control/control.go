@@ -83,7 +83,7 @@ func main() {
 		errs <- fmt.Errorf("webapi: %w", err)
 	}()
 	go func() {
-		err := database.DownsampleOverTime(conf.Database.DownsampleInterval, db)
+		err := database.DownsampleOverTime(conf.Database.DownsampleInterval, conf.Database.DownsampleType, db)
 		errs <- fmt.Errorf("downsampler: %w", err)
 	}()
 	go func() {

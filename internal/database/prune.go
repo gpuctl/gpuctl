@@ -5,14 +5,24 @@ import (
 	"time"
 )
 
-func DownsampleOverTime(interval time.Duration, database Database) error {
+func DownsampleOverTime(interval time.Duration, downsample_type string, database Database) error {
 	downsampleTicker := time.NewTicker(time.Duration(interval))
 
 	for range downsampleTicker.C {
-		err := database.Downsample(time.Now())
+		if downsample_type == "DOWNSAMPLE" {
+			err := database.Downsample(time.Now())
 
-		if err != nil {
-			slog.Error("Got error whilst downsampling", "err", err)
+			if err != nil {
+				slog.Error("Got error whilst downsampling", "err", err)
+			}
+		} else if downsample_type == "DELETE" {
+			err := database.Delete(time.Now())
+
+			if err != nil {
+				slog.Error("Got error whilst deleting", "err", err)
+			}
+		} else {
+			slog.Error("Unknown downsample type", "type", downsample_type)
 		}
 	}
 

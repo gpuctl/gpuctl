@@ -54,6 +54,10 @@ func (edb *ErrorDB) Downsample(time time.Time) error {
 	return nil
 }
 
+func (edb *ErrorDB) Delete(time time.Time) error {
+	return nil
+}
+
 func (edb *ErrorDB) RemoveMachine(changes broadcast.RemoveMachine) error {
 	return nil
 }

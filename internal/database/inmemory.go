@@ -199,6 +199,25 @@ func (m *inMemory) Downsample(cutoffTime time.Time) error {
 	return nil
 }
 
+func (m *inMemory) Delete(now time.Time) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	sixMonthsAgo := now.AddDate(0, -6, 0).Unix()
+
+	for uuid, samples := range m.stats {
+		var newSamples []uplink.GPUStatSample
+		for _, sample := range samples {
+			if sample.Time >= sixMonthsAgo {
+				newSamples = append(newSamples, sample)
+			}
+		}
+		m.stats[uuid] = newSamples
+	}
+
+	return nil
+}
+
 func CalculateAverage(samples []uplink.GPUStatSample) uplink.GPUStatSample {
 	if len(samples) == 0 {
 		return uplink.GPUStatSample{}

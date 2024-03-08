@@ -24,6 +24,7 @@ type Database struct {
 	Postgres           bool          `toml:"postgres"`
 	PostgresUrl        string        `toml:"url"`
 	DownsampleInterval time.Duration `toml:"downsample_interval"`
+	DownsampleType     string        `toml:"downsample_type"`
 }
 
 type AuthConfig struct {
@@ -53,9 +54,10 @@ func DefaultControlConfiguration() ControlConfiguration {
 			WAPort: 8000,
 		},
 		Database: Database{
-			InMemory:    false,
-			Postgres:    false,
-			PostgresUrl: "postgres://postgres@postgres/postgres",
+			InMemory:       false,
+			Postgres:       false,
+			PostgresUrl:    "postgres://postgres@postgres/postgres",
+			DownsampleType: "DOWNSAMPLE",
 		},
 		Auth: AuthConfig{
 			Username: "admin",
