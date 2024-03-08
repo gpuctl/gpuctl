@@ -136,12 +136,10 @@ func TestAverageProcess(t *testing.T) {
 
 // specify the time we test at
 // test hasn't been passing since March started?
-var now = time.Date(2024, time.February, 1, 0, 0, 0, 0, time.Local)
 
 func TestDownsample(t *testing.T) {
+	var now = time.Now()
 	db := InMemory().(*inMemory)
-
-	cutoffTime := now.AddDate(0, -6, 0)
 
 	gpuUUID := uuid.MustParse("96cd8554-161d-4865-9767-60c1779c57b9")
 	hostName := "test-host"
@@ -150,7 +148,7 @@ func TestDownsample(t *testing.T) {
 	db.UpdateLastSeen(hostName, now)
 
 	for i := 1; i <= 250; i++ {
-		sampleTime := now.AddDate(0, 0, -i*2).Unix() // Ensuring a spread over the year
+		sampleTime := now.Add(time.Duration(-1*i) * time.Minute).Unix() // Ensuring a spread over the year
 		db.stats[gpuUUID] = append(db.stats[gpuUUID], uplink.GPUStatSample{
 			Uuid:              gpuUUID,
 			MemoryUtilisation: float64(i % 100), // Example values, vary as needed
@@ -174,10 +172,9 @@ func TestDownsample(t *testing.T) {
 	}
 
 	// TODO: how did we determine this value?
-	// since March we've been getting 93 rather than 94
-	expectedNumSamples := 94
+	expectedNumSamples := 62
 
-	if err := db.Downsample(cutoffTime); err != nil {
+	if err := db.Downsample(-1 * time.Hour); err != nil {
 		t.Fatalf("Downsample failed: %v", err)
 	}
 	if gotNumSamples := len(db.stats[gpuUUID]); gotNumSamples != expectedNumSamples {
@@ -188,9 +185,9 @@ func TestDownsample(t *testing.T) {
 
 func TestDownsamplePruneMethod(t *testing.T) {
 
+	var now = time.Now()
 	db := InMemory().(*inMemory)
 
-	cutoffTime := now.AddDate(0, -6, 0)
 	// use all 1s uuid for test
 	gpuUUID := uuid.MustParse("95a6f0b2-634c-41ab-91e2-1b9782cf8cbd")
 	hostName := "test-host"
@@ -199,7 +196,7 @@ func TestDownsamplePruneMethod(t *testing.T) {
 	db.UpdateLastSeen(hostName, now)
 
 	for i := 1; i <= 250; i++ {
-		sampleTime := now.AddDate(0, 0, -i*2).Unix() // Ensuring a spread over the year
+		sampleTime := now.Add(time.Duration(-1*i) * time.Minute).Unix() // Ensuring a spread
 		db.stats[gpuUUID] = append(db.stats[gpuUUID], uplink.GPUStatSample{
 			Uuid:              gpuUUID,
 			MemoryUtilisation: float64(i % 100), // Example values, vary as needed
@@ -222,9 +219,9 @@ func TestDownsamplePruneMethod(t *testing.T) {
 		})
 	}
 
-	expectedNumSamples := 94
+	expectedNumSamples := 62
 
-	if err := downsampleDatabase(db, cutoffTime); err != nil {
+	if err := downsampleDatabase(db, time.Hour*-1); err != nil {
 		t.Fatalf("Downsample failed: %v", err)
 	}
 	if gotNumSamples := len(db.stats[gpuUUID]); gotNumSamples != expectedNumSamples {

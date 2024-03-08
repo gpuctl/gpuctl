@@ -45,9 +45,8 @@ type Database interface {
 	UpdateMachine(changes broadcast.ModifyMachine) error
 
 	// downsample since certain time
-	Downsample(time.Time) error
-
-	Delete(time.Time) error
+	Downsample(time.Duration) error
+	Delete(time.Duration) error
 
 	// methods for interacting with files
 	AttachFile(broadcast.AttachFile) error

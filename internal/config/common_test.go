@@ -193,6 +193,8 @@ func TestToToml(t *testing.T) {
   postgres = true
   url = "postgres://postgres@postgres/postgres"
   downsample_interval = "2h2m0s"
+  downsample_threshold = "0s"
+  delete_threshold = "0s"
 
 [auth]
   username = "joe"

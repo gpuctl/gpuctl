@@ -221,7 +221,9 @@ func (conn PostgresConn) UpdateGPUContext(host string, packet uplink.GPUInfo) er
 	return err
 }
 
-func (conn PostgresConn) Downsample(int_now time.Time) error {
+func (conn PostgresConn) Downsample(thresh time.Duration) error {
+	int_now := time.Now()
+
 	downsample_query := `CREATE TEMPORARY TABLE TempDownsampled AS
 WITH OrderedStats AS (
   SELECT
@@ -313,8 +315,7 @@ SELECT * FROM GroupedStats;`
 	delete_query := `DELETE FROM Stats WHERE Received <= $1 AND IsDownsampled = FALSE;`
 	cleanup_query := `DROP TABLE TempDownsampled;`
 
-	now := int_now
-	downsampleThresh := now.Add(-time.Hour)
+	downsampleThresh := int_now.Add(-thresh)
 	downsampleThreshFormatted := downsampleThresh.Format("2006-01-02 15:04:05")
 
 	tx, err := conn.db.Begin()
@@ -347,10 +348,10 @@ SELECT * FROM GroupedStats;`
 	return err
 }
 
-func (conn PostgresConn) Delete(cut time.Time) error {
+func (conn PostgresConn) Delete(cut time.Duration) error {
 	// TODO: decide what to do with the old downsampling code (i.e. fix bugs)
 	_, err := conn.db.Exec(`DELETE FROM Stats
-				WHERE Received < $1`, cut)
+				WHERE Received < $1`, time.Now().Add(-cut))
 	return err
 }
 
