@@ -15,12 +15,13 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { GPUStats, WorkStationGroup } from "../Data";
-import { useState } from "react";
+import { GPUStats, WorkStationGroup, WorkStationData } from "../Data";
+import { useEffect, useMemo, useState } from "react";
 import { useForceUpdate } from "framer-motion";
 import { keepIf } from "../Utils/Utils";
 
 import { Link as ReactRouterLink, useSearchParams } from "react-router-dom";
+import { sort } from "d3";
 
 export const GPU_FIELDS = {
   "GPU Name": "gpu_name",
@@ -42,24 +43,26 @@ export const GPU_FIELDS = {
   "Max Memory Clock (MHz)": "max_memory_clock",
 } as const;
 
+const map_idx = (key: string) => {
+  if (key === "Group") return 0;
+  if (key === "Machine Name") return 1;
+
+  return Object.keys(GPU_FIELDS).indexOf(key) + 2;
+};
+
 const Row = ({
   params,
-  workstation_name,
-  shownColumns,
-  gpu,
-  group_name,
+  row,
 }: {
   params: URLSearchParams;
-  workstation_name: string;
-  shownColumns: Record<string, boolean>;
-  gpu: GPUStats;
-  group_name: string;
+  row: (string | number | null)[];
 }) => {
   const [hover, setHover] = useState(false);
   const newParams = new URLSearchParams(
     Object.fromEntries(Array.from(params.entries())),
   );
-  newParams.append("selected", workstation_name);
+
+  newParams.append("selected", row[map_idx("Machine Name")]!.toString());
 
   return (
     <Tr>
@@ -75,7 +78,7 @@ const Row = ({
         }}
       >
         {" "}
-        {tablify(shownColumns, gpu, group_name, workstation_name).map((s, i) =>
+        {row.map((s, i) =>
           s === null ? null : (
             <Td>
               <Text textDecoration={hover ? "underline" : ""}>{s}</Text>
@@ -116,6 +119,56 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   const [shownColumns, setter] = useState<Record<string, boolean>>(SHOWN_COLS);
   const [refresh] = useForceUpdate();
   const [params] = useSearchParams();
+  const [sortConfig, setSortConfig] = useState({
+    key: "name",
+    direction: "ascending",
+  });
+
+  const [rows, setRows] = useState<(string | number | null)[][]>([]);
+
+  const sortedGroups = useMemo(() => {
+    let sortableItems = [...rows];
+    if (sortConfig !== null) {
+      console.log(sortConfig);
+      sortableItems.sort((a, b) => {
+        if (a[map_idx(sortConfig.key)]! < b[map_idx(sortConfig.key)]!) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (a[map_idx(sortConfig.key)]! > b[map_idx(sortConfig.key)]!) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+
+    return sortableItems;
+  }, [groups, sortConfig]);
+
+  const requestSort = (key: string) => {
+    let direction = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
+  useEffect(() => {
+    setRows(
+      groups.flatMap(({ name: group_name, workstations }, i) =>
+        workstations.flatMap(({ name: workstation_name, gpus }, j) =>
+          gpus.map((gpu, k) => {
+            const rows: (string | number | null)[] = tablify(
+              shownColumns,
+              gpu,
+              group_name,
+              workstation_name,
+            );
+            return rows;
+          }),
+        ),
+      ),
+    );
+  }, [groups]);
 
   return (
     <div>
@@ -154,33 +207,24 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
           <Thead>
             <Tr>
               {Object.keys(shownColumns).map((col, i) => {
-                if (shownColumns[col]) return <Th key={i}>{col}</Th>;
+                if (shownColumns[col])
+                  return (
+                    <Th
+                      key={i}
+                      cursor="pointer"
+                      onClick={() => requestSort(col)}
+                    >
+                      {col}
+                    </Th>
+                  );
                 else return null;
               })}
             </Tr>
           </Thead>
           <Tbody key={1}>
-            {groups.map(({ name: group_name, workstations }, i) =>
-              workstations.map(({ name: workstation_name, gpus }, j) =>
-                gpus.map((gpu, k) => {
-                  const id =
-                    (i * gpus.length * workstations.length +
-                      j * gpus.length +
-                      k) *
-                    19; //size of gpu
-                  return (
-                    <Row
-                      key={id}
-                      params={params}
-                      workstation_name={workstation_name}
-                      shownColumns={shownColumns}
-                      gpu={gpu}
-                      group_name={group_name}
-                    />
-                  );
-                }),
-              ),
-            )}
+            {sortedGroups.map((row) => (
+              <Row params={params} row={row} />
+            ))}
           </Tbody>
         </Table>
       </TableContainer>

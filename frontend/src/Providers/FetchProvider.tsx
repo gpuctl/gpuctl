@@ -1,5 +1,5 @@
 import { API_URL, REFRESH_INTERVAL } from "../App";
-import { WorkStationData, WorkStationGroup } from "../Data";
+import { EXAMPLE_DATA_1, WorkStationData, WorkStationGroup } from "../Data";
 import { partition } from "lodash";
 import { Validated, Validation, failure, success } from "../Utils/Utils";
 import { ReactNode, createContext, useContext, useState } from "react";

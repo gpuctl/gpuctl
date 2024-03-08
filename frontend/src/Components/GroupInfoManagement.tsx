@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FaRegCopy } from "react-icons/fa6";
 import {
   Box,
@@ -29,7 +29,7 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import { EditableField } from "./EditableFields";
-import { WorkStationGroup } from "../Data";
+import { WorkStationData, WorkStationGroup } from "../Data";
 import { instKeys, validatedElim } from "../Utils/Utils";
 import {
   useGetAllFiles,
@@ -60,6 +60,11 @@ export const GroupInfoManagement = ({
   const [copied, setCopied] = useState(false);
   const [currentMachine, setCurrentMachine] = useState("");
   const [currentFile, setCurrentFile] = useState("");
+  const [sortConfig, setSortConfig] = useState({
+    key: "name",
+    direction: "ascending",
+  });
+
   const [params] = useSearchParams();
 
   const [files, setFiles] = useState<any[]>([]); // TODO: Change this any
@@ -200,7 +205,7 @@ export const GroupInfoManagement = ({
               <Th>CPU</Th>
               <Th>Motherboard</Th>
               <Th>Notes</Th>
-              <Th>Actions</Th>
+              <Th>Actions</Th>{" "}
             </Tr>
           </Thead>
           <Tbody>
