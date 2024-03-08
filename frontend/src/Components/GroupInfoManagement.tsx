@@ -250,7 +250,7 @@ export const GroupInfoManagement = ({
           </Thead>
           <Tbody>
             {instKeys(
-              groups.flatMap((group) =>
+              sortedGroups.flatMap((group) =>
                 group.workstations.map((workstation) => (k) => {
                   const newParams = new URLSearchParams(
                     Object.fromEntries(Array.from(params.entries())),
