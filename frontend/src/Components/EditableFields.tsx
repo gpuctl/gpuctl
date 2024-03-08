@@ -113,9 +113,3 @@ export const EditableField = ({
     </Td>
   );
 };
-
-export const EditableFieldGroupSelect = ({
-  workstation,
-  fieldKey,
-  placeholder,
-}: EditableFieldProps) => {};
