@@ -72,10 +72,9 @@ export const FetchStatsProvider = ({
 const retrieveAllStats: (
   cb: StatsCB,
 ) => Promise<Validated<WorkStationGroup[]>> = async (cb) => {
-  const stats = success(preProcess(EXAMPLE_DATA_1));
-  // const stats = success(
-  //   preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()),
-  // );
+  const stats = success(
+    preProcess(await (await fetch(API_URL + API_ALL_STATS_PATH)).json()),
+  );
   cb(stats);
   return stats;
 };
