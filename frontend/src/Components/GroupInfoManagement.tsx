@@ -310,7 +310,15 @@ export const GroupInfoManagement = ({
           <ModalHeader>Enter Username</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Input placeholder="Username" ref={inputRef} />
+            <Input
+              placeholder="Username"
+              ref={inputRef}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  copyToClipboard(inputRef.current?.value || "");
+                }
+              }}
+            />
           </ModalBody>
           <ModalFooter>
             <Button
