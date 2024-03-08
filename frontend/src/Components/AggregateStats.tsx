@@ -1,17 +1,33 @@
-import { VStack, Heading, UnorderedList, ListItem } from "@chakra-ui/react";
+import {
+  VStack,
+  Heading,
+  UnorderedList,
+  ListItem,
+  Text,
+} from "@chakra-ui/react";
+import { useAggregateStats } from "../Hooks/Hooks";
+import { validationElim } from "../Utils/Utils";
 
-export const AggregateStats = ({
-  data,
-}: {
-  data: { percent_used: number; total_energy: number };
-}) => {
+export const AggregateStats = () => {
+  const stats = useAggregateStats();
+
   return (
     <VStack paddingLeft={5} spacing={5} align="left">
       <Heading size="lg">Statistics</Heading>
-      <UnorderedList spacing={3}>
-        <ListItem>Percent Used: {data.percent_used}%</ListItem>
-        <ListItem>Total Energy: {data.total_energy} Joules</ListItem>
-      </UnorderedList>
+      {validationElim(stats, {
+        success: (s) => (
+          <UnorderedList spacing={3}>
+            <ListItem>Percent Used: {s.percent_used}%</ListItem>
+            <ListItem>
+              Total Energy: {Math.round(s.total_energy / (60 * 60))} Watt Hours
+            </ListItem>
+          </UnorderedList>
+        ),
+        failure: () => (
+          <Text>Failed to fetch aggregate statistics! Retrying...</Text>
+        ),
+        loading: () => <Text>Fetching aggregate statistics...</Text>,
+      })}
     </VStack>
   );
 };

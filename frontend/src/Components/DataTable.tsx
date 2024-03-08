@@ -234,7 +234,7 @@ export const tablify = (
         shownColumns["GPU Voltage"],
         Math.round(gpu.graphics_voltage).toString(),
       ),
-      keepIf(shownColumns["Power Draw"], Math.round(gpu.power_draw).toString()),
+      keepIf(shownColumns[""], Math.round(gpu.power_draw).toString()),
       keepIf(
         shownColumns["GPU Clock"],
         Math.round(gpu.graphics_clock).toString(),
