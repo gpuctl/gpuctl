@@ -75,15 +75,14 @@ jobs:
       #
       # Frontend
       #
-      - name: Run Frontend Typechecker
+      - name: Run Frontend Tests
         working-directory: ./frontend
-        run: npm run build
+        run: npm test
         env:
           CI: true
       - name: Check Frontend Formatting
         run: npm run fmt-check
         working-directory: ./frontend
-        # TODO: Run linter, and spin this into it's own job.
 
   go-test-short:
     runs-on: ubuntu-latest
