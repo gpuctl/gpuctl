@@ -262,3 +262,17 @@ export const useHistoryStats = (
 
   return stats;
 };
+
+export type AggregateData = { percent_used: number; total_energy: number };
+
+export const useAggregateStats = (): Validation<AggregateData> => {
+  const [agg, updateAgg] = useJarJar<AggregateData>(async () =>
+    success(await (await fetch(API_URL + `/stats/aggregate`)).json()),
+  );
+
+  useInterval(() => {
+    updateAgg();
+  }, GRAPH_REFRESH_INTERVAL);
+
+  return agg;
+};
