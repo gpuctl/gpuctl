@@ -152,14 +152,11 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
     setSortConfig({ key, direction });
   };
 
-
   useEffect(() => {
     setRows(
       groups.flatMap(({ name: group_name, workstations }, i) =>
         workstations.flatMap(({ name: workstation_name, gpus }, j) =>
           gpus.map((gpu, k) => {
-
-
             const rows: (string | number | null)[] = tablify(
               shownColumns,
               gpu,
