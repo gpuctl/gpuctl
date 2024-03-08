@@ -16,5 +16,5 @@ func DownsampleOverTime(interval time.Duration, downsample_thresh time.Duration,
 }
 
 func downsampleDatabase(database Database, t time.Duration) error {
-	return database.Downsample(-1 * t)
+	return database.Downsample(t)
 }
