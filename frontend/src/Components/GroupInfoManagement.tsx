@@ -67,7 +67,7 @@ export const GroupInfoManagement = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const copyToClipboard = (username: string) => {
-    const command = `ssh ${username}@${currentMachine} shutdown now`;
+    const command = `ssh ${username}@${currentMachine} reboot`;
     navigator.clipboard.writeText(command);
     setCopied(true);
     setTimeout(() => {
