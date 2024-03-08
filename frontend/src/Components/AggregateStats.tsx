@@ -17,7 +17,6 @@ export const AggregateStats = () => {
       {validationElim(stats, {
         success: (s) => (
           <UnorderedList spacing={3}>
-            <ListItem>Percent Used: {s.percent_used}%</ListItem>
             <ListItem>
               Total Energy: {Math.round(s.total_energy / (60 * 60))} Watt Hours
             </ListItem>
