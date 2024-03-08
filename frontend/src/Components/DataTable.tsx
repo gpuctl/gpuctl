@@ -152,7 +152,6 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
     setSortConfig({ key, direction });
   };
 
-  const zip = (a: any[], b: any[]) => a.map((k, i) => [k, b[i]]);
 
   useEffect(() => {
     setRows(
