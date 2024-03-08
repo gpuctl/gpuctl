@@ -29,7 +29,7 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import { EditableField } from "./EditableFields";
-import { WorkStationGroup } from "../Data";
+import { WorkStationData, WorkStationGroup } from "../Data";
 import { instKeys, validatedElim } from "../Utils/Utils";
 import {
   useGetAllFiles,
@@ -65,35 +65,7 @@ export const GroupInfoManagement = ({
     direction: "ascending",
   });
 
-  const sortedGroups = useMemo(() => {
-    let sortableItems = [...groups];
-    if (sortConfig !== null) {
-      sortableItems.sort((a: WorkStationGroup, b: WorkStationGroup) => {
-        if (
-          a[sortConfig.key as keyof WorkStationGroup] <
-          b[sortConfig.key as keyof WorkStationGroup]
-        ) {
-          return sortConfig.direction === "ascending" ? -1 : 1;
-        }
-        if (
-          a[sortConfig.key as keyof WorkStationGroup] >
-          b[sortConfig.key as keyof WorkStationGroup]
-        ) {
-          return sortConfig.direction === "ascending" ? 1 : -1;
-        }
-        return 0;
-      });
-    }
-    return sortableItems;
-  }, [groups, sortConfig]);
 
-  const requestSort = (key: string) => {
-    let direction = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    }
-    setSortConfig({ key, direction });
-  };
 
   const [params] = useSearchParams();
 
@@ -229,19 +201,19 @@ export const GroupInfoManagement = ({
         <Table variant="striped">
           <Thead>
             <Tr>
-              <Th cursor="pointer" onClick={() => requestSort("hostname")}>
+              <Th>
                 Hostname
               </Th>
-              <Th cursor="pointer" onClick={() => requestSort("group")}>
+              <Th>
                 Group
               </Th>
-              <Th cursor="pointer" onClick={() => requestSort("owner")}>
+              <Th>
                 Owner
               </Th>
-              <Th cursor="pointer" onClick={() => requestSort("cpu")}>
+              <Th>
                 CPU
               </Th>
-              <Th cursor="pointer" onClick={() => requestSort("motherboard")}>
+              <Th>
                 Motherboard
               </Th>
               <Th>Notes</Th>
@@ -250,7 +222,7 @@ export const GroupInfoManagement = ({
           </Thead>
           <Tbody>
             {instKeys(
-              sortedGroups.flatMap((group) =>
+              groups.flatMap((group) =>
                 group.workstations.map((workstation) => (k) => {
                   const newParams = new URLSearchParams(
                     Object.fromEntries(Array.from(params.entries())),
