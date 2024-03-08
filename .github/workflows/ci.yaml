@@ -8,6 +8,7 @@ on:
   merge_group:
 
 jobs:
+  # TODO: Rename this to something like go-full
   build-and-test:
     runs-on: ubuntu-latest
 
@@ -36,14 +37,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: "1.22.x"
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 18
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-      - name: Install Frontend Dependencies
-        run: npm ci
-        working-directory: ./frontend
       #
       # Unified Build
       #
@@ -72,18 +65,22 @@ jobs:
       - name: Check Go Formatting
         run: test -z $(gofmt -l .)
 
-      #
-      # Frontend
-      #
-      - name: Run Frontend Typechecker
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
         working-directory: ./frontend
-        run: npm run build
-        env:
-          CI: true
-      - name: Check Frontend Formatting
-        run: npm run fmt-check
+      - run: npm run build
         working-directory: ./frontend
-        # TODO: Run linter, and spin this into it's own job.
+      - run: npm run fmt-check
+        working-directory: ./frontend
+        # TODO: Run linter
 
   go-test-short:
     runs-on: ubuntu-latest
