@@ -33,7 +33,7 @@ type GPUStatSample struct {
 	FanSpeed          float64   `json:"fan_speed"`          // Percentage of fan speed
 	Temp              float64   `json:"gpu_temp"`           // Celcius
 	MemoryTemp        float64   `json:"memory_temp"`        // Celcius
-	GraphicsVoltage   float64   `json:"graphics_voltage"`   // Volts
+	GraphicsVoltage   float64   `json:"graphics_voltage"`   // MilliVolts
 	PowerDraw         float64   `json:"power_draw"`         // Watts
 	GraphicsClock     float64   `json:"graphics_clock"`     // Mhz
 	MaxGraphicsClock  float64   `json:"max_graphics_clock"` // Mhz
