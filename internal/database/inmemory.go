@@ -203,7 +203,7 @@ func (m *inMemory) Delete(cut time.Duration) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
-	sixMonthsAgo := time.Now().Add(-cut).Unix()
+	sixMonthsAgo := time.Now().Add(cut).Unix()
 
 	for uuid, samples := range m.stats {
 		var newSamples []uplink.GPUStatSample
