@@ -34,9 +34,9 @@ import {
 } from "@chakra-ui/react";
 import { Navigate, useSearchParams } from "react-router-dom";
 import { Graph } from "./Graph";
-import { useHistoryStats } from "../Hooks/Hooks";
+import { HistorySample, useHistoryStats } from "../Hooks/Hooks";
 import { useState } from "react";
-import { GraphField, WorkStationData } from "../Data";
+import { GraphField, TimeUnit, WorkStationData } from "../Data";
 import {
   Validation,
   all,
@@ -360,6 +360,8 @@ const StatsGraph = ({
   const [endTS, setEndTS] = useState(maxTS);
   const [atEnd, setAtEnd] = useState(true);
 
+  const timeUnit = findTimeUnit(endTS - startTS);
+
   if (atEnd && endTS !== maxTS) {
     setEndTS(maxTS);
   }
@@ -374,7 +376,8 @@ const StatsGraph = ({
     <>
       <Graph
         data={filtered}
-        xlabel="Seconds Since Added"
+        xlabel={`${timeUnit} Since Added`}
+        xdivisor={convertSeconds(timeUnit)}
         maxPoints={50}
       ></Graph>
       <RangeSlider
@@ -421,3 +424,26 @@ const CircleIcon = (props: IconProps) => (
     />
   </Icon>
 );
+
+const findTimeUnit = (diff: number) => {
+  if (diff < convertSeconds(TimeUnit.MINUTES) * 5) return TimeUnit.SECONDS;
+  else if (diff < convertSeconds(TimeUnit.HOURS) * 5) return TimeUnit.MINUTES;
+  else if (diff < convertSeconds(TimeUnit.DAYS) * 5) return TimeUnit.HOURS;
+  else if (diff < convertSeconds(TimeUnit.WEEKS) * 5) return TimeUnit.DAYS;
+  else return TimeUnit.WEEKS;
+};
+
+const convertSeconds = (timeUnit: TimeUnit) => {
+  switch (timeUnit) {
+    case TimeUnit.SECONDS:
+      return 1;
+    case TimeUnit.MINUTES:
+      return 60;
+    case TimeUnit.HOURS:
+      return 60 * 60;
+    case TimeUnit.DAYS:
+      return 60 * 60 * 24;
+    case TimeUnit.WEEKS:
+      return 60 * 60 * 24 * 7;
+  }
+};

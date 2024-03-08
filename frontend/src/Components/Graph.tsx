@@ -11,10 +11,14 @@ const AXIS_MARGIN = { x: 20, y: 20 };
 export const Graph = ({
   data,
   xlabel,
+  xdivisor,
+  ydivisor,
   maxPoints,
 }: {
   data: ({ off: number; line: { x: number; y: number }[] } | null)[];
   xlabel: string;
+  xdivisor?: number;
+  ydivisor?: number;
   maxPoints: number;
 }) => {
   const minX = Math.min(
@@ -83,7 +87,7 @@ export const Graph = ({
             transform={`translate(0, 0)`}
             shapeRendering={"geometricPrecision"}
           >
-            <Axis scale={yScale} pixelsPerTick={40} vertical={true} />
+            <Axis scale={yScale} pixelsPerTick={40} vertical={true} divisor={ydivisor ?? 1} />
           </g>
 
           <g
@@ -104,7 +108,7 @@ export const Graph = ({
             transform={`translate(0, ${innerHeight})`}
             shapeRendering={"geometricPrecision"}
           >
-            <Axis scale={xScale} pixelsPerTick={40} vertical={false} />
+            <Axis scale={xScale} pixelsPerTick={40} vertical={false} divisor={xdivisor ?? 1} />
           </g>
 
           {linePaths.map((p, i) => (
@@ -129,10 +133,12 @@ export const Axis = ({
   scale,
   pixelsPerTick,
   vertical,
+  divisor,
 }: {
   scale: ScaleLinear<number, number>;
   pixelsPerTick: number;
   vertical: boolean;
+  divisor: number;
 }) => {
   const range = scale.range();
 
@@ -193,7 +199,7 @@ export const Axis = ({
                 : "translate(0, 15px)",
             }}
           >
-            {value}
+            {value / divisor}
           </text>
         </g>
       ))}

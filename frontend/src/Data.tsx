@@ -57,6 +57,14 @@ export type DurationDeltas = {
   seconds_since: number;
 };
 
+export enum TimeUnit {
+  SECONDS = "Seconds",
+  MINUTES = "Minutes",
+  HOURS = "Hours",
+  DAYS = "Days",
+  WEEKS = "Weeks",
+}
+
 export const EXAMPLE_DATA_1: WorkStationGroup[] = [
   {
     name: "Shared",
