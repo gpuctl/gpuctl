@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FaRegCopy } from "react-icons/fa6";
 import {
   Box,
@@ -60,6 +60,41 @@ export const GroupInfoManagement = ({
   const [copied, setCopied] = useState(false);
   const [currentMachine, setCurrentMachine] = useState("");
   const [currentFile, setCurrentFile] = useState("");
+  const [sortConfig, setSortConfig] = useState({
+    key: "name",
+    direction: "ascending",
+  });
+
+  const sortedGroups = useMemo(() => {
+    let sortableItems = [...groups];
+    if (sortConfig !== null) {
+      sortableItems.sort((a: WorkStationGroup, b: WorkStationGroup) => {
+        if (
+          a[sortConfig.key as keyof WorkStationGroup] <
+          b[sortConfig.key as keyof WorkStationGroup]
+        ) {
+          return sortConfig.direction === "ascending" ? -1 : 1;
+        }
+        if (
+          a[sortConfig.key as keyof WorkStationGroup] >
+          b[sortConfig.key as keyof WorkStationGroup]
+        ) {
+          return sortConfig.direction === "ascending" ? 1 : -1;
+        }
+        return 0;
+      });
+    }
+    return sortableItems;
+  }, [groups, sortConfig]);
+
+  const requestSort = (key: string) => {
+    let direction = "ascending";
+    if (sortConfig.key === key && sortConfig.direction === "ascending") {
+      direction = "descending";
+    }
+    setSortConfig({ key, direction });
+  };
+
   const [params] = useSearchParams();
 
   const [files, setFiles] = useState<any[]>([]); // TODO: Change this any
@@ -194,13 +229,23 @@ export const GroupInfoManagement = ({
         <Table variant="striped">
           <Thead>
             <Tr>
-              <Th>Hostname</Th>
-              <Th>Group</Th>
-              <Th>Owner</Th>
-              <Th>CPU</Th>
-              <Th>Motherboard</Th>
+              <Th cursor="pointer" onClick={() => requestSort("hostname")}>
+                Hostname
+              </Th>
+              <Th cursor="pointer" onClick={() => requestSort("group")}>
+                Group
+              </Th>
+              <Th cursor="pointer" onClick={() => requestSort("owner")}>
+                Owner
+              </Th>
+              <Th cursor="pointer" onClick={() => requestSort("cpu")}>
+                CPU
+              </Th>
+              <Th cursor="pointer" onClick={() => requestSort("motherboard")}>
+                Motherboard
+              </Th>
               <Th>Notes</Th>
-              <Th>Actions</Th>
+              <Th>Actions</Th>{" "}
             </Tr>
           </Thead>
           <Tbody>
