@@ -4,12 +4,31 @@ import (
 	"time"
 )
 
-func DownsampleOverTime(interval time.Duration, downsample_thresh time.Duration, delete_thresh time.Duration, database Database) error {
+type PruneConfig struct {
+	interval           time.Duration
+	deleteThreshold    time.Duration
+	downsampeThreshold time.Duration
+}
+
+func DownsampleOverTime(downsampleConfig PruneConfig, database Database) error {
+	interval := downsampleConfig.interval
+	delete_thresh := downsampleConfig.deleteThreshold
+	downsample_thresh := downsampleConfig.downsampeThreshold
+
 	downsampleTicker := time.NewTicker(time.Duration(interval))
 
 	for range downsampleTicker.C {
-		database.Downsample(-1 * downsample_thresh)
-		database.Delete(-1 * delete_thresh)
+		err := database.Downsample(-downsample_thresh)
+
+		if err != nil {
+			return err
+		}
+
+		err = database.DeleteOldStats(-delete_thresh)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

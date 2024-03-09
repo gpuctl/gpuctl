@@ -54,7 +54,7 @@ func (edb *ErrorDB) Downsample(time time.Duration) error {
 	return nil
 }
 
-func (edb *ErrorDB) Delete(time time.Duration) error {
+func (edb *ErrorDB) DeleteOldStats(time time.Duration) error {
 	return nil
 }
 

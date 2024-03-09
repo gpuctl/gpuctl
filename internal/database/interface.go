@@ -44,9 +44,11 @@ type Database interface {
 	RemoveMachine(machine broadcast.RemoveMachine) error
 	UpdateMachine(changes broadcast.ModifyMachine) error
 
-	// downsample since certain time
+	// Downsample past certain threshold
 	Downsample(time.Duration) error
-	Delete(time.Duration) error
+
+	// Delete old stats past certain threshold
+	DeleteOldStats(time.Duration) error
 
 	// methods for interacting with files
 	AttachFile(broadcast.AttachFile) error

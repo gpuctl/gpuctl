@@ -24,8 +24,8 @@ type Database struct {
 	Postgres            bool          `toml:"postgres"`
 	PostgresUrl         string        `toml:"url"`
 	DownsampleInterval  time.Duration `toml:"downsample_interval"`
-	DownsampleThreshold time.Duration `toml:"downsample_threshold"`
-	DeleteThreshold     time.Duration `toml:"delete_threshold"`
+	DownsampleThreshold time.Duration `toml:"downsample_threshold"` // Downsample threshold is the time after which data is downsampled
+	DeleteThreshold     time.Duration `toml:"delete_threshold"`     // Delete threshold is the time after which data is deleted from the database
 }
 
 type AuthConfig struct {

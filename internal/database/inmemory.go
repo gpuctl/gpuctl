@@ -199,7 +199,7 @@ func (m *inMemory) Downsample(cutoffTime time.Duration) error {
 	return nil
 }
 
-func (m *inMemory) Delete(cut time.Duration) error {
+func (m *inMemory) DeleteOldStats(cut time.Duration) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 

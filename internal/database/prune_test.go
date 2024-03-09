@@ -138,7 +138,7 @@ func TestAverageProcess(t *testing.T) {
 // test hasn't been passing since March started?
 
 func TestDownsample(t *testing.T) {
-	var now = time.Now()
+	now := time.Now()
 	db := InMemory().(*inMemory)
 
 	gpuUUID := uuid.MustParse("96cd8554-161d-4865-9767-60c1779c57b9")
@@ -174,7 +174,8 @@ func TestDownsample(t *testing.T) {
 	// TODO: how did we determine this value?
 	expectedNumSamples := 62
 
-	if err := db.Downsample(-1 * time.Hour); err != nil {
+	if err := db.Downsample(-time.Hour); err != nil {
+
 		t.Fatalf("Downsample failed: %v", err)
 	}
 	if gotNumSamples := len(db.stats[gpuUUID]); gotNumSamples != expectedNumSamples {
@@ -185,7 +186,7 @@ func TestDownsample(t *testing.T) {
 
 func TestDownsamplePruneMethod(t *testing.T) {
 
-	var now = time.Now()
+	now := time.Now()
 	db := InMemory().(*inMemory)
 
 	// use all 1s uuid for test
