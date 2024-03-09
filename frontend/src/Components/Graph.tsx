@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { ScaleLinear } from "d3";
+import { ScaleLinear, ScaleTime } from "d3";
 import { useMemo, useRef } from "react";
 import { useDims } from "../Utils/Hooks";
 import { Box } from "@chakra-ui/react";
@@ -37,8 +37,8 @@ export const Graph = ({
   const innerWidth = width - AXIS_MARGIN.x * 2;
   const innerHeight = height - AXIS_MARGIN.y * 2;
 
-  const xScale: ScaleLinear<number, number> = d3
-    .scaleLinear()
+  const xScale: ScaleTime<number, number> = d3
+    .scaleTime()
     .domain([minX, maxX])
     .range([0, innerWidth]);
 
@@ -104,7 +104,7 @@ export const Graph = ({
             transform={`translate(0, ${innerHeight})`}
             shapeRendering={"geometricPrecision"}
           >
-            <Axis scale={xScale} pixelsPerTick={40} vertical={false} />
+            <Axis toDate scale={xScale} pixelsPerTick={40} vertical={false} />
           </g>
 
           {linePaths.map((p, i) => (
@@ -128,12 +128,16 @@ const TICK_LENGTH = 6;
 export const Axis = ({
   scale,
   pixelsPerTick,
+  toDate,
   vertical,
 }: {
-  scale: ScaleLinear<number, number>;
+  scale: ScaleLinear<number, number> | ScaleTime<number, number>;
   pixelsPerTick: number;
+  toDate?: boolean;
   vertical: boolean;
 }) => {
+  const fmt = scale.tickFormat(10);
+
   const range = scale.range();
 
   const ticks = useMemo(() => {
@@ -161,9 +165,9 @@ export const Axis = ({
       />
 
       {/* Ticks and labels */}
-      {ticks.map(({ value, offset }) => (
+      {ticks.map(({ value, offset }, i) => (
         <g
-          key={value}
+          key={i}
           transform={
             vertical ? `translate(0, ${offset})` : `translate(${offset}, 0)`
           }
@@ -184,7 +188,7 @@ export const Axis = ({
             />
           )}
           <text
-            key={value}
+            key={i}
             style={{
               fontSize: "10px",
               textAnchor: "middle",
@@ -193,7 +197,7 @@ export const Axis = ({
                 : "translate(0, 15px)",
             }}
           >
-            {value}
+            {typeof value === "number" ? value : fmt(value)}
           </text>
         </g>
       ))}
