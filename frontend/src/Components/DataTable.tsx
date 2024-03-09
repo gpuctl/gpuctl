@@ -76,10 +76,9 @@ const Row = ({
           setHover(false);
         }}
       >
-        {" "}
-        {row.map((s, i) =>
+        {row.map((s) =>
           s === null ? null : (
-            <Td key={i}>
+            <Td key={s}>
               <Text textDecoration={hover ? "underline" : ""}>{s}</Text>
             </Td>
           ),
@@ -119,7 +118,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   };
 
   const [shownColumns, setter] = useState<Record<string, boolean>>(SHOWN_COLS);
-  const [refresh] = useForceUpdate();
+  const [refresh, subscribe] = useForceUpdate();
   const [params] = useSearchParams();
   const [sortConfig, setSortConfig] = useState<{
     key: TableViewCol;
@@ -173,7 +172,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
         ),
       ),
     );
-  }, [groups, shownColumns]);
+  }, [groups, shownColumns, subscribe]);
 
   const shown = Object.keys(shownColumns) as TableViewCol[];
 
@@ -213,9 +212,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                   <Th key={i} cursor="pointer" onClick={() => requestSort(col)}>
                     {col}
                   </Th>
-                ) : (
-                  <></>
-                ),
+                ) : null,
               )}
             </Tr>
           </Thead>

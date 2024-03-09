@@ -77,8 +77,8 @@ export const Navbar = ({
       </TabList>
       <TabPanels>
         {children.map((c, i) => (
-          <Text align="left">
-            <TabPanel key={i}>{c}</TabPanel>
+          <Text key={i} align="left">
+            <TabPanel>{c}</TabPanel>
           </Text>
         ))}
       </TabPanels>
