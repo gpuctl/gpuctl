@@ -56,6 +56,7 @@ import { EditableField } from "./EditableFields";
 import { STATS_PATH } from "../Config/Paths";
 import { DEFAULT_VIEW } from "../App";
 import { range } from "d3";
+
 import { NotesPopout } from "./NotesPopout";
 
 const USE_FAKE_STATS = false;
@@ -226,7 +227,7 @@ const StatsGraphPanel = ({
     : mapSuccess(historyStats, (hist) => {
         return hist.map((h) =>
           h.map(({ timestamp, sample }) => ({
-            x: timestamp,
+            x: timestamp * 1000, // Typescript uses ms since epoch (not second)
             y: sample[GPU_FIELDS[field]],
           })),
         );
@@ -351,9 +352,13 @@ const StatsGraph = ({
   numGPUs: number;
 }) => {
   const minTS =
-    stats.length === 0 ? 0 : Math.min(...stats[0].map(({ x }) => x));
+    stats.length === 0
+      ? 0
+      : Math.min(...stats.flatMap((s) => s.map(({ x }) => x)));
   const maxTS =
-    stats.length === 0 ? 0 : Math.max(...stats[0].map(({ x }) => x));
+    stats.length === 0
+      ? 0
+      : Math.max(...stats.flatMap((s) => s.map(({ x }) => x)));
 
   const [startTS, setStartTS] = useState(minTS);
   const [endTS, setEndTS] = useState(maxTS);
