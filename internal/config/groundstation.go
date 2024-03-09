@@ -20,10 +20,12 @@ func (t Timeouts) MonitorInterval() time.Duration {
 }
 
 type Database struct {
-	InMemory           bool          `toml:"inmemory"`
-	Postgres           bool          `toml:"postgres"`
-	PostgresUrl        string        `toml:"url"`
-	DownsampleInterval time.Duration `toml:"downsample_interval"`
+	InMemory            bool          `toml:"inmemory"`
+	Postgres            bool          `toml:"postgres"`
+	PostgresUrl         string        `toml:"url"`
+	DownsampleInterval  time.Duration `toml:"downsample_interval"`
+	DownsampleThreshold time.Duration `toml:"downsample_threshold"` // Downsample threshold is the time after which data is downsampled
+	DeleteThreshold     time.Duration `toml:"delete_threshold"`     // Delete threshold is the time after which data is deleted from the database
 }
 
 type AuthConfig struct {
@@ -53,9 +55,11 @@ func DefaultControlConfiguration() ControlConfiguration {
 			WAPort: 8000,
 		},
 		Database: Database{
-			InMemory:    false,
-			Postgres:    false,
-			PostgresUrl: "postgres://postgres@postgres/postgres",
+			InMemory:            false,
+			Postgres:            false,
+			PostgresUrl:         "postgres://postgres@postgres/postgres",
+			DownsampleThreshold: 1 * time.Hour,
+			DeleteThreshold:     24 * time.Hour,
 		},
 		Auth: AuthConfig{
 			Username: "admin",

@@ -50,7 +50,11 @@ func (edb *ErrorDB) UpdateMachine(changes broadcast.ModifyMachine) error {
 	return nil
 }
 
-func (edb *ErrorDB) Downsample(time time.Time) error {
+func (edb *ErrorDB) Downsample(time time.Duration) error {
+	return nil
+}
+
+func (edb *ErrorDB) DeleteOldStats(time time.Duration) error {
 	return nil
 }
 

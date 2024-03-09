@@ -72,7 +72,7 @@ func main() {
 	wa := webapi.NewServer(db, &authenticator, tunnelConf)
 	waPort := config.PortToAddress(conf.Server.WAPort)
 
-	errs := make(chan (error), 1)
+	errs := make(chan error, 3)
 
 	go func() {
 		err := http.ListenAndServe(gsPort, gs)
@@ -83,7 +83,11 @@ func main() {
 		errs <- fmt.Errorf("webapi: %w", err)
 	}()
 	go func() {
-		err := database.DownsampleOverTime(conf.Database.DownsampleInterval, db)
+		err := database.DownsampleOverTime(database.PruneConfig{
+			Interval:            conf.Database.DownsampleInterval,
+			DownsampleThreshold: conf.Database.DownsampleThreshold,
+			DeleteThreshold:     conf.Database.DeleteThreshold,
+		}, db)
 		errs <- fmt.Errorf("downsampler: %w", err)
 	}()
 	go func() {

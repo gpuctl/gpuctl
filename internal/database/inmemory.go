@@ -161,21 +161,21 @@ func (m *inMemory) LastSeen() ([]broadcast.WorkstationSeen, error) {
 	return seen, nil
 }
 
-func (m *inMemory) Downsample(cutoffTime time.Time) error {
+func (m *inMemory) Downsample(cutoffTime time.Duration) error {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 
 	for uuid, samples := range m.stats {
 		var oldSamples, newSamples []uplink.GPUStatSample
 		for _, sample := range samples {
-			if sample.Time < cutoffTime.Unix() {
+			if sample.Time < time.Now().Add(cutoffTime).Unix() {
 				oldSamples = append(oldSamples, sample)
 			} else {
 				newSamples = append(newSamples, sample)
 			}
 		}
 
-		sort.Slice(oldSamples, func(i, j int) bool {
+		sort.Slice(oldSamples, func(i int, j int) bool {
 			return oldSamples[i].Time < oldSamples[j].Time
 		})
 
@@ -194,6 +194,25 @@ func (m *inMemory) Downsample(cutoffTime time.Time) error {
 		}
 
 		m.stats[uuid] = append(downsampled, newSamples...)
+	}
+
+	return nil
+}
+
+func (m *inMemory) DeleteOldStats(cut time.Duration) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	sixMonthsAgo := time.Now().Add(cut).Unix()
+
+	for uuid, samples := range m.stats {
+		var newSamples []uplink.GPUStatSample
+		for _, sample := range samples {
+			if sample.Time >= sixMonthsAgo {
+				newSamples = append(newSamples, sample)
+			}
+		}
+		m.stats[uuid] = newSamples
 	}
 
 	return nil
