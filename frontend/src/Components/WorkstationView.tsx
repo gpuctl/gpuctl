@@ -56,6 +56,7 @@ import { EditableField } from "./EditableFields";
 import { STATS_PATH } from "../Config/Paths";
 import { DEFAULT_VIEW } from "../App";
 import { range } from "d3";
+
 import { NotesPopout } from "./NotesPopout";
 
 const USE_FAKE_STATS = false;
@@ -224,12 +225,9 @@ const StatsGraphPanel = ({
   > = USE_FAKE_STATS
     ? success([FAKE_STATS])
     : mapSuccess(historyStats, (hist) => {
-        const minTS = Math.min(
-          ...hist.flatMap((h) => h.map(({ timestamp }) => timestamp)),
-        );
         return hist.map((h) =>
           h.map(({ timestamp, sample }) => ({
-            x: timestamp - minTS,
+            x: timestamp * 1000, // Typescript uses ms since epoch (not second)
             y: sample[GPU_FIELDS[field]],
           })),
         );
@@ -353,10 +351,16 @@ const StatsGraph = ({
   stats: { x: number; y: number }[][];
   numGPUs: number;
 }) => {
+  const minTS =
+    stats.length === 0
+      ? 0
+      : Math.min(...stats.flatMap((s) => s.map(({ x }) => x)));
   const maxTS =
-    stats.length === 0 ? 0 : Math.max(...stats[0].map(({ x }) => x));
+    stats.length === 0
+      ? 0
+      : Math.max(...stats.flatMap((s) => s.map(({ x }) => x)));
 
-  const [startTS, setStartTS] = useState(0);
+  const [startTS, setStartTS] = useState(minTS);
   const [endTS, setEndTS] = useState(maxTS);
   const [atEnd, setAtEnd] = useState(true);
 
@@ -372,15 +376,11 @@ const StatsGraph = ({
 
   return (
     <>
-      <Graph
-        data={filtered}
-        xlabel="Seconds Since Added"
-        maxPoints={50}
-      ></Graph>
+      <Graph data={filtered} xlabel="Time" maxPoints={50}></Graph>
       <RangeSlider
-        defaultValue={[0, maxTS]}
+        defaultValue={[minTS, maxTS]}
         value={[startTS, endTS]}
-        min={0}
+        min={minTS}
         max={maxTS}
         onChange={([min, max]) => {
           if (min === max) return;

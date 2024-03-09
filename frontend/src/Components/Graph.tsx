@@ -1,10 +1,21 @@
 import * as d3 from "d3";
-import { ScaleLinear } from "d3";
-import { useMemo, useRef } from "react";
+import { ScaleLinear, ScaleTime } from "d3";
+import { useRef } from "react";
 import { useDims } from "../Utils/Hooks";
 import { Box } from "@chakra-ui/react";
 import { catNulls, chunks, mapNotNulls } from "../Utils/Utils";
 import { GRAPH_COLS } from "./WorkstationView";
+
+import {
+  utcDay,
+  utcFormat,
+  utcHour,
+  utcMinute,
+  utcMonth,
+  utcSecond,
+  utcWeek,
+  utcYear,
+} from "d3";
 
 const AXIS_MARGIN = { x: 20, y: 20 };
 
@@ -37,8 +48,8 @@ export const Graph = ({
   const innerWidth = width - AXIS_MARGIN.x * 2;
   const innerHeight = height - AXIS_MARGIN.y * 2;
 
-  const xScale: ScaleLinear<number, number> = d3
-    .scaleLinear()
+  const xScale: ScaleTime<number, number> = d3
+    .scaleTime()
     .domain([minX, maxX])
     .range([0, innerWidth]);
 
@@ -83,7 +94,16 @@ export const Graph = ({
             transform={`translate(0, 0)`}
             shapeRendering={"geometricPrecision"}
           >
-            <Axis scale={yScale} pixelsPerTick={40} vertical={true} />
+            <Axis
+              min={0}
+              max={innerHeight}
+              ticks={yScale
+                .ticks(10)
+                .map((value) => ({ value, offset: yScale(value) }))}
+              fmt={(v) => v.toString()}
+              pixelsPerTick={40}
+              vertical={true}
+            />
           </g>
 
           <g
@@ -104,7 +124,16 @@ export const Graph = ({
             transform={`translate(0, ${innerHeight})`}
             shapeRendering={"geometricPrecision"}
           >
-            <Axis scale={xScale} pixelsPerTick={40} vertical={false} />
+            <Axis
+              min={0}
+              max={innerWidth}
+              ticks={xScale
+                .ticks(10)
+                .map((value) => ({ value, offset: xScale(value) }))}
+              fmt={multiFormat}
+              pixelsPerTick={40}
+              vertical={false}
+            />
           </g>
 
           {linePaths.map((p, i) => (
@@ -125,45 +154,63 @@ export const Graph = ({
 
 const TICK_LENGTH = 6;
 
-export const Axis = ({
-  scale,
+const formatMillisecond = utcFormat("%S.%L"),
+  formatSecond = utcFormat("%H:%M:%S"),
+  formatMinute = utcFormat("%H:%M"),
+  formatHour = utcFormat("%H:%M"),
+  formatDay = utcFormat("%a %d"),
+  formatWeek = utcFormat("%b %d"),
+  formatMonth = utcFormat("%B"),
+  formatYear = utcFormat("%Y");
+
+const multiFormat = (date: Date) =>
+  (utcSecond(date) < date
+    ? formatMillisecond
+    : utcMinute(date) < date
+      ? formatSecond
+      : utcHour(date) < date
+        ? formatMinute
+        : utcDay(date) < date
+          ? formatHour
+          : utcMonth(date) < date
+            ? utcWeek(date) < date
+              ? formatDay
+              : formatWeek
+            : utcYear(date) < date
+              ? formatMonth
+              : formatYear)(date);
+
+export const Axis = <T,>({
+  min,
+  max,
   pixelsPerTick,
   vertical,
+  ticks,
+  fmt,
 }: {
-  scale: ScaleLinear<number, number>;
+  min: number;
+  max: number;
   pixelsPerTick: number;
   vertical: boolean;
+  ticks: { value: T; offset: number }[];
+  fmt: (t: T) => string;
 }) => {
-  const range = scale.range();
-
-  const ticks = useMemo(() => {
-    // const diff = Math.abs(range[1] - range[0]);
-    // const numberOfTicksTarget = Math.round(diff / pixelsPerTick);
-    const numberOfTicksTarget = 10;
-
-    return scale.ticks(numberOfTicksTarget).map((value) => ({
-      value,
-      offset: scale(value),
-    }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scale]);
-
   return (
     <>
       {/* Main axis line */}
       <path
         d={(vertical
-          ? ["M", 0, range[0], "L", 0, range[1]]
-          : ["M", range[0], 0, "L", range[1], 0]
+          ? ["M", 0, min, "L", 0, max]
+          : ["M", min, 0, "L", max, 0]
         ).join(" ")}
         fill="none"
         stroke="currentColor"
       />
 
       {/* Ticks and labels */}
-      {ticks.map(({ value, offset }) => (
+      {ticks.map(({ value, offset }, i) => (
         <g
-          key={value}
+          key={i}
           transform={
             vertical ? `translate(0, ${offset})` : `translate(${offset}, 0)`
           }
@@ -184,7 +231,7 @@ export const Axis = ({
             />
           )}
           <text
-            key={value}
+            key={i}
             style={{
               fontSize: "10px",
               textAnchor: "middle",
@@ -193,7 +240,7 @@ export const Axis = ({
                 : "translate(0, 15px)",
             }}
           >
-            {value}
+            {typeof value === "number" ? value : fmt(value)}
           </text>
         </g>
       ))}
