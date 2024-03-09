@@ -5,15 +5,15 @@ import (
 )
 
 type PruneConfig struct {
-	interval           time.Duration
-	deleteThreshold    time.Duration
-	downsampeThreshold time.Duration
+	Interval            time.Duration
+	DeleteThreshold     time.Duration
+	DownsampleThreshold time.Duration
 }
 
 func DownsampleOverTime(downsampleConfig PruneConfig, database Database) error {
-	interval := downsampleConfig.interval
-	delete_thresh := downsampleConfig.deleteThreshold
-	downsample_thresh := downsampleConfig.downsampeThreshold
+	interval := downsampleConfig.Interval
+	delete_thresh := downsampleConfig.DeleteThreshold
+	downsample_thresh := downsampleConfig.DownsampleThreshold
 
 	downsampleTicker := time.NewTicker(time.Duration(interval))
 
