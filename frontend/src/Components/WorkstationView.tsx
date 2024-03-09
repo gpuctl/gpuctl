@@ -224,9 +224,6 @@ const StatsGraphPanel = ({
   > = USE_FAKE_STATS
     ? success([FAKE_STATS])
     : mapSuccess(historyStats, (hist) => {
-        // const minTS = Math.min(
-        //   ...hist.flatMap((h) => h.map(({ timestamp }) => timestamp)),
-        // );
         return hist.map((h) =>
           h.map(({ timestamp, sample }) => ({
             x: timestamp,
@@ -374,11 +371,7 @@ const StatsGraph = ({
 
   return (
     <>
-      <Graph
-        data={filtered}
-        xlabel="Seconds Since Added"
-        maxPoints={50}
-      ></Graph>
+      <Graph data={filtered} xlabel="Time" maxPoints={50}></Graph>
       <RangeSlider
         defaultValue={[minTS, maxTS]}
         value={[startTS, endTS]}
