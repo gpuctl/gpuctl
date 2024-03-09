@@ -15,13 +15,12 @@ import {
   Thead,
   Tr,
 } from "@chakra-ui/react";
-import { GPUStats, WorkStationGroup, WorkStationData } from "../Data";
+import { GPUStats, WorkStationGroup } from "../Data";
 import { useEffect, useMemo, useState } from "react";
 import { useForceUpdate } from "framer-motion";
 import { keepIf } from "../Utils/Utils";
 
 import { Link as ReactRouterLink, useSearchParams } from "react-router-dom";
-import { sort } from "d3";
 
 export const GPU_FIELDS = {
   "GPU Name": "gpu_name",
@@ -43,7 +42,7 @@ export const GPU_FIELDS = {
   "Max Memory Clock (MHz)": "max_memory_clock",
 } as const;
 
-const map_idx = (key: string) => {
+const colToIdx = (key: TableViewCol) => {
   if (key === "Group") return 0;
   if (key === "Machine Name") return 1;
 
@@ -62,7 +61,7 @@ const Row = ({
     Object.fromEntries(Array.from(params.entries())),
   );
 
-  newParams.append("selected", row[map_idx("Machine Name")]!.toString());
+  newParams.append("selected", row[colToIdx("Machine Name")]!.toString());
 
   return (
     <Tr>
@@ -77,10 +76,9 @@ const Row = ({
           setHover(false);
         }}
       >
-        {" "}
-        {row.map((s, i) =>
+        {row.map((s) =>
           s === null ? null : (
-            <Td>
+            <Td key={s}>
               <Text textDecoration={hover ? "underline" : ""}>{s}</Text>
             </Td>
           ),
@@ -90,10 +88,13 @@ const Row = ({
   );
 };
 
+type TableViewCol = keyof typeof GPU_FIELDS | "Group" | "Machine Name";
+type Direction = "ascending" | "descending";
+
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   // default to show group, machine_name, gpu_name, isFree, brand, and memory_total
   const SHOWN_COLS: {
-    [_ in keyof typeof GPU_FIELDS | "Group" | "Machine Name"]: boolean;
+    [_ in TableViewCol]: boolean;
   } = {
     Group: true,
     "Machine Name": true,
@@ -117,24 +118,27 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   };
 
   const [shownColumns, setter] = useState<Record<string, boolean>>(SHOWN_COLS);
-  const [refresh] = useForceUpdate();
+  const [refresh, subscribe] = useForceUpdate();
   const [params] = useSearchParams();
-  const [sortConfig, setSortConfig] = useState({
-    key: "name",
+  const [sortConfig, setSortConfig] = useState<{
+    key: TableViewCol;
+    direction: Direction;
+  }>({
+    key: "GPU Name",
     direction: "ascending",
   });
 
   const [rows, setRows] = useState<(string | number | null)[][]>([]);
 
   const sortedGroups = useMemo(() => {
-    let sortableItems = [...rows];
+    const sortableItems = [...rows];
     if (sortConfig !== null) {
       console.log(sortConfig);
       sortableItems.sort((a, b) => {
-        if (a[map_idx(sortConfig.key)]! < b[map_idx(sortConfig.key)]!) {
+        if (a[colToIdx(sortConfig.key)]! < b[colToIdx(sortConfig.key)]!) {
           return sortConfig.direction === "ascending" ? -1 : 1;
         }
-        if (a[map_idx(sortConfig.key)]! > b[map_idx(sortConfig.key)]!) {
+        if (a[colToIdx(sortConfig.key)]! > b[colToIdx(sortConfig.key)]!) {
           return sortConfig.direction === "ascending" ? 1 : -1;
         }
         return 0;
@@ -142,21 +146,21 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
     }
 
     return sortableItems;
-  }, [groups, sortConfig]);
+  }, [rows, sortConfig]);
 
-  const requestSort = (key: string) => {
-    let direction = "ascending";
-    if (sortConfig.key === key && sortConfig.direction === "ascending") {
-      direction = "descending";
-    }
+  const requestSort = (key: TableViewCol) => {
+    const direction =
+      sortConfig.key === key && sortConfig.direction === "ascending"
+        ? "ascending"
+        : "descending";
     setSortConfig({ key, direction });
   };
 
   useEffect(() => {
     setRows(
-      groups.flatMap(({ name: group_name, workstations }, i) =>
-        workstations.flatMap(({ name: workstation_name, gpus }, j) =>
-          gpus.map((gpu, k) => {
+      groups.flatMap(({ name: group_name, workstations }) =>
+        workstations.flatMap(({ name: workstation_name, gpus }) =>
+          gpus.map((gpu) => {
             const rows: (string | number | null)[] = tablify(
               shownColumns,
               gpu,
@@ -168,7 +172,9 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
         ),
       ),
     );
-  }, [groups]);
+  }, [groups, shownColumns, subscribe]);
+
+  const shown = Object.keys(shownColumns) as TableViewCol[];
 
   return (
     <div>
@@ -179,25 +185,20 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
         <MenuList overflowY="scroll" maxHeight="200">
           <MenuOptionGroup
             type="checkbox"
-            defaultValue={Object.keys(shownColumns).filter(
-              (key) => shownColumns[key],
-            )}
+            defaultValue={shown.filter((key) => shownColumns[key])}
             onChange={(props) => {
-              Object.keys(shownColumns).forEach((col) => {
+              shown.forEach((col) => {
                 shownColumns[col] = props.includes(col);
               });
               setter(shownColumns);
               refresh();
             }}
           >
-            {Object.keys(shownColumns).map((col, i) => {
-              return (
-                <MenuItemOption value={col} key={i}>
-                  {" "}
-                  {col}{" "}
-                </MenuItemOption>
-              );
-            })}
+            {shown.map((col, i) => (
+              <MenuItemOption value={col} key={i}>
+                {col}
+              </MenuItemOption>
+            ))}
           </MenuOptionGroup>
         </MenuList>
       </Menu>
@@ -206,24 +207,18 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
         <Table variant="striped">
           <Thead>
             <Tr>
-              {Object.keys(shownColumns).map((col, i) => {
-                if (shownColumns[col])
-                  return (
-                    <Th
-                      key={i}
-                      cursor="pointer"
-                      onClick={() => requestSort(col)}
-                    >
-                      {col}
-                    </Th>
-                  );
-                else return null;
-              })}
+              {shown.map((col, i) =>
+                shownColumns[col] ? (
+                  <Th key={i} cursor="pointer" onClick={() => requestSort(col)}>
+                    {col}
+                  </Th>
+                ) : null,
+              )}
             </Tr>
           </Thead>
-          <Tbody key={1}>
-            {sortedGroups.map((row) => (
-              <Row params={params} row={row} />
+          <Tbody>
+            {sortedGroups.map((row, i) => (
+              <Row key={i} params={params} row={row} />
             ))}
           </Tbody>
         </Table>
