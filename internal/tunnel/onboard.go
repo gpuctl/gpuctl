@@ -106,6 +106,9 @@ func RestartSatellite(hostname string, conf Config) error {
 		return err
 	}
 
+	// attempt to kill everything but ignore "no clients" error
+	_ = killall(client)
+
 	return startSatellite(client, conf)
 }
 
@@ -127,7 +130,7 @@ func Deboard(hostname string, conf Config) error {
 	defer client.Close()
 
 	// Kill satellit
-	err = runCommand(client, "killall satellite")
+	err = killall(client)
 	if err != nil {
 		return fmt.Errorf("failed to kill satellite on remote: %w", err)
 	}
@@ -139,6 +142,10 @@ func Deboard(hostname string, conf Config) error {
 	}
 
 	return nil
+}
+
+func killall(client *ssh.Client) error {
+	return runCommand(client, "killall satellite")
 }
 
 func sshInto(hostname string, conf Config) (*ssh.Client, error) {

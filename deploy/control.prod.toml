@@ -9,7 +9,7 @@ downsample_interval = "10m"
 
 [Timeouts]
 death_timeout = "60s"
-monitor_interval = "15s"
+monitor_interval = "60s"
 
 [Auth]
 username = "admin"
