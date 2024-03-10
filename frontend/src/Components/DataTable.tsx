@@ -128,10 +128,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   const [sortConfig, setSortConfig] = useState<{
     key: TableViewCol;
     direction: Direction;
-  }>({
-    key: "GPU Name",
-    direction: "ascending",
-  });
+  } | null>(null);
 
   const [rows, setRows] = useState<
     { name: string; rs: (string | number | null)[] }[]
@@ -155,7 +152,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   }, [rows, sortConfig]);
 
   const requestSort = (key: TableViewCol) => {
-    if (sortConfig.key === key) {
+    if (sortConfig?.key === key) {
       setSortConfig({ key, direction: invertDir(sortConfig.direction) });
     } else {
       setSortConfig({ key, direction: "ascending" });
@@ -220,7 +217,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
                       // We add a blank unicode character to prevent heading
                       // names from changing length causing the table columns to
                       // jump around
-                      `${col} ${sortConfig.key !== col ? "⠀" : sortConfig.direction === "ascending" ? "▲" : "▼"}`
+                      `${col} ${sortConfig?.key === col ? (sortConfig.direction === "ascending" ? "▲" : "▼") : "⠀"}`
                     }
                   </Th>
                 ) : null,
