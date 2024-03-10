@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync/atomic"
 	"testing"
 
 	"golang.org/x/crypto/ssh"
@@ -31,10 +32,12 @@ var emptyAuthCookie = &http.Cookie{Name: authentication.TokenCookieName, Value: 
 func TestOnboardNoKey(t *testing.T) {
 	t.Parallel()
 
+	var totalEnergy atomic.Uint64
+	totalEnergy.Store(42)
 	serv := webapi.NewServer(nil, alwaysAuth{}, tunnel.Config{
 		DataDirTemplate: "/foo",
 		User:            "JFK",
-	})
+	}, &totalEnergy)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader(`{"hostname": "foo.net"}`))
 	req.AddCookie(emptyAuthCookie)
@@ -52,11 +55,13 @@ func TestOnboardNoHostname(t *testing.T) {
 	sign, err := ssh.ParsePrivateKey([]byte(demoPrivKey))
 	require.NoError(t, err)
 
+	var totalEnergy atomic.Uint64
+	totalEnergy.Store(1337)
 	serv := webapi.NewServer(nil, alwaysAuth{}, tunnel.Config{
 		DataDirTemplate: "/foo",
 		User:            "root",
 		Signer:          sign,
-	})
+	}, &totalEnergy)
 
 	req := httptest.NewRequest(http.MethodPost, "/api/admin/add_workstation", strings.NewReader("{}"))
 	req.AddCookie(emptyAuthCookie)

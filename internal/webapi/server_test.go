@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -295,7 +296,9 @@ func TestServerEndpoints(t *testing.T) {
 		CurrentTokens: map[authentication.AuthToken]bool{"example_token": true},
 	}
 
-	server := webapi.NewServer(mockDB, &auth, tunnel.Config{})
+	var totalEnergy atomic.Uint64
+	totalEnergy.Store(420)
+	server := webapi.NewServer(mockDB, &auth, tunnel.Config{}, &totalEnergy)
 
 	tests := []struct {
 		name           string

@@ -83,7 +83,7 @@ func (edb *ErrorDB) HistoricalData(hostname string) (broadcast.HistoricalData, e
 	return nil, nil
 }
 
-func (edb *ErrorDB) AggregateData(days int) (broadcast.AggregateData, error) {
+func (edb *ErrorDB) AggregateData() (broadcast.AggregateData, error) {
 	return broadcast.AggregateData{}, nil
 }
 
