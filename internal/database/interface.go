@@ -55,5 +55,5 @@ type Database interface {
 
 	// Historical and aggregate data for graphs
 	HistoricalData(hostname string) (broadcast.HistoricalData, error)
-	AggregateData(days int) (broadcast.AggregateData, error)
+	AggregateData() (broadcast.AggregateData, error)
 }

@@ -811,7 +811,9 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 
 	return data[1:], nil
 }
-func (conn PostgresConn) AggregateData(days int) (broadcast.AggregateData, error) {
+
+// calculating the aggregate data
+func (conn PostgresConn) AggregateData() (broadcast.AggregateData, error) {
 	row := conn.db.QueryRow(`
 		SELECT SUM (
 			curr.powerdraw *

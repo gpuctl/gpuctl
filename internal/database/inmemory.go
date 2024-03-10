@@ -427,6 +427,6 @@ func (m *inMemory) RemoveFile(remove broadcast.RemoveFile) error {
 func (m *inMemory) HistoricalData(hostname string) (broadcast.HistoricalData, error) {
 	return broadcast.HistoricalData{}, ErrNotImplemented
 }
-func (m *inMemory) AggregateData(days int) (broadcast.AggregateData, error) {
+func (m *inMemory) AggregateData() (broadcast.AggregateData, error) {
 	return broadcast.AggregateData{}, ErrNotImplemented
 }
