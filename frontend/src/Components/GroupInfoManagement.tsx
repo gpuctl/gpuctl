@@ -290,7 +290,7 @@ export const GroupInfoManagement = ({
                                 <Text> Copied </Text> <FaRegCopy />{" "}
                               </HStack>
                             ) : (
-                              "Shutdown"
+                              "Reboot"
                             )}
                           </Button>
                           <Button
