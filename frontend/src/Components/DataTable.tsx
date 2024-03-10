@@ -220,10 +220,9 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
             </Tr>
           </Thead>
           <Tbody>
-            {sortedGroups.map((row, i) => {
-              console.log(row);
-              return <Row key={i} params={params} row={row} />;
-            })}
+            {sortedGroups.map((row, i) => (
+              <Row key={i} params={params} row={row} />
+            ))}
           </Tbody>
         </Table>
       </TableContainer>
