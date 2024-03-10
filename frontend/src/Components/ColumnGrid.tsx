@@ -8,11 +8,13 @@ export const ColumnGrid = ({
   hMinSpacing,
   vSpacing,
   children,
+  sizes,
 }: {
   minChildWidth: number;
   hMinSpacing: number;
   vSpacing: number;
   children: ReactNode[];
+  sizes: number[];
 }) => {
   const ref = useRef<HTMLHeadingElement>(null);
   const { w: width } = useDims(ref);
@@ -27,10 +29,12 @@ export const ColumnGrid = ({
   const hspacing = numCols === 1 ? 0 : tempSpace;
 
   const grouped: ReactNode[][] = makeArr(numCols, () => []);
-  let colNum = 0;
-  children.forEach((c) => {
-    grouped[colNum].push(c);
-    colNum = (colNum + 1) % numCols;
+  const colSizes: number[] = makeArr(numCols, () => 0);
+
+  children.forEach((c, i) => {
+    const idx = colSizes.indexOf(Math.min(...colSizes));
+    grouped[idx].push(c);
+    colSizes[idx] += sizes[i];
   });
   return (
     <Center ref={ref}>

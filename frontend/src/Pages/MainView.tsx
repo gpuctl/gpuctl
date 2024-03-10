@@ -30,7 +30,12 @@ const cardView = (stats: WorkStationGroup[]) => (
             </Heading>
           </Box>
           <Box w="100%">
-            <ColumnGrid minChildWidth={325} hMinSpacing={40} vSpacing={10}>
+            <ColumnGrid
+              minChildWidth={325}
+              hMinSpacing={40}
+              vSpacing={10}
+              sizes={l.workstations.map((row) => row.gpus.length)}
+            >
               {l.workstations.map((row, i) => {
                 return (
                   <WorkstationCardMin
