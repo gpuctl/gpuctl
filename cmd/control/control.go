@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 
 	"golang.org/x/crypto/ssh"
@@ -81,6 +82,10 @@ func main() {
 	go func() {
 		err := http.ListenAndServe(waPort, wa)
 		errs <- fmt.Errorf("webapi: %w", err)
+	}()
+	go func() {
+		// Serve the default mux for pprof debug.
+		http.ListenAndServe(":6060", nil)
 	}()
 	go func() {
 		err := database.DownsampleOverTime(conf.Database.DownsampleInterval, db)

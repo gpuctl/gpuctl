@@ -42,6 +42,7 @@ https://gpuctl.perial.co.uk {
 		# should match ports set in ./control.toml.default
 		reverse_proxy /gs-api/* control:8080
 		reverse_proxy /api/* control:8000
+		reverse_proxy /debug/* control:6060
 
 		file_server
 	}
