@@ -136,7 +136,6 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   const sortedGroups = useMemo(() => {
     const sortableItems = [...rows];
     if (sortConfig !== null) {
-      console.log(sortConfig);
       sortableItems.sort((a, b) => {
         if (a[colToIdx(sortConfig.key)]! < b[colToIdx(sortConfig.key)]!) {
           return sortConfig.direction === "ascending" ? -1 : 1;
@@ -213,7 +212,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
               {shown.map((col, i) =>
                 shownColumns[col] ? (
                   <Th key={i} cursor="pointer" onClick={() => requestSort(col)}>
-                    {col}
+                    {`${col} ${sortConfig.key !== col ? "" : sortConfig.direction === "ascending" ? "▲" : "▼"}`}
                   </Th>
                 ) : null,
               )}
