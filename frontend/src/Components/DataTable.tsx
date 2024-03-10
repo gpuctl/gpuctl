@@ -52,16 +52,18 @@ const colToIdx = (key: TableViewCol) => {
 const Row = ({
   params,
   row,
+  machineName,
 }: {
   params: URLSearchParams;
   row: (string | number | null)[];
+  machineName: string;
 }) => {
   const [hover, setHover] = useState(false);
   const newParams = new URLSearchParams(
     Object.fromEntries(Array.from(params.entries())),
   );
 
-  newParams.append("selected", row[colToIdx("Machine Name")]!.toString());
+  newParams.append("selected", machineName);
 
   return (
     <Tr>
@@ -131,16 +133,18 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
     direction: "ascending",
   });
 
-  const [rows, setRows] = useState<(string | number | null)[][]>([]);
+  const [rows, setRows] = useState<
+    { name: string; rs: (string | number | null)[] }[]
+  >([]);
 
   const sortedGroups = useMemo(() => {
     const sortableItems = [...rows];
     if (sortConfig !== null) {
-      sortableItems.sort((a, b) => {
-        if (a[colToIdx(sortConfig.key)]! < b[colToIdx(sortConfig.key)]!) {
+      sortableItems.sort(({ rs: rs1 }, { rs: rs2 }) => {
+        if (rs1[colToIdx(sortConfig.key)]! < rs2[colToIdx(sortConfig.key)]!) {
           return sortConfig.direction === "ascending" ? -1 : 1;
         }
-        if (a[colToIdx(sortConfig.key)]! > b[colToIdx(sortConfig.key)]!) {
+        if (rs1[colToIdx(sortConfig.key)]! > rs2[colToIdx(sortConfig.key)]!) {
           return sortConfig.direction === "ascending" ? 1 : -1;
         }
         return 0;
@@ -169,7 +173,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
               group_name,
               workstation_name,
             );
-            return rows;
+            return { name: workstation_name, rs: rows };
           }),
         ),
       ),
@@ -224,8 +228,8 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
             </Tr>
           </Thead>
           <Tbody>
-            {sortedGroups.map((row, i) => (
-              <Row key={i} params={params} row={row} />
+            {sortedGroups.map(({ name, rs }, i) => (
+              <Row machineName={name} key={i} params={params} row={rs} />
             ))}
           </Tbody>
         </Table>
