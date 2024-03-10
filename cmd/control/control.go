@@ -80,9 +80,9 @@ func main() {
 	}
 	totalEnergy.Store(data.TotalEnergy)
 
-	const cache_duration = time.Hour
+	const cacheDuration = time.Hour
 	go func() {
-		for range time.NewTicker(cache_duration).C {
+		for range time.NewTicker(cacheDuration).C {
 			data, err := db.AggregateData()
 			if err != nil {
 				log.Error("Got error calculating new cache value of aggregate", "err", err)
