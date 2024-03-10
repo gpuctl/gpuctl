@@ -80,7 +80,7 @@ func main() {
 	}
 	totalEnergy.Store(data.TotalEnergy)
 
-	const cache_duration = 15 * time.Minute
+	const cache_duration = time.Hour
 	go func() {
 		for range time.NewTicker(cache_duration).C {
 			data, err := db.AggregateData()
