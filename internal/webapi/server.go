@@ -5,6 +5,7 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"sync/atomic"
 
 	"github.com/gpuctl/gpuctl/internal/authentication"
 	"github.com/gpuctl/gpuctl/internal/broadcast"
@@ -21,6 +22,8 @@ type Server struct {
 type Api struct {
 	DB         database.Database
 	tunnelConf tunnel.Config
+
+	totalEnergy *atomic.Uint64
 }
 
 type APIAuthCredientals struct {
@@ -28,9 +31,9 @@ type APIAuthCredientals struct {
 	Password string
 }
 
-func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], tunnelConf tunnel.Config) *Server {
+func NewServer(db database.Database, auth authentication.Authenticator[APIAuthCredientals], tunnelConf tunnel.Config, totalEnergy *atomic.Uint64) *Server {
 	mux := new(femto.Femto)
-	api := &Api{db, tunnelConf}
+	api := &Api{db, tunnelConf, totalEnergy}
 
 	femto.OnGet(mux, "/api/stats/all", api.AllStatistics)
 	femto.OnGet(mux, "/api/stats/offline", api.HandleOfflineMachineRequest)
@@ -101,13 +104,8 @@ func (a *Api) historicalData(r *http.Request, l *slog.Logger) (*femto.Response[b
 
 func (a *Api) aggregateData(r *http.Request, l *slog.Logger) (*femto.Response[broadcast.AggregateData], error) {
 	// TODO: add functionality for variable number of days
-	days := 7
-	data, err := a.DB.AggregateData(days)
-	if err != nil {
-		return nil, err
-	}
-
-	return femto.Ok(data)
+	totalEnergy := a.totalEnergy.Load()
+	return femto.Ok(broadcast.AggregateData{TotalEnergy: totalEnergy})
 }
 
 func (a *Api) Authenticate(auth authentication.Authenticator[APIAuthCredientals], packet APIAuthCredientals, r *http.Request, l *slog.Logger) (*femto.EmptyBodyResponse, error) {

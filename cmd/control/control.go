@@ -7,6 +7,8 @@ import (
 	"net/http"
 	_ "net/http/pprof"
 	"os"
+	"sync/atomic"
+	"time"
 
 	"golang.org/x/crypto/ssh"
 
@@ -69,8 +71,29 @@ func main() {
 		KeyCallback:     ssh.InsecureIgnoreHostKey(), // TODO: Be secure here.
 	}
 
+	// calculating aggregate data takes a while, so cache it
+	var totalEnergy atomic.Uint64
+	data, err := db.AggregateData()
+	if err != nil {
+		log.Error("Got error calculating initial value of aggregate", "err", err)
+		os.Exit(-1)
+	}
+	totalEnergy.Store(data.TotalEnergy)
+
+	const cacheDuration = time.Hour
+	go func() {
+		for range time.NewTicker(cacheDuration).C {
+			data, err := db.AggregateData()
+			if err != nil {
+				log.Error("Got error calculating new cache value of aggregate", "err", err)
+			} else {
+				totalEnergy.Store(data.TotalEnergy)
+			}
+		}
+	}()
+
 	authenticator := webapi.AuthenticatorFromConfig(conf)
-	wa := webapi.NewServer(db, &authenticator, tunnelConf)
+	wa := webapi.NewServer(db, &authenticator, tunnelConf, &totalEnergy)
 	waPort := config.PortToAddress(conf.Server.WAPort)
 
 	errs := make(chan (error), 1)
