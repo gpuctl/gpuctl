@@ -100,18 +100,6 @@ func Onboard(
 	return nil
 }
 
-func RestartSatellite(hostname string, conf Config) error {
-	client, err := sshInto(hostname, conf)
-	if err != nil {
-		return err
-	}
-
-	// attempt to kill everything but ignore "no clients" error
-	_ = killall(client)
-
-	return startSatellite(client, conf)
-}
-
 func startSatellite(client *ssh.Client, conf Config) error {
 	installDir := conf.installDir()
 	command := fmt.Sprintf(

@@ -44,7 +44,7 @@ func monitor(database database.Database, cutoffTime time.Time, l *slog.Logger, s
 		if seenIsOld && canPing {
 			l.Info("Attempting to restart a satellite", "hostname", seen.Hostname, "last-seen", seen.LastSeen)
 
-			err := tunnel.RestartSatellite(seen.Hostname, s)
+			err := tunnel.Onboard(seen.Hostname, s)
 
 			if err != nil {
 				l.Error("Failed to restart machine", "hostname", seen.Hostname, "error", err)
