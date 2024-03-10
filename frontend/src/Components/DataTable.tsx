@@ -212,7 +212,12 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
               {shown.map((col, i) =>
                 shownColumns[col] ? (
                   <Th key={i} cursor="pointer" onClick={() => requestSort(col)}>
-                    {`${col} ${sortConfig.key !== col ? "" : sortConfig.direction === "ascending" ? "▲" : "▼"}`}
+                    {
+                      // We add a blank unicode character to prevent heading
+                      // names from changing length causing the table columns to
+                      // jump around
+                      `${col} ${sortConfig.key !== col ? "⠀" : sortConfig.direction === "ascending" ? "▲" : "▼"}`
+                    }
                   </Th>
                 ) : null,
               )}
