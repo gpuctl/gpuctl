@@ -76,9 +76,9 @@ const Row = ({
           setHover(false);
         }}
       >
-        {row.map((s) =>
+        {row.map((s, i) =>
           s === null ? null : (
-            <Td key={s}>
+            <Td key={i}>
               <Text textDecoration={hover ? "underline" : ""}>{s}</Text>
             </Td>
           ),
@@ -90,6 +90,9 @@ const Row = ({
 
 type TableViewCol = keyof typeof GPU_FIELDS | "Group" | "Machine Name";
 type Direction = "ascending" | "descending";
+
+const invertDir = (dir: Direction) =>
+  dir === "ascending" ? "descending" : "ascending";
 
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   // default to show group, machine_name, gpu_name, isFree, brand, and memory_total
@@ -133,7 +136,6 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   const sortedGroups = useMemo(() => {
     const sortableItems = [...rows];
     if (sortConfig !== null) {
-      console.log(sortConfig);
       sortableItems.sort((a, b) => {
         if (a[colToIdx(sortConfig.key)]! < b[colToIdx(sortConfig.key)]!) {
           return sortConfig.direction === "ascending" ? -1 : 1;
@@ -149,11 +151,11 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   }, [rows, sortConfig]);
 
   const requestSort = (key: TableViewCol) => {
-    const direction =
-      sortConfig.key === key && sortConfig.direction === "ascending"
-        ? "ascending"
-        : "descending";
-    setSortConfig({ key, direction });
+    if (sortConfig.key === key) {
+      setSortConfig({ key, direction: invertDir(sortConfig.direction) });
+    } else {
+      setSortConfig({ key, direction: "ascending" });
+    }
   };
 
   useEffect(() => {
@@ -203,14 +205,19 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
         </MenuList>
       </Menu>
 
-      <TableContainer>
+      <TableContainer overflowX="scroll">
         <Table variant="striped">
           <Thead>
             <Tr>
               {shown.map((col, i) =>
                 shownColumns[col] ? (
                   <Th key={i} cursor="pointer" onClick={() => requestSort(col)}>
-                    {col}
+                    {
+                      // We add a blank unicode character to prevent heading
+                      // names from changing length causing the table columns to
+                      // jump around
+                      `${col} ${sortConfig.key !== col ? "⠀" : sortConfig.direction === "ascending" ? "▲" : "▼"}`
+                    }
                   </Th>
                 ) : null,
               )}
@@ -232,8 +239,13 @@ export const tablify = (
   gpu: GPUStats,
   group_name?: string,
   workstation_name?: string,
-): (string | null)[] =>
-  (group_name === undefined ? [] : [keepIf(shownColumns["Group"], group_name)])
+): (string | number | null)[] =>
+  (group_name === undefined
+    ? []
+    : // Having to type annotate this `keepIf` is an incredible skill issue
+      // Unification is cancelled ig
+      [keepIf<string | number>(shownColumns["Group"], group_name)]
+  )
     .concat(
       workstation_name === undefined
         ? []
@@ -244,56 +256,32 @@ export const tablify = (
       keepIf(shownColumns["Free"], gpu.in_use ? "❌" : "✅"),
       keepIf(shownColumns["GPU Brand"], gpu.gpu_brand),
       keepIf(shownColumns["Driver Version"], gpu.driver_ver),
-      keepIf(
-        shownColumns["Memory Total (MB)"],
-        Math.round(gpu.memory_total).toString(),
-      ),
+      keepIf(shownColumns["Memory Total (MB)"], Math.round(gpu.memory_total)),
       keepIf(
         shownColumns["Memory Utilisation (%)"],
-        Math.round(gpu.memory_util).toString(),
+        Math.round(gpu.memory_util),
       ),
-      keepIf(
-        shownColumns["GPU Utilisation (%)"],
-        Math.round(gpu.gpu_util).toString(),
-      ),
-      keepIf(
-        shownColumns["Memory Used (MB)"],
-        Math.round(gpu.memory_used).toString(),
-      ),
-      keepIf(
-        shownColumns["Fan Speed (%)"],
-        Math.round(gpu.fan_speed).toString(),
-      ),
-      keepIf(
-        shownColumns["GPU Temperature (°C)"],
-        Math.round(gpu.gpu_temp).toString(),
-      ),
+      keepIf(shownColumns["GPU Utilisation (%)"], Math.round(gpu.gpu_util)),
+      keepIf(shownColumns["Memory Used (MB)"], Math.round(gpu.memory_used)),
+      keepIf(shownColumns["Fan Speed (%)"], Math.round(gpu.fan_speed)),
+      keepIf(shownColumns["GPU Temperature (°C)"], Math.round(gpu.gpu_temp)),
       keepIf(
         shownColumns["Memory Temperature (°C)"],
-        Math.round(gpu.memory_temp).toString(),
+        Math.round(gpu.memory_temp),
       ),
       keepIf(
         shownColumns["GPU Voltage (mV)"],
-        Math.round(gpu.graphics_voltage).toString(),
+        Math.round(gpu.graphics_voltage),
       ),
-      keepIf(
-        shownColumns["Power Draw (W)"],
-        Math.round(gpu.power_draw).toString(),
-      ),
-      keepIf(
-        shownColumns["GPU Clock (MHz)"],
-        Math.round(gpu.graphics_clock).toString(),
-      ),
+      keepIf(shownColumns["Power Draw (W)"], Math.round(gpu.power_draw)),
+      keepIf(shownColumns["GPU Clock (MHz)"], Math.round(gpu.graphics_clock)),
       keepIf(
         shownColumns["Max GPU Clock (MHz)"],
-        Math.round(gpu.max_graphics_clock).toString(),
+        Math.round(gpu.max_graphics_clock),
       ),
-      keepIf(
-        shownColumns["Memory Clock (MHz)"],
-        Math.round(gpu.memory_clock).toString(),
-      ),
+      keepIf(shownColumns["Memory Clock (MHz)"], Math.round(gpu.memory_clock)),
       keepIf(
         shownColumns["Max Memory Clock (MHz)"],
-        Math.round(gpu.max_memory_clock).toString(),
+        Math.round(gpu.max_memory_clock),
       ),
     ]);
