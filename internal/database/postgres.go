@@ -17,6 +17,8 @@ import (
 	_ "github.com/jackc/pgx/v5/stdlib"
 )
 
+const maxOpenCons = 50
+
 // PostgresConn represents an open connection to a control database backed by postgres.
 type PostgresConn struct {
 	db *sql.DB
@@ -27,6 +29,8 @@ func Postgres(databaseUrl string) (Database, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	db.SetMaxOpenConns(maxOpenCons)
 
 	// sql.Open won't make a connection til use
 	// so try pinging database to verify connection
