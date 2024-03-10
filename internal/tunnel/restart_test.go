@@ -18,7 +18,7 @@ func TestSSHRestart_UnreadableKey(t *testing.T) {
 	// Setup
 	sshConfig := tunnel.Config{User: "testuser"}
 
-	err := tunnel.RestartSatellite("localhost", sshConfig)
+	err := tunnel.Onboard("localhost", sshConfig)
 
 	if !errors.Is(err, tunnel.InvalidConfigError) {
 		t.Errorf("expected InvalidConfigError, but got %v", err)
@@ -42,7 +42,7 @@ func TestSSHRestart_ValidKey(t *testing.T) {
 		KeyCallback: ssh.InsecureIgnoreHostKey(),
 	}
 
-	err = tunnel.RestartSatellite("invalid.remote.address", sshConfig)
+	err = tunnel.Onboard("invalid.remote.address", sshConfig)
 
 	var opError *net.OpError
 	if errors.As(err, &opError) && opError.Err != nil {
