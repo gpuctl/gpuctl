@@ -86,8 +86,9 @@ func main() {
 			data, err := db.AggregateData()
 			if err != nil {
 				log.Error("Got error calculating new cache value of aggregate", "err", err)
+			} else {
+				totalEnergy.Store(data.TotalEnergy)
 			}
-			totalEnergy.Store(data.TotalEnergy)
 		}
 	}()
 
