@@ -76,9 +76,9 @@ const Row = ({
           setHover(false);
         }}
       >
-        {row.map((s) =>
+        {row.map((s, i) =>
           s === null ? null : (
-            <Td key={s}>
+            <Td key={i}>
               <Text textDecoration={hover ? "underline" : ""}>{s}</Text>
             </Td>
           ),
@@ -90,6 +90,9 @@ const Row = ({
 
 type TableViewCol = keyof typeof GPU_FIELDS | "Group" | "Machine Name";
 type Direction = "ascending" | "descending";
+
+const invertDir = (dir: Direction) =>
+  dir === "ascending" ? "descending" : "ascending";
 
 export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   // default to show group, machine_name, gpu_name, isFree, brand, and memory_total
@@ -149,11 +152,11 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
   }, [rows, sortConfig]);
 
   const requestSort = (key: TableViewCol) => {
-    const direction =
-      sortConfig.key === key && sortConfig.direction === "ascending"
-        ? "ascending"
-        : "descending";
-    setSortConfig({ key, direction });
+    if (sortConfig.key === key) {
+      setSortConfig({ key, direction: invertDir(sortConfig.direction) });
+    } else {
+      setSortConfig({ key, direction: "ascending" });
+    }
   };
 
   useEffect(() => {
@@ -203,7 +206,7 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
         </MenuList>
       </Menu>
 
-      <TableContainer>
+      <TableContainer overflowX="scroll">
         <Table variant="striped">
           <Thead>
             <Tr>
@@ -217,9 +220,10 @@ export const TableTab = ({ groups }: { groups: WorkStationGroup[] }) => {
             </Tr>
           </Thead>
           <Tbody>
-            {sortedGroups.map((row, i) => (
-              <Row key={i} params={params} row={row} />
-            ))}
+            {sortedGroups.map((row, i) => {
+              console.log(row);
+              return <Row key={i} params={params} row={row} />;
+            })}
           </Tbody>
         </Table>
       </TableContainer>
