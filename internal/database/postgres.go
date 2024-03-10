@@ -812,72 +812,36 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 	return data[1:], nil
 }
 func (conn PostgresConn) AggregateData(days int) (broadcast.AggregateData, error) {
-	// TODO: test this in production
-	// TODO: add functionality for this to be variable
-	var data broadcast.AggregateData
-	threshold := time.Now().AddDate(0, 0, -days)
+	row := conn.db.QueryRow(`
+		SELECT SUM (
+			curr.powerdraw *
+			EXTRACT(EPOCH FROM curr.received - prev.received)
+		)
 
-	samples, err := conn.db.Query(`SELECT s.Received,
-		s.PowerDraw,
-		s.InUse
-		FROM Stats s
-		WHERE s.Received > $1
-		ORDER BY s.Received`,
-		threshold,
-	)
-	if err != nil {
-		return data, err
+		FROM
+			(SELECT received,
+				gpu,
+				ROW_NUMBER() OVER (PARTITION BY gpu
+						   ORDER BY received),
+				powerdraw
+			FROM stats) curr
+		INNER JOIN
+			(SELECT received,
+				gpu,
+				ROW_NUMBER() OVER (PARTITION BY gpu
+						   ORDER BY received)
+			FROM stats) prev
+		ON curr.row_number - 1=prev.row_number
+		   AND curr.gpu=prev.gpu
+	`)
+
+	var result *uint64 = nil
+	err := row.Scan(&result)
+	if errors.Is(err, sql.ErrNoRows) || result == nil {
+		return broadcast.AggregateData{TotalEnergy: 0}, nil
+	} else if err != nil {
+		return broadcast.AggregateData{}, err
 	}
 
-	// XXX: I hate EVERYTHING about the rest of this function,
-	//  	but idk how to write a better SQL query
-	lastseen := make(map[string]time.Time)
-	usage := make(map[string]int64)
-	totalTime := make(map[string]int64)
-	totalEnergy := float64(0)
-	for samples.Next() {
-		var t time.Time
-		var powerDraw float64
-		var inUse bool
-		var uuid string
-		err = samples.Scan(&t, &powerDraw, &inUse)
-		if err != nil {
-			return data, err
-		}
-		if prev, ok := lastseen[uuid]; ok {
-			delta := t.Sub(prev).Seconds()
-
-			if sum, ok := usage[uuid]; inUse && ok {
-				usage[uuid] = sum + int64(delta)
-			} else if inUse {
-				usage[uuid] = int64(delta)
-			}
-
-			if sum, ok := totalTime[uuid]; ok {
-				totalTime[uuid] = sum + int64(delta)
-			} else {
-				totalTime[uuid] = int64(delta)
-			}
-
-			totalEnergy += powerDraw * delta
-		}
-		lastseen[uuid] = t
-	}
-
-	// sum up usage
-	totalt := int64(0)
-	usedt := int64(0)
-	for uuid, totalTime := range totalTime {
-		totalt += totalTime
-		if ut, ok := usage[uuid]; ok {
-			usedt += ut
-		}
-	}
-
-	// return results
-	if totalt != 0 {
-		data.PercentUsed = int(usedt) / int(totalt)
-	}
-	data.TotalEnergy = uint64(totalEnergy)
-	return data, nil
+	return broadcast.AggregateData{TotalEnergy: *result}, nil
 }
