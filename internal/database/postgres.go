@@ -815,10 +815,10 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 // calculating the aggregate data
 func (conn PostgresConn) AggregateData() (broadcast.AggregateData, error) {
 	row := conn.db.QueryRow(`
-		SELECT SUM (
+		SELECT ROUND( SUM (
 			curr.powerdraw *
 			EXTRACT(EPOCH FROM curr.received - prev.received)
-		)
+		) )
 
 		FROM
 			(SELECT received,
