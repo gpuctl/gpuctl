@@ -818,7 +818,7 @@ func (conn PostgresConn) AggregateData() (broadcast.AggregateData, error) {
 		SELECT ROUND( SUM (
 			curr.powerdraw *
 			EXTRACT(EPOCH FROM curr.received - prev.received)
-		) )
+		), 0 )
 
 		FROM
 			(SELECT received,
