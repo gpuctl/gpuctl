@@ -815,26 +815,26 @@ func (conn PostgresConn) HistoricalData(hostname string) (broadcast.HistoricalDa
 // calculating the aggregate data
 func (conn PostgresConn) AggregateData() (broadcast.AggregateData, error) {
 	row := conn.db.QueryRow(`
-		SELECT ROUND( SUM (
-			curr.powerdraw *
-			EXTRACT(EPOCH FROM curr.received - prev.received)
-		), 0)
+		SELECT CAST(SUM (
+            curr.powerdraw *
+            EXTRACT(EPOCH FROM curr.received - prev.received)
+        ) AS integer )
 
-		FROM
-			(SELECT received,
-				gpu,
-				ROW_NUMBER() OVER (PARTITION BY gpu
-						   ORDER BY received),
-				powerdraw
-			FROM stats) curr
-		INNER JOIN
-			(SELECT received,
-				gpu,
-				ROW_NUMBER() OVER (PARTITION BY gpu
-						   ORDER BY received)
-			FROM stats) prev
-		ON curr.row_number - 1=prev.row_number
-		   AND curr.gpu=prev.gpu
+        FROM
+            (SELECT received,
+                gpu,
+                ROW_NUMBER() OVER (PARTITION BY gpu
+                           ORDER BY received),
+                powerdraw
+            FROM stats) curr
+        INNER JOIN
+            (SELECT received,
+                gpu,
+                ROW_NUMBER() OVER (PARTITION BY gpu
+                           ORDER BY received)
+            FROM stats) prev
+        ON curr.row_number - 1=prev.row_number
+           AND curr.gpu=prev.gpu
 	`)
 
 	var result *uint64 = nil
